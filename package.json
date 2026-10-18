@@ -1,0 +1,49 @@
+{
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.4.2",
+  "trustedDependencies": [
+    "esbuild",
+    "sharp",
+    "workerd"
+  ],
+  "dependencies": {
+    "@codemirror/commands": "^6.11.1",
+    "@codemirror/lang-markdown": "^6.5.2",
+    "@codemirror/language": "^6.13.1",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.14",
+    "@lezer/highlight": "^1.2.5",
+    "jose": "^6.2.12",
+    "lucide-react": "^1.59.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.4.4",
+    "@cloudflare/workers-types": "^5.20261016.1",
+    "@playwright/test": "^1.64.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "fake-indexeddb": "^6.2.6",
+    "miniflare": "^4.20260730.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.0.10",
+    "vitest": "^5.0.5",
+    "void": "^1.1.11"
+  },
+  "name": "kiroku",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "prepare": "void prepare",
+    "typecheck": "void prepare && tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:workers": "vitest run --config server/vitest.workers.config.ts",
+    "check": "bun run typecheck && bun run test && bun run test:workers && bun run build"
+  }
+}

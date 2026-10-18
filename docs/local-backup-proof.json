@@ -1,0 +1,45 @@
+{
+  "checkedAt": "2026-10-17T17:48:22.392964Z",
+  "kind": "local-sqlite-only",
+  "passed": true,
+  "sqlExportImportMatched": true,
+  "chunkedParameterizedTransferMatched": true,
+  "epochRotated": true,
+  "nonemptyTargetRefused": true,
+  "maxSqlBytes": 401,
+  "metadataTablesMatched": [
+    "app_meta",
+    "mutation_receipts"
+  ],
+  "indexesRestored": [
+    "diaries_deleted_date_idx",
+    "diaries_diary_date_unique",
+    "mutation_receipts_date_idx"
+  ],
+  "maxBoundStringBytes": 48000,
+  "sqlBackupBytes": 1015013,
+  "bodies": [
+    {
+      "id": "fixture-empty",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "fixture-near-limit",
+      "bytes": 1000000,
+      "sha256": "99a15c27b48f3bef97cb30255c21bbe99cfaec539120746adaa3e62a1cfc7a95"
+    },
+    {
+      "id": "fixture-trash",
+      "bytes": 22,
+      "sha256": "659640e697f08af98c1eeed94cd48a936ea2c613ac0ecf7a90755a94f92e6e25"
+    }
+  ],
+  "migrationSha256": {
+    "20261017174228_big_ghost_rider.sql": "a44a0463e7efc880daccf84f3b086b79ab37bb975b826278250a68ed0d848a27",
+    "20261017174706_plain_marvel_boy.sql": "84d3a450c4652b1bb5692e6cb74bc558f0f266395a58fcf1f599e7b1f246870d"
+  },
+  "remoteD1": "NOT RUN",
+  "androidChrome": "NOT RUN",
+  "cloudflareAccess": "NOT RUN"
+}

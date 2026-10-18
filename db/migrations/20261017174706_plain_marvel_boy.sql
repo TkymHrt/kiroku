@@ -1,0 +1,1 @@
+CREATE INDEX `mutation_receipts_date_idx` ON `mutation_receipts` (`diary_date`);
