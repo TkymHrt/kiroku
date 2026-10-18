@@ -1,12 +1,12 @@
 # MVP受入と公開判定
 
-基準日 2026-10-18。Accessで保護した初回公開は完了した。`未確認`は失敗とも成功とも扱わず、自動テストと実機/本番の確認を区別する。実データの利用開始前に残る必須項目の証跡を揃える。
+基準日 2026-10-18。Accessで保護した初回公開と[独自ドメインでの公開](https://kiroku.tkymhrt.dpdns.org/)は完了した。本人のMFA有効化もCloudflare APIで確認した。`未確認`は失敗とも成功とも扱わず、自動テストと実機/本番の確認を区別する。実データの利用開始前に残る必須項目の証跡を揃える。
 
 実行済みの検証は[local-test-results.md](local-test-results.md)と[公開記録](deployment.md)にまとめた。PC/390px相当のEdge Chromiumで、ソース固定後のE2E40ケースが単一実行ですべて成功した。Vitest86件、公式Workers連携4件、ビルドも成功した。実D1復元と本人SSOでの本番操作も確認したが、Android実機の合格を意味しない。
 
 | # | 要件・確認内容 | 検証方法/期待する証跡 | 状態 |
 |---|---|---|---|
-| 1 | 本人以外/未認証で画面・全API拒否 | 本人メールだけのIncludeとCloudflare IdP Require。Worker全経路を保護、preview無効。匿名8経路はAccessへ302、本人SSOで実画面表示。JWT不正/iss/aud/expiry拒否も自動テスト。 | 本人/匿名確認済み、別アカウント実ログイン拒否は未確認 |
+| 1 | 本人以外/未認証で画面・全API拒否 | 本人メールだけのIncludeとCloudflare IdP Require。Worker全経路を保護、preview無効。新独自ドメインでも匿名8経路はAccessへ302、本人SSOで実画面表示。JWT不正/iss/aud/expiry拒否も自動テスト。 | 本人/匿名確認済み、別アカウント実ログイン拒否は未確認 |
 | 2 | Android一覧/日付/前後/今日 | Android実機で未同期新規を含む移動・段階読込・Tokyo日付を確認。PC/小画面E2Eも実行。 | 実機未確認 |
 | 3 | 開くだけでは新規作成せず、1日1件 | API/unit/E2Eで空日を開く→一覧なし→入力→1件→同日create競合。入力を空に戻すと未作成。 | 自動テスト結果は実行ログ参照 |
 | 4 | 保存済み空本文/午前0時保持 | 空への更新が消えずversion進行。時刻をTokyo深夜へ固定して編集中日付/本文/selection保持。 | 自動テスト結果は実行ログ参照 |
@@ -35,10 +35,11 @@
 |---|---|---|---|
 | Android IME/toolbar/viewport | — | — | 未確認 |
 | Android copy/Markdown download | — | — | 未確認 |
-| Access本人限定/別の公開口 | 2026-10-18 | PC Microsoft Edge、本人SSO/匿名HTTP | 本人表示成功、匿名8経路302、Worker全経路保護・preview無効。別アカウントでの実ログイン拒否は未確認 |
+| Access本人限定/別の公開口 | 2026-10-18 | PC Microsoft Edge、本人SSO/匿名HTTP | workers.devと新独自ドメインで本人表示成功、匿名8経路302、Worker全経路保護・preview無効。別アカウントでの実ログイン拒否は未確認 |
+| アカウントMFA | 2026-10-18 | 本人申告、Cloudflare API | 有効化済みを確認 |
 | Access期限切れ→下書き保持→再認証/競合 | — | — | 未確認 |
 | 1MB実D1 restore | 2026-10-18 | Cloudflareの一時D1 2件、架空データ | 全表/本文一致、index復元、epoch回転、両DB削除成功。[証跡](remote-backup-proof.json) |
 | 復旧後の端末下書き停止 | — | — | 実D1復元時のepoch回転は成功。Time Travel相当の復旧後に各端末の未同期下書きが停止する実機確認は未実施。本番DBを復元試験に使わない |
 | 本番初回smoke/log設定 | 2026-10-18 | PC Microsoft Edge、本人SSO | 作成→保存済み→ゴミ箱→復元→再ゴミ箱→完全削除。D1日記件数0、観測ログ無効。[公開記録](deployment.md) |
 
-本番に実データを入れる前に未確認項目とアカウントMFA設定の確認を行い、上表を更新する。障害運用としての本番Time Travel巻戻し手順は未実施であり、受入試験のために本番DBを巻き戻さない。Application / Policy sessionは168時間、共通Global sessionは他アプリへの影響を避けるため未変更。HTML/JSのヘッダー8項目は標準MiniflareのASSETS配信で一致し、本番の認証後応答を直接観測した結果とは区別する。ログやスクリーンショットに実際の日記本文・JWTを含めない。
+本番に実データを入れる前に未確認項目を確認し、上表を更新する。障害運用としての本番Time Travel巻戻し手順は未実施であり、受入試験のために本番DBを巻き戻さない。Application / Policy sessionは168時間、共通Global sessionは他アプリへの影響を避けるため未変更。HTML/JSのヘッダー8項目は標準MiniflareのASSETS配信で一致し、本番の認証後応答を直接観測した結果とは区別する。旧URLの端末下書きは新URLへ自動移行されないため、旧URLでの同期完了かコピー・Markdown保存による退避を確認する。ログやスクリーンショットに実際の日記本文・JWTを含めない。

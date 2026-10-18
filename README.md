@@ -2,7 +2,9 @@
 
 単一利用者のための日付別Markdown日記。2026-10-18版の確定要件をもとに、Cloudflare Workers / D1で動作します。Android Chromeを優先し、PC Chromeにも対応します。
 
-2026-10-18に[初回公開](https://kiroku.23-h-takayama-nutfes.workers.dev/)しました。画面とAPIはCloudflare Accessで本人だけに制限しています。[公開記録](docs/deployment.md)に設定・確認結果・残る受入項目をまとめています。
+2026-10-18に[きろく](https://kiroku.tkymhrt.dpdns.org/)を公開しました。画面とAPIはCloudflare Accessで本人だけに制限しています。[公開記録](docs/deployment.md)に設定・確認結果・残る受入項目をまとめています。
+
+旧workers.dev URLもAccess保護付きで維持しています。下書きはURLごとに端末へ保存されるため、旧URLで編集していた場合は「保存済み」を確認するか、コピー・Markdown保存で退避してから新URLへ移動してください。
 
 ## 起動
 

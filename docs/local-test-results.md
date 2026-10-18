@@ -13,6 +13,8 @@
 | `python scripts/backup_restore.py remote-proof --run-remote` | 成功 | 実D1でSQL export→空D1への復元、1,000,000バイト本文を含む全表一致、epoch回転、一時DB2件の削除 |
 | 標準MiniflareのASSETS配信 | 成功 | HTML/JS応答の`_headers`全8項目一致。本番認証後応答の直接観測ではない |
 | 初回本番smoke | 成功 | 本人SSO、架空日記の作成/保存/ゴミ箱/復元/完全削除、匿名8経路のAccessへの302 |
+| 独自ドメイン公開 | 成功 | `kiroku.tkymhrt.dpdns.org`で匿名8経路のAccessへの302、Edge本人SSOで日記一覧の取得完了（空一覧）。再deploy・DB migrationなし |
+| アカウントMFA | 確認済み | 本人申告とCloudflare APIで有効化済みを確認 |
 
 ブラウザ検証は入力後作成、自動保存、カーソル保持、重複チェック項目、HTML/画像/URLの安全性、オフライン編集と再起動復旧、端末競合、空本文、ゴミ箱/復元/完全削除と古端末、未同期コピー/Markdown、JSONへのゴミ箱データ包含、認証切れ後の編集と退避、明示ログアウト後に両タブの本文DOMを除去して下書きを保持することを確認した。
 
@@ -24,4 +26,6 @@
 
 復元の詳細は[ローカルSQLite証跡](local-backup-proof.json)と[実D1証跡](remote-backup-proof.json)に記録した。実D1試験は本番DBを使わず、一時DBにだけ架空データを書き込んだ。本番smokeの架空日記も完全削除し、日記件数0件を確認した。
 
-AndroidのIME/キーボード/ファイル保存、別アカウントでの実ログイン拒否、実Access期限切れ、Time Travel相当の復旧後に各端末の未同期下書きが停止する実機確認は未実施。本番DBを復元試験に使わない。障害運用としての本番Time Travel巻戻し手順も未実施。アカウントMFA設定の確認、Access保護後のCLI認証を含む再deployも残る。初回公開の成功と、すべての受入項目の完了は区別する。
+旧workers.dev URLはAccess保護付きで維持している。端末下書きはoriginごとのため新URLへ自動移行されず、旧URLでの同期完了かコピー・Markdown保存による退避が必要。
+
+AndroidのIME/キーボード/ファイル保存、別アカウントでの実ログイン拒否、実Access期限切れ、Time Travel相当の復旧後に各端末の未同期下書きが停止する実機確認は未実施。本番DBを復元試験に使わない。障害運用としての本番Time Travel巻戻し手順も未実施。Access保護後のCLI認証を含む再deployも残る。初回公開の成功と、すべての受入項目の完了は区別する。

@@ -1,6 +1,6 @@
 # 開発・公開・復旧手順
 
-基準日 2026-10-18。同日にVoid CLIでWorkers / D1へ初回公開し、本人のAccessログインと架空データの保存・削除を確認した。実D1での1MBバックアップ復元も成功した。設定と確認範囲は[公開記録](deployment.md)、残る受入項目は[受入表](verification.md)を参照する。
+基準日 2026-10-18。同日にVoid CLIでWorkers / D1へ初回公開し、本人のAccessログインと架空データの保存・削除を確認した。現在の公開先は[kiroku.tkymhrt.dpdns.org](https://kiroku.tkymhrt.dpdns.org/)。本人のMFA有効化と実D1での1MBバックアップ復元も確認した。設定と確認範囲は[公開記録](deployment.md)、残る受入項目は[受入表](verification.md)を参照する。
 
 ## ローカル開発
 
@@ -29,7 +29,7 @@ python scripts/backup_restore.py self-test
 3. Application / Policy sessionは168時間（7日）に設定する。初回公開では共通Global sessionを変更していない。Global変更は他アプリへ影響するため、既存アプリを調査してから決める。Cloudflare One Client認証を使う場合はそちらのsessionが優先し得る。[Session management](https://developers.cloudflare.com/cloudflare-one/access-controls/access-settings/session-management/)
 4. ApplicationのAUDを`ACCESS_AUD`、team domain（`https://TEAM.cloudflareaccess.com`）を`ACCESS_TEAM_DOMAIN`、本人メールを`ACCESS_EMAIL`としてサーバー設定へ登録する。説明用の`docs/access.env.example`も参照。Voidはルートの`.env.example`を許可しないため、ローカル設定が必要な場合は単一の`.env`だけを使う。Cloudflareアカウントのパスワード/API tokenをアプリへ渡さない。
 5. WorkerでもAccess JWTの署名・`iss`・`aud`・有効期限を検証する。本人emailを追加照合する。ヘッダーが存在するだけで認証済みとみなさない。JWKSはteamの`/cdn-cgi/access/certs`から取得する。[JWT validation](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json/)
-6. `workers.dev`や別ルートも同じWorkerのAccess保護対象であることを確認する。初回公開ではpreview URLを無効化した。公開口の設定は`void.config.ts`へ残し、deployで戻らないようにする。
+6. `workers.dev`や別ルートも同じWorkerのAccess保護対象であることを確認する。初回公開ではpreview URLを無効化した。公開口をVoidで管理し、Void設定・lock差分をcommitしてdeployで戻らないようにする。
 
 Accessが期限切れするとfetchが401/403だけでなくログインHTMLへリダイレクトされる場合もある。下書きを残したまま同期を止め、再認証導線でログイン後に再取得・version/epoch照合する。実Accessの期限切れ試験は残っている。短いsessionで試験するときは他アプリへの影響を避け、終了後に目標7日へ戻す。ログアウト後の既存タブ、戻るボタン、API拒否も確認する。
 
@@ -55,6 +55,12 @@ bunx wrangler d1 export DATABASE_NAME --remote --output 'X:/Encrypted/KirokuBack
 ```
 
 初回は架空の日記で読み書き・ゴミ箱・復元・完全削除を確認し、確認後の本番日記件数は0件だった。匿名8経路のAccessへのリダイレクトも確認した。JSONを含む詳細機能はローカル自動テストで確認しており、本番での確認範囲とは区別する。観測ログは無効に設定した。HTML/JSのセキュリティヘッダー8項目は標準MiniflareのASSETS配信で一致を確認したが、本番での認証後応答を直接観測した結果ではない。
+
+### ドメインと旧URLの下書き
+
+独自ドメインはVoidの`domain add`で既存Workerへ接続した。この操作はDNS・TLS・公開口の同期だけで完了し、アプリ再deployやDB migrationは不要だった。新URLでも匿名8経路のAccessへの302と本人SSOでの画面表示を確認し、本人限定policyと168時間のsessionを維持している。
+
+旧workers.dev URLもAccess保護付きで残す。IndexedDBの下書きはoriginごとに保存され、新URLには自動移行されない。旧URLで「保存済み」を確認するか、コピー・Markdown保存で退避してから新URLへ移動する。未同期下書きの有無を確認せず、旧URLのブラウザデータを消さない。
 
 ## SQLバックアップ
 

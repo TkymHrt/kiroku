@@ -4,7 +4,8 @@
 
 - 公開リポジトリ：[TkymHrt/kiroku](https://github.com/TkymHrt/kiroku)
 - 初回mainコミット：`bd8d65b`
-- アプリ：[きろく](https://kiroku.23-h-takayama-nutfes.workers.dev/)
+- アプリ：[きろく](https://kiroku.tkymhrt.dpdns.org/)
+- 旧URL：[workers.dev](https://kiroku.23-h-takayama-nutfes.workers.dev/)（Access保護付きで維持）
 - 実行環境：Cloudflare Workers、Worker名`kiroku`
 - データベース：Cloudflare D1、DB名`kiroku-db`、binding名`DB`
 
@@ -23,6 +24,14 @@ Workerには次のサーバーsecretを登録した。値は公開資料へ記�
 - `ACCESS_EMAIL`
 
 WorkerでもAccess JWTの署名・issuer・audience・有効期限・本人メールを照合する。認証設定が欠けた場合はfail closedとする。
+
+## 独自ドメインでの公開
+
+同日、既存のCloudflare zone内の未使用ホスト`kiroku.tkymhrt.dpdns.org`をVoidの`domain add`で既存Workerへ接続した。DNS・TLS・Workerの公開口を同期し、アプリの再deployやDB migrationは行っていない。Void設定・lock差分をcommitし、課金設定は変更していない。
+
+Workerを対象にしたAccess保護、本人メール1件だけのAllow policy、Cloudflare IdP、168時間のsessionは維持した。本人のMFA有効化申告に加え、Cloudflare APIでも有効化済みであることを確認した。
+
+新URLでも下記8経路すべてが匿名アクセス時にAccessへ302で移動し、PCのMicrosoft Edgeで本人SSO後に日記一覧の取得完了（空一覧）まで確認した。旧workers.dev URLは、旧URLに残る端末下書きを同期・退避できるよう維持する。IndexedDBはoriginごとに分かれるため、下書きは新URLへ自動移行されない。旧URLで「保存済み」を確認するか、コピー・Markdown保存で退避してから新URLへ移動する。
 
 ## 確認した範囲
 
@@ -49,7 +58,6 @@ PCのMicrosoft Edgeで本人のSSOを使い実画面を表示した。架空日�
 - 別アカウントによる実ログインの拒否。
 - 実Access期限切れ後の下書き保持・再認証・競合確認。
 - Time Travel相当の復旧後に各端末の未同期下書きが停止する実機確認。本番DBを復元試験に使わない。
-- アカウントMFA設定の確認。
 - 本番での認証後HTML/API応答ヘッダーの直接確認。
 - Access保護後のCLI再deploy。readiness確認に短期の本人トークンを`CF_ACCESS_TOKEN`として渡す必要があり、`cf access login`等による取得を含む手順は未検証。
 
