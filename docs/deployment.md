@@ -1,0 +1,56 @@
+# 初回公開記録
+
+初回公開日：**2026-10-18（日本時間）**。
+
+- 公開リポジトリ：[TkymHrt/kiroku](https://github.com/TkymHrt/kiroku)
+- 初回mainコミット：`bd8d65b`
+- アプリ：[きろく](https://kiroku.23-h-takayama-nutfes.workers.dev/)
+- 実行環境：Cloudflare Workers、Worker名`kiroku`
+- データベース：Cloudflare D1、DB名`kiroku-db`、binding名`DB`
+
+Void CLIでbuild・D1確保・migration適用・deployを実行した。リソース情報は`void.lock.json`、公開口と観測ログの設定は`void.config.ts`へ記録する。GitHubへのpushとCloudflareへの公開はローカルから手動で行い、CI/CDは導入していない。課金設定は変更していない。
+
+## Accessと公開口
+
+単一Workerを対象にするself-hosted Accessアプリの`worker` destinationで、画面・API・静的ファイル・Void内部経路を含む全経路を保護した。Allow policyのIncludeは本人の完全一致メールアドレスだけ、RequireはCloudflare IdPだけとし、メンバー全体を許可するpolicyは設けていない。
+
+Application / Policy sessionは168時間（7日）。共通Global sessionは他アプリへの影響を避けるため変更していない。preview URLと観測ログは無効にした。CLIとの互換性のため、このアプリのBinding Cookieは無効、HttpOnlyは維持した。
+
+Workerには次のサーバーsecretを登録した。値は公開資料へ記載しない。
+
+- `ACCESS_TEAM_DOMAIN`
+- `ACCESS_AUD`
+- `ACCESS_EMAIL`
+
+WorkerでもAccess JWTの署名・issuer・audience・有効期限・本人メールを照合する。認証設定が欠けた場合はfail closedとする。
+
+## 確認した範囲
+
+匿名HTTPで次の8経路を確認し、すべてAccessのログインへ302で移動した。
+
+- `/`
+- `/api/session`
+- `/api/diaries`
+- `/api/diaries/2099-12-31`
+- `/api/diaries/2099-12-31/neighbors`
+- `/api/export`
+- `/__void/ready`
+- `/favicon.svg`
+
+PCのMicrosoft Edgeで本人のSSOを使い実画面を表示した。架空日付`2099-12-31`で、作成→「保存済み」→ゴミ箱→復元→再びゴミ箱→完全削除を確認し、終了後のD1日記件数は0件だった。
+
+実D1では1,000,000 UTF-8バイト本文を含む架空データをSQLへ出力し、新しい空D1へ分割パラメータで復元した。全表・本文の一致、index復元、epoch回転が成功し、試験用DB2件を削除した。[本文を含まない証跡](remote-backup-proof.json)を保存している。
+
+型チェック・単体テスト86件・公式Workers連携4件・ビルドが成功した。ソース固定後のE2E40件も単一実行ですべて成功した。標準MiniflareのASSETS配信でHTML/JSのセキュリティヘッダー8項目の一致を確認したが、本番での認証後応答を直接観測した結果ではない。[検証結果](local-test-results.md)も参照。
+
+## 残る確認
+
+- Android Chrome実機での日本語IME、キーボード直上ツールバー、コピー/Markdownファイル保存。
+- 別アカウントによる実ログインの拒否。
+- 実Access期限切れ後の下書き保持・再認証・競合確認。
+- Time Travel相当の復旧後に各端末の未同期下書きが停止する実機確認。本番DBを復元試験に使わない。
+- アカウントMFA設定の確認。
+- 本番での認証後HTML/API応答ヘッダーの直接確認。
+- Access保護後のCLI再deploy。readiness確認に短期の本人トークンを`CF_ACCESS_TOKEN`として渡す必要があり、`cf access login`等による取得を含む手順は未検証。
+
+実データの利用開始前に[受入表](verification.md)の残る項目を確認する。障害運用としての本番Time Travel巻戻し手順は未実施であり、上記の受入確認とは区別する。更新・バックアップ・復旧の手順は[運用資料](operations.md)を参照。

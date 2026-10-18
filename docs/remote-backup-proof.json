@@ -1,0 +1,55 @@
+{
+  "checkedAt": "2026-10-18T02:23:26.045873Z",
+  "kind": "real-temporary-cloudflare-d1",
+  "passed": true,
+  "temporaryDatabases": [
+    {
+      "id": "66649737-1aa3-409f-a3d9-359582b15d20",
+      "name": "kiroku-restore-check-640cd8ecaa62-source"
+    },
+    {
+      "id": "5b9b5bd3-9641-45a2-94f4-01cdaff16521",
+      "name": "kiroku-restore-check-e7a9f2a8c850-target"
+    }
+  ],
+  "cleanup": [
+    {
+      "id": "5b9b5bd3-9641-45a2-94f4-01cdaff16521",
+      "deleted": true
+    },
+    {
+      "id": "66649737-1aa3-409f-a3d9-359582b15d20",
+      "deleted": true
+    }
+  ],
+  "sqlExportImportMatched": true,
+  "chunkedParameterizedTransferMatched": true,
+  "epochRotated": true,
+  "metadataTablesMatched": [
+    "app_meta",
+    "mutation_receipts"
+  ],
+  "indexesRestored": [
+    "diaries_deleted_date_idx",
+    "diaries_diary_date_unique",
+    "mutation_receipts_date_idx"
+  ],
+  "bodies": [
+    {
+      "id": "fixture-empty",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "fixture-near-limit",
+      "bytes": 1000000,
+      "sha256": "99a15c27b48f3bef97cb30255c21bbe99cfaec539120746adaa3e62a1cfc7a95"
+    },
+    {
+      "id": "fixture-trash",
+      "bytes": 22,
+      "sha256": "659640e697f08af98c1eeed94cd48a936ea2c613ac0ecf7a90755a94f92e6e25"
+    }
+  ],
+  "sqlBackupBytes": 1064612
+}

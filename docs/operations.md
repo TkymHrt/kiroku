@@ -1,6 +1,6 @@
 # 開発・公開・復旧手順
 
-基準日 2026-10-18。ローカル検証と、本番で人が確認する項目を分ける。本書を作った時点でクラウドの作成・公開・復元は実行していない。
+基準日 2026-10-18。同日にVoid CLIでWorkers / D1へ初回公開し、本人のAccessログインと架空データの保存・削除を確認した。実D1での1MBバックアップ復元も成功した。設定と確認範囲は[公開記録](deployment.md)、残る受入項目は[受入表](verification.md)を参照する。
 
 ## ローカル開発
 
@@ -25,17 +25,17 @@ python scripts/backup_restore.py self-test
 ## Accessの初回設定
 
 1. 本人のCloudflareアカウントにMFAを設定する。Zero TrustでCloudflareをIdPとして追加し、アカウントメンバー限定も有効にする。[Cloudflare IdP](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/cloudflare/)
-2. 対象ホストの**全パス**を1つのself-hosted Accessアプリで保護する。Allow policyは本人のメールアドレスだけをIncludeし、Cloudflare IdPをRequireする。メンバー全体を許可するselectorだけで済ませない。Bypass/Everyoneや別の広いAllowを残さない。
-3. Application sessionを7日、policyをSame as applicationへ。Global sessionも目標7日との整合性を確認する。Global変更は他アプリへ影響するため、既存アプリを調査してから決める。Cloudflare One Client認証を使う場合はそちらのsessionが優先し得る。[Session management](https://developers.cloudflare.com/cloudflare-one/access-controls/access-settings/session-management/)
+2. 単一Workerを対象とするself-hosted Accessアプリの`worker` destinationで、画面・API・静的ファイル・内部経路を含む全経路を保護する。Allow policyは本人のメールアドレスだけをIncludeし、Cloudflare IdPをRequireする。メンバー全体を許可するselectorだけで済ませない。Bypass/Everyoneや別の広いAllowを残さない。[Workers Access](https://developers.cloudflare.com/workers/configuration/cloudflare-access/)
+3. Application / Policy sessionは168時間（7日）に設定する。初回公開では共通Global sessionを変更していない。Global変更は他アプリへ影響するため、既存アプリを調査してから決める。Cloudflare One Client認証を使う場合はそちらのsessionが優先し得る。[Session management](https://developers.cloudflare.com/cloudflare-one/access-controls/access-settings/session-management/)
 4. ApplicationのAUDを`ACCESS_AUD`、team domain（`https://TEAM.cloudflareaccess.com`）を`ACCESS_TEAM_DOMAIN`、本人メールを`ACCESS_EMAIL`としてサーバー設定へ登録する。説明用の`docs/access.env.example`も参照。Voidはルートの`.env.example`を許可しないため、ローカル設定が必要な場合は単一の`.env`だけを使う。Cloudflareアカウントのパスワード/API tokenをアプリへ渡さない。
 5. WorkerでもAccess JWTの署名・`iss`・`aud`・有効期限を検証する。本人emailを追加照合する。ヘッダーが存在するだけで認証済みとみなさない。JWKSはteamの`/cdn-cgi/access/certs`から取得する。[JWT validation](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json/)
-6. 独自ドメインに加え、`workers.dev`、preview URL、別ルートからAPI/HTMLへ到達できないことを確認する。使わない公開口を無効化するか同等のAccess保護を設定する。
+6. `workers.dev`や別ルートも同じWorkerのAccess保護対象であることを確認する。初回公開ではpreview URLを無効化した。公開口の設定は`void.config.ts`へ残し、deployで戻らないようにする。
 
-Accessが期限切れするとfetchが401/403だけでなくログインHTMLへリダイレクトされる場合もある。下書きを残したまま同期を止め、再認証導線でログイン後に再取得・version/epoch照合する。短いsessionで期限切れを実際に起こす試験を公開前に行い、その後目標7日へ戻す。ログアウト後の既存タブ、戻るボタン、API拒否も確認する。
+Accessが期限切れするとfetchが401/403だけでなくログインHTMLへリダイレクトされる場合もある。下書きを残したまま同期を止め、再認証導線でログイン後に再取得・version/epoch照合する。実Accessの期限切れ試験は残っている。短いsessionで試験するときは他アプリへの影響を避け、終了後に目標7日へ戻す。ログアウト後の既存タブ、戻るボタン、API拒否も確認する。
 
 ## 手動公開
 
-公開の前に[受入表](verification.md)の必須項目を埋める。Android実機、Accessの本人/他人/未認証、実D1復元が未確認なら実データを登録しない。
+初回公開は完了している。更新時は型チェック・必要なテスト・migrationレビューを行い、[受入表](verification.md)に確認結果を記録する。実データの利用開始前には残るAndroid実機・別アカウントでの拒否・実Access期限切れ等の受入確認を行う。
 
 ```powershell
 bunx void connect --platform cloudflare
@@ -43,6 +43,8 @@ bunx void deploy --platform cloudflare
 ```
 
 Voidがbuild、リソース確保、migration、deployを管理する。生成された`void.config.ts`/`void.lock.json`は必要に応じてバージョン管理する。`cf init/dev/build/deploy`で別構成を追加しない。課金が必要な選択肢を有効にする前は本人へ確認する。CI/CDや常設クラウド検証環境は作らない。[Void deployment](https://void.cloud/guide/deployment)
+
+Access保護後の再deployでは、保護されたreadinessへのアクセスに短期の本人トークンを`CF_ACCESS_TOKEN`としてdeployプロセスへ渡す必要がある。`cf access login`等による取得を含む再deploy手順は未検証。トークンをGit・コマンド引数・ログへ記録せず、本人限定policyを緩めて通過させない。VoidのCloudflareガイドのAccess認証手順を確認し、再deploy成功後に本書へ実行結果を追記する。
 
 追加のリソース操作は`cf`を優先する。`bunx cf cli search "export D1 database"`、該当`--help`/`bunx cf schema ...`、`--dry-run`で現行の引数と送信先を確かめる。cfはbetaでNode 22以上が必要。アプリの設定・migration管理はVoidに統一する。[公式cf CLI](https://github.com/cloudflare/cf/blob/main/packages/cli/README.md)
 
@@ -52,7 +54,7 @@ Void/cfが対応しない操作だけWranglerを例外使用できる。SQL expo
 bunx wrangler d1 export DATABASE_NAME --remote --output 'X:/Encrypted/KirokuBackup/diary-20261018-before-change.sql'
 ```
 
-初回は架空の日記で読み書き・削除・復元・完全削除・JSONを確認し、Access保護の証拠を残してから実データを使う。アクセス/例外ログへ本文・tokenを出していないこと、本文API/JSONに`Cache-Control: no-store`、書込のorigin/CSRF検査があることを確認する。
+初回は架空の日記で読み書き・ゴミ箱・復元・完全削除を確認し、確認後の本番日記件数は0件だった。匿名8経路のAccessへのリダイレクトも確認した。JSONを含む詳細機能はローカル自動テストで確認しており、本番での確認範囲とは区別する。観測ログは無効に設定した。HTML/JSのセキュリティヘッダー8項目は標準MiniflareのASSETS配信で一致を確認したが、本番での認証後応答を直接観測した結果ではない。
 
 ## SQLバックアップ
 
@@ -81,7 +83,7 @@ python scripts/backup_restore.py verify-sql --sql 'X:/Encrypted/KirokuBackup/dia
 python scripts/backup_restore.py remote-proof --run-remote --report docs/remote-backup-proof.json
 ```
 
-API tokenには対象accountのD1 Read/Edit（作成・削除・query・export）が必要。成功とcleanupの両方を証跡で確認する。cleanup失敗時は報告された**一時DBのUUID/名前だけ**を管理画面で確認して削除する。このリポジトリではまだ実行していない。標準SQL importの成否とは別に、公開前にこの実D1経路を通す。[D1 import/export](https://developers.cloudflare.com/d1/best-practices/import-export-data/)、[Export API](https://developers.cloudflare.com/api/resources/d1/subresources/database/methods/export/)
+API tokenには対象accountのD1 Read/Edit（作成・削除・query・export）が必要。成功とcleanupの両方を証跡で確認する。cleanup失敗時は報告された**一時DBのUUID/名前だけ**を管理画面で確認して削除する。2026-10-18にこの実D1経路が成功し、1,000,000バイト本文を含む全表一致、index復元、epoch回転、一時DB2件の削除を[remote-backup-proof.json](remote-backup-proof.json)へ記録した。標準SQL importの成功を意味するものではなく、分割パラメータ復元の検証結果である。[D1 import/export](https://developers.cloudflare.com/d1/best-practices/import-export-data/)、[Export API](https://developers.cloudflare.com/api/resources/d1/subresources/database/methods/export/)
 
 ## 障害復旧
 

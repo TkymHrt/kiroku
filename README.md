@@ -1,8 +1,8 @@
 # きろく
 
-単一利用者のための日付別Markdown日記。2026-10-18版の確定要件をもとにしたローカル実装です。Android Chromeを優先し、PC Chromeにも対応します。
+単一利用者のための日付別Markdown日記。2026-10-18版の確定要件をもとに、Cloudflare Workers / D1で動作します。Android Chromeを優先し、PC Chromeにも対応します。
 
-**本番未公開です。Android実機、実Cloudflare Access、実D1での1MB復元検証は公開前に必要です。** 自動テストの成功でこれらの実証を代替しません。
+2026-10-18に[初回公開](https://kiroku.23-h-takayama-nutfes.workers.dev/)しました。画面とAPIはCloudflare Accessで本人だけに制限しています。[公開記録](docs/deployment.md)に設定・確認結果・残る受入項目をまとめています。
 
 ## 起動
 
@@ -38,18 +38,20 @@ mise exec -- python scripts/backup_restore.py self-test
 
 `check`は型チェック、Vitest、公式Cloudflare Workers Vitest連携、本番ビルドを実行します。E2Eはインストール済みMicrosoft EdgeをChromiumエンジンとして使い、1440px / 390pxを検証します。Android実機試験とは区別します。テストの架空データは2080年/2081年の予約日付だけに作成し、その日付だけを片付けます。実データを登録した環境では実行しないでください。
 
-本番ビルドは`dist/client`と`dist/ssr`へ出力します。公開・D1作成・Access設定はこの作業では行っていません。
+型チェック・単体テスト86件・Workers連携4件・ビルド、ソース固定後のE2E40件が成功しています。実D1で1,000,000バイト本文を含むSQLバックアップの復元と、一時DB2件の削除も確認しました。Android実機、別アカウントでの実ログイン拒否、実Access期限切れ、復旧後の端末整合性は未確認です。本番DBを復元試験には使いません。
 
 ## 設計・運用資料
 
 - [確定要件と対象範囲](docs/requirements.md)
 - [API・同期・競合・データ設計](docs/architecture.md)
 - [公開・Access・バックアップ・復旧手順](docs/operations.md)
+- [初回公開の設定と検証結果](docs/deployment.md)
 - [受入表と未実証項目](docs/verification.md)
 - [ローカルテスト結果](docs/local-test-results.md)
 - [UI改善とレビュー記録](docs/ui-refinement.md)
 - [エラー表示と復旧導線](docs/error-recovery.md)
 - [1MBローカル復元の証跡](docs/local-backup-proof.json)
+- [1MB実D1復元の証跡](docs/remote-backup-proof.json)
 
 SQLバックアップは破壊的DB変更前に取得し、開発PCの暗号化ストレージで直近3世代を保持します。実D1試験用の`remote-proof`は、本人のCloudflareアカウントに接続してから、架空データの一時DBだけで実行します。トークンをチャットやGitへ貼り付けないでください。
 
