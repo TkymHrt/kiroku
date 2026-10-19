@@ -185,34 +185,40 @@ export function DatePicker({
                 <ChevronLeft size={20} aria-hidden="true" />
               </button>
               <div className="date-picker-month-selects">
-                <select
-                  className="date-picker-select date-picker-year"
-                  aria-label="年"
-                  value={year}
-                  onChange={(event) =>
-                    changeMonth(Number(event.target.value), month)
-                  }
-                >
-                  {calendarYears(year).map((option) => (
-                    <option key={option} value={option}>
-                      {option}年
-                    </option>
-                  ))}
-                </select>
-                <select
-                  className="date-picker-select date-picker-month"
-                  aria-label="月"
-                  value={month}
-                  onChange={(event) =>
-                    changeMonth(year, Number(event.target.value))
-                  }
-                >
-                  {Array.from({ length: 12 }, (_, index) => (
-                    <option key={index} value={index + 1}>
-                      {index + 1}月
-                    </option>
-                  ))}
-                </select>
+                <div className="date-picker-select-field date-picker-year">
+                  <select
+                    className="date-picker-select"
+                    aria-label="年"
+                    value={year}
+                    onChange={(event) =>
+                      changeMonth(Number(event.target.value), month)
+                    }
+                  >
+                    {calendarYears(year).map((option) => (
+                      <option key={option} value={option}>
+                        {option}年
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown size={16} aria-hidden="true" />
+                </div>
+                <div className="date-picker-select-field date-picker-month">
+                  <select
+                    className="date-picker-select"
+                    aria-label="月"
+                    value={month}
+                    onChange={(event) =>
+                      changeMonth(year, Number(event.target.value))
+                    }
+                  >
+                    {Array.from({ length: 12 }, (_, index) => (
+                      <option key={index} value={index + 1}>
+                        {index + 1}月
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown size={16} aria-hidden="true" />
+                </div>
               </div>
               <button
                 type="button"
@@ -227,8 +233,13 @@ export function DatePicker({
               </button>
             </div>
             <div className="date-picker-weekdays" aria-hidden="true">
-              {WEEKDAYS.map((weekday) => (
-                <span key={weekday}>{weekday}</span>
+              {WEEKDAYS.map((weekday, index) => (
+                <span
+                  key={weekday}
+                  className={`weekday-tone weekday-tone-${index}`}
+                >
+                  {weekday}
+                </span>
               ))}
             </div>
             <div
@@ -272,9 +283,6 @@ export function DatePicker({
               >
                 今日
               </button>
-              <span className="date-picker-hint">
-                {today.replaceAll("-", "/")}
-              </span>
             </div>
           </dialog>,
           document.body,

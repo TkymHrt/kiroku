@@ -367,8 +367,12 @@ test(titles[12], async ({ page, request, diaryDate }, info) => {
     if (info.project.name !== 'mobile') return;
     const buttons = await navigation.getByRole('button').evaluateAll(elements => elements.map(element => {
       const bounds = element.getBoundingClientRect();
+      const y = bounds.top + bounds.height / 2;
       return { width: bounds.width, height: bounds.height, left: bounds.left, right: bounds.right,
-        contentFits: element.scrollWidth <= element.clientWidth };
+        viewportWidth: document.documentElement.clientWidth,
+        contentFits: element.scrollWidth <= element.clientWidth,
+        leftHit: document.elementFromPoint(bounds.left + 1, y)?.closest('button') === element,
+        rightHit: document.elementFromPoint(bounds.right - 1, y)?.closest('button') === element };
     }));
     expect(buttons).toHaveLength(3);
     for (const button of buttons) {
@@ -376,14 +380,26 @@ test(titles[12], async ({ page, request, diaryDate }, info) => {
       expect(button.height).toBe(buttons[0].height);
       expect(button.height).toBeGreaterThanOrEqual(44);
       expect(button.contentFits).toBe(true);
+      expect(button.leftHit).toBe(true);
+      expect(button.rightHit).toBe(true);
     }
-    expect(buttons[0].left).toBeGreaterThanOrEqual(16);
-    expect(buttons[2].right).toBeLessThanOrEqual(page.viewportSize()!.width - 16);
+    expect(Math.abs(buttons[0].left)).toBeLessThan(1);
+    expect(Math.abs(buttons[2].right - buttons[0].viewportWidth)).toBeLessThan(1);
+    for (let index = 0; index < 3; index++) {
+      expect(Math.abs(buttons[index].left - buttons[0].viewportWidth * index / 3)).toBeLessThan(1);
+      expect(Math.abs(buttons[index].right - buttons[0].viewportWidth * (index + 1) / 3)).toBeLessThan(1);
+    }
   };
   await expectEqualMobileNavigation();
   if (info.project.name === 'mobile') {
     await page.setViewportSize({ width: 320, height: 844 });
     await expectEqualMobileNavigation();
+    for (const [name, edge] of [['設定', 'right'], ['ゴミ箱', 'left'], ['日記一覧', 'left']] as const) {
+      const button = navigation.getByRole('button', { name, exact: true });
+      const bounds = (await button.boundingBox())!;
+      await page.mouse.click(edge === 'left' ? bounds.x + 1 : bounds.x + bounds.width - 1, bounds.y + bounds.height / 2);
+      await expect(button).toHaveAttribute('aria-current', 'page');
+    }
     await page.setViewportSize({ width: 390, height: 844 });
     const firstDiary = await page.locator('.diary-row').first().boundingBox();
     expect(firstDiary?.y).toBeLessThan(220);
@@ -406,6 +422,42 @@ test(titles[12], async ({ page, request, diaryDate }, info) => {
   await capture('editor');
   await page.getByRole('button', { name: /^日付を変更:/ }).click();
   await expect(page.getByRole('dialog', { name: '日付を選ぶ', exact: true })).toBeVisible();
+  const picker = page.getByRole('dialog', { name: '日付を選ぶ', exact: true });
+  await expect(picker.locator('.date-picker-footer')).toHaveText('今日');
+  const weekendColors = await picker.locator('.date-picker-weekdays > span').evaluateAll(elements =>
+    elements.map(element => getComputedStyle(element).color));
+  expect(weekendColors[0]).not.toBe(weekendColors[1]);
+  expect(weekendColors[6]).not.toBe(weekendColors[1]);
+  expect(weekendColors[0]).not.toBe(weekendColors[6]);
+  const expectSelectorSpacing = async () => {
+    const fields = await picker.locator('.date-picker-select-field').evaluateAll(elements => elements.map(element => {
+      const select = element.querySelector('select')!;
+      const icon = element.querySelector('svg')!;
+      const rect = select.getBoundingClientRect();
+      const arrow = icon.getBoundingClientRect();
+      const style = getComputedStyle(select);
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d')!;
+      context.font = style.font;
+      return { left: rect.left, right: rect.right, width: rect.width, arrowInset: rect.right - arrow.right,
+        contentWidth: rect.width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) - 2,
+        textWidth: context.measureText(select.selectedOptions[0].text).width,
+        customArrow: style.appearance === 'none', iconIgnoresTouches: getComputedStyle(icon).pointerEvents === 'none' };
+    }));
+    for (const field of fields) {
+      expect(field.arrowInset).toBeGreaterThanOrEqual(10);
+      expect(field.contentWidth).toBeGreaterThanOrEqual(field.textWidth);
+      expect(field.customArrow).toBe(true);
+      expect(field.iconIgnoresTouches).toBe(true);
+    }
+    expect(fields[0].right).toBeLessThan(fields[1].left);
+  };
+  await expectSelectorSpacing();
+  if (info.project.name === 'mobile') {
+    await page.setViewportSize({ width: 320, height: 844 });
+    await expectSelectorSpacing();
+    await page.setViewportSize({ width: 390, height: 844 });
+  }
   await capture('datepicker');
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: '日記一覧に戻る', exact: true }).click();

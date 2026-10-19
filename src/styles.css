@@ -14,6 +14,9 @@
   --accent: #3f5846;
   --accent-light: #e6ece2;
   --danger: #9e4037;
+  --weekday-ink: #58715c;
+  --weekday-sunday: #98615e;
+  --weekday-saturday: #526f86;
   --keyboard-inset: 0px;
   color-scheme: light;
 }
@@ -546,6 +549,15 @@ button:hover:not(:disabled) {
   font-weight: 400;
   white-space: nowrap;
 }
+.weekday-tone {
+  color: var(--weekday-ink);
+}
+.weekday-tone-0 {
+  color: var(--weekday-sunday);
+}
+.weekday-tone-6 {
+  color: var(--weekday-saturday);
+}
 .editor-surface {
   background: var(--paper);
   border: 1px solid var(--line);
@@ -958,27 +970,36 @@ button:hover:not(:disabled) {
   gap: 6px;
 }
 .date-picker-month-selects {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(96px, 114px) minmax(78px, 86px);
   justify-content: center;
   gap: 7px;
   min-width: 0;
 }
+.date-picker-select-field {
+  position: relative;
+  min-width: 0;
+}
+.date-picker-select-field > svg {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+}
 .date-picker-select {
+  appearance: none;
+  width: 100%;
   min-height: 44px;
   min-width: 0;
-  padding: 6px 8px;
+  padding: 6px 36px 6px 10px;
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--paper);
   color: var(--ink);
   font-size: 14px;
   cursor: pointer;
-}
-.date-picker-year {
-  width: 110px;
-}
-.date-picker-month {
-  width: 76px;
 }
 .date-picker-weekdays {
   display: grid;
@@ -1032,7 +1053,7 @@ button:hover:not(:disabled) {
 .date-picker-footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 12px;
   margin-top: 10px;
   padding-top: 8px;
@@ -1046,10 +1067,14 @@ button:hover:not(:disabled) {
   font-size: 14px;
   font-weight: 600;
 }
-.date-picker-hint {
-  font-size: 12px;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
+@media (max-width: 360px) {
+  .date-picker-dialog {
+    padding: 12px;
+  }
+  .date-picker-month-nav,
+  .date-picker-month-selects {
+    gap: 4px;
+  }
 }
 .dialog p {
   font-size: 14px;
@@ -1185,7 +1210,7 @@ button:hover:not(:disabled) {
   .sidebar {
     position: static;
     width: 100%;
-    padding: 10px 20px 0;
+    padding: 10px 0 0;
     border-right: 0;
     border-bottom: 1px solid var(--line);
     background: #edf0e8;
@@ -1196,11 +1221,11 @@ button:hover:not(:disabled) {
   }
   .brand {
     font-size: 23px;
-    margin: 0;
+    margin: 0 0 0 20px;
     gap: 5px;
   }
   .today-button {
-    margin: 0;
+    margin: 0 20px 0 0;
     width: auto;
     padding: 8px 12px;
     font-size: 12px;
@@ -1216,7 +1241,7 @@ button:hover:not(:disabled) {
     grid-column: 1/-1;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
+    gap: 0;
   }
   .nav-item {
     border-radius: 0;
@@ -1230,6 +1255,9 @@ button:hover:not(:disabled) {
   }
   .nav-item svg {
     width: 16px;
+  }
+  .nav-item:focus-visible {
+    outline-offset: -3px;
   }
   .nav-item.active {
     background: transparent;

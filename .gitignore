@@ -25,3 +25,4 @@ __pycache__/
 *.key
 .agents/skills/
 .impeccable/review/
+.codex-remote-attachments/

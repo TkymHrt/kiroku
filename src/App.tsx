@@ -77,6 +77,8 @@ const stateLabels: Record<SaveStatus, string> = {
   error: "保存できていません",
 };
 const dateObject = (date: string) => new Date(`${date}T12:00:00+09:00`);
+const weekdayTone = (date: string) =>
+  `weekday-tone weekday-tone-${dateObject(date).getUTCDay()}`;
 const prettyDate = (
   date: string,
   options: Intl.DateTimeFormatOptions = {
@@ -1025,7 +1027,7 @@ export default function App() {
                         </span>
                         <span className="row-date">
                           <span>
-                            <span className="weekday">
+                            <span className={`weekday ${weekdayTone(item.date)}`}>
                               {prettyDate(item.date, { weekday: "long" })}
                             </span>
                             {item.date === tokyoToday() && (
@@ -1110,7 +1112,9 @@ export default function App() {
                     />
                   </h1>
                   <span className="diary-weekday">
-                    {prettyDate(date, { weekday: "short" })}
+                    <span className={weekdayTone(date)}>
+                      {prettyDate(date, { weekday: "short" })}
+                    </span>
                     {date === tokyoToday() ? " · 今日" : ""}
                   </span>
                 </div>
