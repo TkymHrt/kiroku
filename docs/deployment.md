@@ -56,11 +56,21 @@ PCのMicrosoft Edgeで本人のSSOを使い実画面を表示した。架空日�
 
 スマートフォンのナビ3項目を等幅・中央揃えにし、Markdownの単改行をプレビューでも表示する修正を公開した。本文の保存形式は変えず、DBの新規migrationはない。
 
-Void CLIの通常のstaged deployがreadiness確認・activationまで成功し、公開中のWorker Versionは`880ece18-fd9a-4c8d-94da-a63a100cbfb3`。Accessで保護されたreadinessには短期の本人JWTを`CF_ACCESS_TOKEN`へ、送信先の明示に`CLOUDFLARE_WORKERS_SUBDOMAIN`を同じdeployプロセスへ渡した。具体的な手順は[運用資料](operations.md)を参照する。
+Void CLIの通常のstaged deployがreadiness確認・activationまで成功し、この更新時のWorker Versionは`880ece18-fd9a-4c8d-94da-a63a100cbfb3`。Accessで保護されたreadinessには短期の本人JWTを`CF_ACCESS_TOKEN`へ、送信先の明示に`CLOUDFLARE_WORKERS_SUBDOMAIN`を同じdeployプロセスへ渡した。具体的な手順は[運用資料](operations.md)を参照する。
 
 独自ドメインと旧workers.devの両方で、配信されたmain JS・CSS・MarkdownPreview JSがローカルbuildとバイト単位で一致した。独自ドメインのHTML・session・一覧・JSON出力は認証付きでHTTP 200、`no-store`・CSPを含む8ヘッダーを直接確認した。匿名の上記8経路はすべてAccessへ302。本番のモバイル相当表示でもナビ3項目の等幅・高さ44pxを確認した。
 
 型チェック、単体91件、Workers連携4件、E2E40件、本番buildが成功。320px/390px幅のナビ、段落・コード・リスト・同名チェック項目と保存ソースの保持を含む。Android実機確認とは区別する。
+
+## 同日の追加UI調整
+
+ナビを画面端から端まで隙間なく3分割し、表示・背景・下線・押下領域を各1/3に揃えた。日付選択の年/月は矢印を右12pxに配置し、下部の重複する今日の日付を削除した。一覧・編集・カレンダーの曜日には共通の平日/日曜/土曜の色を付けた。
+
+コードcommit `7fc25c1`をVoidで公開し、Worker Version `9058adbc-8d40-4705-905d-12f5c87e11cc`がliveであることを確認した。独自ドメイン・旧workers.devの配信アセットはbuildとバイト一致し、匿名8経路のAccess保護も維持されている。
+
+認証済みの隔離したPlaywrightブラウザで本番を読み取り検証した。390px幅のナビは`0–130 / 130–260 / 260–390px`、高さ44pxで、各領域両端のhit判定が一致した。矢印の右余白12px、曜日3色、footerが「今日」のみであることも確認した。書き込みリクエストは0件。端末内の画面証跡には日記本文を含めていない。
+
+公開前は単体91件・Workers連携4件・型チェック・build・E2E40件が成功し、フォーカス調整後の関連2ケースも成功した。320px/390pxの押下領域と年/月の文字の収まりを含む。詳細は[UI記録](ui-refinement.md)を参照する。
 
 ## 残る確認
 

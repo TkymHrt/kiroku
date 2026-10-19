@@ -60,7 +60,7 @@ Void/cfが対応しない操作だけWranglerを例外使用できる。SQL expo
 bunx wrangler d1 export DATABASE_NAME --remote --output 'X:/Encrypted/KirokuBackup/diary-20261018-before-change.sql'
 ```
 
-初回は架空の日記で読み書き・ゴミ箱・復元・完全削除を確認し、確認後の本番日記件数は0件だった。JSONを含む詳細機能はローカル自動テストで確認しており、本番での確認範囲とは区別する。観測ログは無効に設定した。2026-10-19のUI改修公開後、独自ドメインと旧workers.devのHTML・main JS・CSS・MarkdownPreview JSがローカルbuildとバイト一致した。独自ドメインでは本人JWTによる4経路（`/`・`/api/session`・`/api/diaries`・`/api/export`）のHTTP 200、`no-store`・CSPを含むセキュリティヘッダー8項目、匿名8経路のAccessへの302を再確認した。本番390px幅でもナビ3項目の同幅と高さ44pxを確認した。公開versionは`880ece18-fd9a-4c8d-94da-a63a100cbfb3`。
+初回は架空の日記で読み書き・ゴミ箱・復元・完全削除を確認し、確認後の本番日記件数は0件だった。JSONを含む詳細機能はローカル自動テストで確認しており、本番での確認範囲とは区別する。観測ログは無効に設定した。2026-10-19のUI改修公開後、独自ドメインと旧workers.devのHTML・main JS・CSS・MarkdownPreview JSがローカルbuildとバイト一致した。独自ドメインでは本人JWTによる4経路（`/`・`/api/session`・`/api/diaries`・`/api/export`）のHTTP 200、`no-store`・CSPを含むセキュリティヘッダー8項目、匿名8経路のAccessへの302を再確認した。本番390px幅でもナビ3項目の同幅と高さ44pxを確認した。この更新時のversionは`880ece18-fd9a-4c8d-94da-a63a100cbfb3`。最新の追加公開は[公開記録](deployment.md)を参照する。
 
 ### ドメインと旧URLの下書き
 

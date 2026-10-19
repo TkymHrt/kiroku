@@ -9,6 +9,9 @@ colors:
   surface: "#f5f6f2"
   ink: "#29332d"
   muted: "#637064"
+  weekday-ink: "#58715c"
+  weekday-sunday: "#98615e"
+  weekday-saturday: "#526f86"
   line: "#dce1d8"
   sidebar: "#edf0e8"
   nav-selected: "#dfe6d9"
@@ -190,6 +193,7 @@ The palette uses a forest primary family and green-tinted neutrals, with functio
 
 - **Saved green** (`state-saved`), **local ochre** (`state-local`), **busy blue-grey** (`state-busy`), and **problem red-brown** (`state-problem`) distinguish synchronization states alongside an icon and text.
 - **Danger** (`danger`) marks destructive action text. Warning and danger surface/ink/line families frame actionable notices; the conflict panel uses its own warm paper treatment.
+- **Weekdays:** `weekday-ink` is green for Monday–Friday, `weekday-sunday` is muted red, and `weekday-saturday` is muted blue. List labels, the editor's short weekday, and calendar weekday headings share these colors. Each has at least 4.60:1 contrast on paper and the page surface; day names remain visible alongside the color.
 
 **The Explicit Status Rule.** Pair save-state color with an icon and the actual Japanese state label. Preserve the distinction between 端末保存済み and 保存済み.
 
@@ -223,7 +227,7 @@ Spacing is a set of observed, task-specific steps, not a strict arithmetic scale
 | --- | --- |
 | At or above 1450px | Standard content retains 28px top padding; diary retains 22px top padding. |
 | At or below 1000px | Navigation width and workspace offset become 202px; content padding becomes 24px 30px 48px, with diary top padding 18px. |
-| At or below 700px | Navigation becomes a full-width top grid; the three links share equal-width columns with 8px gaps and the sidebar footer disappears. Each link has 10px vertical / 8px horizontal padding and centered contents. Workspace offset becomes zero. Standard content padding is 12px 20px 36px; diary content is 8px 16px 85px. Date rows use 12px 4px padding and a 74px minimum height. |
+| At or below 700px | Navigation spans the viewport edge to edge with three equal-width columns and no gaps or outer horizontal padding. Each link has 10px vertical / 8px horizontal padding and centered contents. The brand and today action retain 20px side insets, and the sidebar footer disappears. Workspace offset becomes zero. Standard content padding is 12px 20px 36px; diary content is 8px 16px 85px. Date rows use 12px 4px padding and a 74px minimum height. |
 
 While editing on mobile, the navigation row hides and the identity band compacts. The formatting toolbar is fixed across the viewport above `--keyboard-inset`, which the editor updates from `visualViewport`; safe-area bottom padding is added. Its eight buttons share the width, each with a (42px) height and (55px) maximum width. Desktop formatting remains a sticky row at the editor's bottom. Preserve the content bottom clearance needed by this toolbar.
 
@@ -245,7 +249,7 @@ Use stroke SVG geometry for functional icons, as the implementation does through
 
 Familiar, compact controls with a clear action hierarchy. Primary buttons use forest with paper text; secondary buttons use paper, graphite, and a one-pixel divider-color border. Both use the frontmatter padding and a (44px) minimum height. The compact variant is (38px) minimum height with (6px 12px) padding. Text actions have a (36px) minimum height. Disabled buttons use (0.4) opacity and the default cursor.
 
-Hover changes color over (0.15s); primary hover deepens forest, secondary hover uses (`#eef1ea`), and text actions use the pale accent. Keyboard focus on buttons, links, inputs, and textareas is an accent outline (2px) with a (4px) offset. Selects use the same outline with a (3px) offset; calendar days tighten it to (1px). Do not copy the editor's removed CodeMirror container outline onto other controls.
+Hover changes color over (0.15s); primary hover deepens forest, secondary hover uses (`#eef1ea`), and text actions use the pale accent. Keyboard focus on buttons, links, inputs, and textareas is an accent outline (2px) with a (4px) offset. Selects use the same outline with a (3px) offset; calendar days tighten it to (1px). Mobile navigation uses an inward (-3px) outline offset so focus remains visible at the viewport edges. Do not copy the editor's removed CodeMirror container outline onto other controls.
 
 ### Today marker
 
@@ -259,15 +263,15 @@ Merge and copy textareas use a fine border, (13px) padding, (16px) type, and (1.
 
 The list has one 日付からひらく trigger. Selecting a calendar day opens that day's diary immediately; there is no second open action. The editor uses the same chooser in a compact `YYYY/MM/DD` trigger. Trash has no date jump; its optional ゴミ箱について disclosure holds restoration and deletion guidance.
 
-The local modal calendar uses Japanese year and month selects, a stable six-week day grid, previous/next month actions, and a 今日 shortcut. The year select centers a window of up to (201) years on the displayed year, bounded to (1–9999). Selecting a year recenters that window, so distant dates remain reachable without a full-range menu.
+The local modal calendar uses native Japanese year and month selects, a stable six-week day grid, previous/next month actions, and a 今日 shortcut. Each select retains the native option menu while its wrapper positions a Lucide chevron (12px) from the right edge; (36px) right padding keeps the label clear of the icon. The year select centers a window of up to (201) years on the displayed year, bounded to (1–9999). Selecting a year recenters that window, so distant dates remain reachable without a full-range menu. The footer contains only the 今日 action, without a repeated current-date label.
 
-The trigger uses paper, a fine border, forest text, the frontmatter padding, and a (44px) minimum height. Its compact editor variant is transparent, hides the leading calendar icon, and uses the diary-date type role. The popup uses the frontmatter width and padding with a maximum height of `calc(100dvh - 32px)` and internal overflow. Year/month selects have (14px) text, (44px) minimum height, and widths of (110px) and (76px). Month and close buttons are (44px) square; day cells have a (46px) minimum height and day buttons are up to (44px) square. Selection uses forest fill and paper text; today has a forest border; dates outside the displayed month use muted text.
+The trigger uses paper, a fine border, forest text, the frontmatter padding, and a (44px) minimum height. Its compact editor variant is transparent, hides the leading calendar icon, and uses the diary-date type role. The popup uses the frontmatter width and padding with a maximum height of `calc(100dvh - 32px)` and internal overflow. Year/month selects have (14px) text, (44px) minimum height, and flexible widths of (96–114px) and (78–86px). At or below (360px), dialog padding becomes (12px), and month-navigation / select gaps become (4px), keeping the controls within a (320px) viewport. Month and close buttons are (44px) square; day cells have a (46px) minimum height and day buttons are up to (44px) square. Selection uses forest fill and paper text; today has a forest border; dates outside the displayed month use muted text.
 
 Opening focuses the selected day. Arrow keys move by day or week; Home/End move to the week's edges; Page Up/Down move a month, or a year with Shift. Escape, the close action, or the backdrop cancels; closing restores trigger focus. Each day has its full Japanese date and weekday as its accessible name, selection uses `aria-selected`, and today's date uses `aria-current="date"`. Native modal behavior contains focus while open.
 
 ### Navigation and diary rows
 
-Desktop links have a (46px) minimum height, modest rounding, and tonal selection with stronger weight. At or below (700px), the three mobile links use equal-width `minmax(0, 1fr)` columns, (8px) gaps, centered contents, and (10px 8px) padding. They retain a (44px) minimum height, square corners, and a (2px) active underline. The current destination has `aria-current="page"`; diary editing keeps 日記一覧 selected. Diary rows retain a stable day-number column and a flexible weekday/status column, with status aligned to the opposite edge. Hover fills the entire row; the separating line remains the organizing device. Each row's accessible name retains its complete date.
+Desktop links have a (46px) minimum height, modest rounding, and tonal selection with stronger weight. At or below (700px), the three mobile links use equal-width `minmax(0, 1fr)` columns with no gaps or outer horizontal padding. Each hit area, hover area, and active underline spans one third of the viewport, including its edge. Contents are centered with (10px 8px) padding. The links retain a (44px) minimum height, square corners, and a (2px) active underline. The current destination has `aria-current="page"`; diary editing keeps 日記一覧 selected. Diary rows retain a stable day-number column and a flexible weekday/status column, with status aligned to the opposite edge. Hover fills the entire row; the separating line remains the organizing device. Each row's accessible name retains its complete date.
 
 ### Editor
 
