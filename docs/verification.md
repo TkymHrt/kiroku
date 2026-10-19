@@ -1,8 +1,10 @@
 # MVP受入と公開判定
 
-基準日 2026-10-18。Accessで保護した初回公開と[独自ドメインでの公開](https://kiroku.tkymhrt.dpdns.org/)は完了した。本人のMFA有効化もCloudflare APIで確認した。`未確認`は失敗とも成功とも扱わず、自動テストと実機/本番の確認を区別する。実データの利用開始前に残る必須項目の証跡を揃える。
+初回基準日 2026-10-18、更新確認 2026-10-19。Accessで保護した初回公開と[独自ドメインでの公開](https://kiroku.tkymhrt.dpdns.org/)は完了した。本人のMFA有効化もCloudflare APIで確認した。`未確認`は失敗とも成功とも扱わず、自動テストと実機/本番の確認を区別する。実データの利用開始前に残る必須項目の証跡を揃える。
 
 実行済みの検証は[local-test-results.md](local-test-results.md)と[公開記録](deployment.md)にまとめた。PC/390px相当のEdge Chromiumで、ソース固定後のE2E40ケースが単一実行ですべて成功した。Vitest86件、公式Workers連携4件、ビルドも成功した。実D1復元と本人SSOでの本番操作も確認したが、Android実機の合格を意味しない。
+
+2026-10-19の更新では、プレビュー回帰5件を加えた単体91件、Workers連携4件、E2E40件、型チェック・buildが成功した。スマホナビの等幅と単改行プレビューを本番へ反映し、Access保護後の再deploy、配信アセット一致、認証後ヘッダーも直接確認した。
 
 | # | 要件・確認内容 | 検証方法/期待する証跡 | 状態 |
 |---|---|---|---|
@@ -19,7 +21,7 @@
 | 11 | 未同期コピー/Markdown/JSON | offline本文をClipboard/Blobで全文退避、見出し追加なし。JSONはD1全件＋ゴミ箱、purge/端末だけの下書きを除外。ページ取得の途中変更はEXPORT_CHANGEDで中止してやり直す。Android保存先/日本語ファイルを実機確認。 | Androidファイル保存未確認 |
 | 12 | 1,000,000byte境界/超過保護/再試行 | 日本語/emojiで境界成功・超過拒否、本文保持。503/通信断/Retry-After/401/409/validationの分岐、24時間警告、IDB失敗退避。 | 自動テスト結果は実行ログ参照 |
 | 13 | 実D1で約1MB SQL export/復元/一致 | `python scripts/backup_restore.py remote-proof --run-remote`。新規2つの一時D1、fake1MB本文、SQL export→空D1分割restore、全表digest一致、epoch回転、cleanup成功。 | **成功、[実D1証跡](remote-backup-proof.json)** |
-| 14 | 本番Access/読み書き/削除/ログ | 匿名8経路拒否と本人SSOを確認。架空日記の作成/保存/ゴミ箱/復元/完全削除後、日記件数0。観測ログ無効。 | 基本smoke成功。本番認証後ヘッダーの直接観測は未確認 |
+| 14 | 本番Access/読み書き/削除/ログ | 初回は匿名8経路拒否と本人SSO、架空日記の作成/保存/ゴミ箱/復元/完全削除後に日記件数0を確認。観測ログ無効。10/19は更新公開後の認証付き4経路と8ヘッダーも直接確認。 | 基本smokeと認証後ヘッダー確認成功 |
 
 ## 既にある復元の証跡
 
@@ -41,5 +43,6 @@
 | 1MB実D1 restore | 2026-10-18 | Cloudflareの一時D1 2件、架空データ | 全表/本文一致、index復元、epoch回転、両DB削除成功。[証跡](remote-backup-proof.json) |
 | 復旧後の端末下書き停止 | — | — | 実D1復元時のepoch回転は成功。Time Travel相当の復旧後に各端末の未同期下書きが停止する実機確認は未実施。本番DBを復元試験に使わない |
 | 本番初回smoke/log設定 | 2026-10-18 | PC Microsoft Edge、本人SSO | 作成→保存済み→ゴミ箱→復元→再ゴミ箱→完全削除。D1日記件数0、観測ログ無効。[公開記録](deployment.md) |
+| Access保護後の更新公開/ヘッダー | 2026-10-19 | Void CLI、本人JWT、PC Microsoft Edge | 再deploy成功、両originの配信アセット一致、独自ドメインの認証付き4経路200/8ヘッダー、匿名8経路302、本番モバイル幅でナビ等幅を確認 |
 
-本番に実データを入れる前に未確認項目を確認し、上表を更新する。障害運用としての本番Time Travel巻戻し手順は未実施であり、受入試験のために本番DBを巻き戻さない。Application / Policy sessionは168時間、共通Global sessionは他アプリへの影響を避けるため未変更。HTML/JSのヘッダー8項目は標準MiniflareのASSETS配信で一致し、本番の認証後応答を直接観測した結果とは区別する。旧URLの端末下書きは新URLへ自動移行されないため、旧URLでの同期完了かコピー・Markdown保存による退避を確認する。ログやスクリーンショットに実際の日記本文・JWTを含めない。
+本番に実データを入れる前に未確認項目を確認し、上表を更新する。障害運用としての本番Time Travel巻戻し手順は未実施であり、受入試験のために本番DBを巻き戻さない。Application / Policy sessionは168時間、共通Global sessionは他アプリへの影響を避けるため未変更。ヘッダー8項目は初回の標準Miniflare検証に加え、10/19に本番の認証後HTML/APIでも直接確認した。旧URLの端末下書きは新URLへ自動移行されないため、旧URLでの同期完了かコピー・Markdown保存による退避を確認する。ログやスクリーンショットに実際の日記本文・JWTを含めない。

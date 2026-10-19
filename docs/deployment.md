@@ -52,13 +52,21 @@ PCのMicrosoft Edgeで本人のSSOを使い実画面を表示した。架空日�
 
 型チェック・単体テスト86件・公式Workers連携4件・ビルドが成功した。ソース固定後のE2E40件も単一実行ですべて成功した。標準MiniflareのASSETS配信でHTML/JSのセキュリティヘッダー8項目の一致を確認したが、本番での認証後応答を直接観測した結果ではない。[検証結果](local-test-results.md)も参照。
 
+## 更新公開（2026-10-19）
+
+スマートフォンのナビ3項目を等幅・中央揃えにし、Markdownの単改行をプレビューでも表示する修正を公開した。本文の保存形式は変えず、DBの新規migrationはない。
+
+Void CLIの通常のstaged deployがreadiness確認・activationまで成功し、公開中のWorker Versionは`880ece18-fd9a-4c8d-94da-a63a100cbfb3`。Accessで保護されたreadinessには短期の本人JWTを`CF_ACCESS_TOKEN`へ、送信先の明示に`CLOUDFLARE_WORKERS_SUBDOMAIN`を同じdeployプロセスへ渡した。具体的な手順は[運用資料](operations.md)を参照する。
+
+独自ドメインと旧workers.devの両方で、配信されたmain JS・CSS・MarkdownPreview JSがローカルbuildとバイト単位で一致した。独自ドメインのHTML・session・一覧・JSON出力は認証付きでHTTP 200、`no-store`・CSPを含む8ヘッダーを直接確認した。匿名の上記8経路はすべてAccessへ302。本番のモバイル相当表示でもナビ3項目の等幅・高さ44pxを確認した。
+
+型チェック、単体91件、Workers連携4件、E2E40件、本番buildが成功。320px/390px幅のナビ、段落・コード・リスト・同名チェック項目と保存ソースの保持を含む。Android実機確認とは区別する。
+
 ## 残る確認
 
 - Android Chrome実機での日本語IME、キーボード直上ツールバー、コピー/Markdownファイル保存。
 - 別アカウントによる実ログインの拒否。
 - 実Access期限切れ後の下書き保持・再認証・競合確認。
 - Time Travel相当の復旧後に各端末の未同期下書きが停止する実機確認。本番DBを復元試験に使わない。
-- 本番での認証後HTML/API応答ヘッダーの直接確認。
-- Access保護後のCLI再deploy。readiness確認に短期の本人トークンを`CF_ACCESS_TOKEN`として渡す必要があり、`cf access login`等による取得を含む手順は未検証。
 
 実データの利用開始前に[受入表](verification.md)の残る項目を確認する。障害運用としての本番Time Travel巻戻し手順は未実施であり、上記の受入確認とは区別する。更新・バックアップ・復旧の手順は[運用資料](operations.md)を参照。

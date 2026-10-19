@@ -207,7 +207,7 @@ The hierarchy uses moderate weight changes and generous line spacing. Source hea
 - **Diary date:** `diary-date` defines the compact year-first date trigger at every viewport size. The chooser displays `YYYY/MM/DD`, alongside a quieter short weekday and, when applicable, 今日.
 - **Section title:** `section`; settings and conflict titles use (17px), reducing to (16px) and (15px) respectively on mobile.
 - **Source:** `source`; fixed (16px) with (1.95) line-height on every viewport, including Markdown headings. The editor inherits the application font rather than switching the whole document to monospace.
-- **Preview:** `preview`; rendered heading sizes are (27px), (22px), and (18px), with (1.6) line-height. Preview paragraphs use vertical margins of (12px).
+- **Preview:** `preview`; rendered heading sizes are (27px), (22px), and (18px), with (1.6) line-height. Preview paragraphs use vertical margins of (12px). A single source newline renders as a visible line break; blank lines retain paragraph separation. This display rule does not change the saved Markdown source.
 - **Controls and copy:** `label` and `label-small`; most supporting prose is (12–14px), with settings text capped at (68ch).
 - **Save status:** `status` uses (11px) in rows on desktop and mobile; the diary heading uses (12px). Byte/footer metadata is (10px), reducing to (9px) on mobile; these small values describe the current build, not a new minimum text-size standard.
 
@@ -223,7 +223,7 @@ Spacing is a set of observed, task-specific steps, not a strict arithmetic scale
 | --- | --- |
 | At or above 1450px | Standard content retains 28px top padding; diary retains 22px top padding. |
 | At or below 1000px | Navigation width and workspace offset become 202px; content padding becomes 24px 30px 48px, with diary top padding 18px. |
-| At or below 700px | Navigation becomes a full-width top grid; links become a horizontal row and the sidebar footer disappears. Workspace offset becomes zero. Standard content padding is 12px 20px 36px; diary content is 8px 16px 85px. Date rows use 12px 4px padding and a 74px minimum height. |
+| At or below 700px | Navigation becomes a full-width top grid; the three links share equal-width columns with 8px gaps and the sidebar footer disappears. Each link has 10px vertical / 8px horizontal padding and centered contents. Workspace offset becomes zero. Standard content padding is 12px 20px 36px; diary content is 8px 16px 85px. Date rows use 12px 4px padding and a 74px minimum height. |
 
 While editing on mobile, the navigation row hides and the identity band compacts. The formatting toolbar is fixed across the viewport above `--keyboard-inset`, which the editor updates from `visualViewport`; safe-area bottom padding is added. Its eight buttons share the width, each with a (42px) height and (55px) maximum width. Desktop formatting remains a sticky row at the editor's bottom. Preserve the content bottom clearance needed by this toolbar.
 
@@ -267,13 +267,15 @@ Opening focuses the selected day. Arrow keys move by day or week; Home/End move 
 
 ### Navigation and diary rows
 
-Desktop links have a (46px) minimum height, modest rounding, and tonal selection with stronger weight. Mobile links are (44px) minimum height with square corners and a (2px) active underline. The current destination has `aria-current="page"`; diary editing keeps 日記一覧 selected. Diary rows retain a stable day-number column and a flexible weekday/status column, with status aligned to the opposite edge. Hover fills the entire row; the separating line remains the organizing device. Each row's accessible name retains its complete date.
+Desktop links have a (46px) minimum height, modest rounding, and tonal selection with stronger weight. At or below (700px), the three mobile links use equal-width `minmax(0, 1fr)` columns, (8px) gaps, centered contents, and (10px 8px) padding. They retain a (44px) minimum height, square corners, and a (2px) active underline. The current destination has `aria-current="page"`; diary editing keeps 日記一覧 selected. Diary rows retain a stable day-number column and a flexible weekday/status column, with status aligned to the opposite edge. Hover fills the entire row; the separating line remains the organizing device. Each row's accessible name retains its complete date.
 
 ### Editor
 
 A compact date/navigation header combines one-action return to the list or trash, the date chooser, weekday, previous/next recorded entries, and actual save state. Its grid uses (40px) action columns, a flexible date column, and (8px) column gaps, reducing to (6px) on mobile. Save state occupies the line beneath the date in the same header. The group ends (12px) before the writing panel, or (10px) on mobile.
 
 The writing panel is paper with a thin border. Its tab/action bar is (57px) tall, or (48px) on mobile. Source and preview tabs use a (2px) accent underline and weight (600) for selection; the bar also holds compact icon actions. Source text has (28px) side insets, reduced to (17px) on mobile, and a (360px) minimum host height. Preview uses (27px 29px 55px) padding, reduced to (21px 18px 40px).
+
+Preview preserves visible single line breaks through `remark-breaks`, so one Enter in ordinary prose starts a new display line. It does not insert trailing spaces or rewrite source text; editing, saving, copying, and Markdown download retain the original source. GFM lists, task markers, paragraphs, and code keep their existing structure.
 
 The formatting toolbar uses real labelled SVG buttons; each has a Japanese accessible name. During IME composition the toolbar disables, and pointer-down preserves the current editor selection. Text selection uses the selection tone; caret and cursor use forest. CodeMirror's container outline is intentionally removed; the text cursor and selection communicate editing position.
 

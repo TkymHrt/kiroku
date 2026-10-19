@@ -1,6 +1,6 @@
 # 開発・公開・復旧手順
 
-基準日 2026-10-18。同日にVoid CLIでWorkers / D1へ初回公開し、本人のAccessログインと架空データの保存・削除を確認した。現在の公開先は[kiroku.tkymhrt.dpdns.org](https://kiroku.tkymhrt.dpdns.org/)。本人のMFA有効化と実D1での1MBバックアップ復元も確認した。設定と確認範囲は[公開記録](deployment.md)、残る受入項目は[受入表](verification.md)を参照する。
+更新日 2026-10-19。2026-10-18にVoid CLIでWorkers / D1へ初回公開し、本人のAccessログインと架空データの保存・削除を確認した。現在の公開先は[kiroku.tkymhrt.dpdns.org](https://kiroku.tkymhrt.dpdns.org/)。本人のMFA有効化と実D1での1MBバックアップ復元も確認した。設定と確認範囲は[公開記録](deployment.md)、残る受入項目は[受入表](verification.md)を参照する。
 
 ## ローカル開発
 
@@ -44,7 +44,13 @@ bunx void deploy --platform cloudflare
 
 Voidがbuild、リソース確保、migration、deployを管理する。生成された`void.config.ts`/`void.lock.json`は必要に応じてバージョン管理する。`cf init/dev/build/deploy`で別構成を追加しない。課金が必要な選択肢を有効にする前は本人へ確認する。CI/CDや常設クラウド検証環境は作らない。[Void deployment](https://void.cloud/guide/deployment)
 
-Access保護後の再deployでは、保護されたreadinessへのアクセスに短期の本人トークンを`CF_ACCESS_TOKEN`としてdeployプロセスへ渡す必要がある。`cf access login`等による取得を含む再deploy手順は未検証。トークンをGit・コマンド引数・ログへ記録せず、本人限定policyを緩めて通過させない。VoidのCloudflareガイドのAccess認証手順を確認し、再deploy成功後に本書へ実行結果を追記する。
+Access保護後の再deployでは、保護されたreadinessへのアクセスに短期の本人トークンを`CF_ACCESS_TOKEN`としてdeployプロセスへ渡す。2026-10-19に、標準の`cf access login`からブラウザで本人承認を行い、JWT取得からVoidの通常staged deployまで成功した。`CLOUDFLARE_WORKERS_SUBDOMAIN`も指定し、readinessの候補versionId照合後にactivateされた。
+
+1. `cf access login`の標準出力を表示せずに受け取り、ブラウザに開いた認証要求を本人として承認する。
+2. 得られた短期JWTを`CF_ACCESS_TOKEN`として当該deployプロセスだけへ渡し、Voidでdeployする。JWTを引数や公開資料へ埋め込まない。
+3. 成功・失敗にかかわらず、終了後にプロセスの環境変数からトークンを除く。トークンをGit・ログへ記録せず、本人限定policyを緩めて通過させない。
+
+preview URLを無効にしたこの構成では、トークン送信先を明示するため、同じdeployプロセスへ`CLOUDFLARE_WORKERS_SUBDOMAIN=23-h-takayama-nutfes`も渡す。未指定ではVoidの送信先確認でreadinessが失敗するため、previewやAccess policyを変更して回避しない。この値は公開URLのsubdomainであり秘密情報ではない。
 
 追加のリソース操作は`cf`を優先する。`bunx cf cli search "export D1 database"`、該当`--help`/`bunx cf schema ...`、`--dry-run`で現行の引数と送信先を確かめる。cfはbetaでNode 22以上が必要。アプリの設定・migration管理はVoidに統一する。[公式cf CLI](https://github.com/cloudflare/cf/blob/main/packages/cli/README.md)
 
@@ -54,7 +60,7 @@ Void/cfが対応しない操作だけWranglerを例外使用できる。SQL expo
 bunx wrangler d1 export DATABASE_NAME --remote --output 'X:/Encrypted/KirokuBackup/diary-20261018-before-change.sql'
 ```
 
-初回は架空の日記で読み書き・ゴミ箱・復元・完全削除を確認し、確認後の本番日記件数は0件だった。匿名8経路のAccessへのリダイレクトも確認した。JSONを含む詳細機能はローカル自動テストで確認しており、本番での確認範囲とは区別する。観測ログは無効に設定した。HTML/JSのセキュリティヘッダー8項目は標準MiniflareのASSETS配信で一致を確認したが、本番での認証後応答を直接観測した結果ではない。
+初回は架空の日記で読み書き・ゴミ箱・復元・完全削除を確認し、確認後の本番日記件数は0件だった。JSONを含む詳細機能はローカル自動テストで確認しており、本番での確認範囲とは区別する。観測ログは無効に設定した。2026-10-19のUI改修公開後、独自ドメインと旧workers.devのHTML・main JS・CSS・MarkdownPreview JSがローカルbuildとバイト一致した。独自ドメインでは本人JWTによる4経路（`/`・`/api/session`・`/api/diaries`・`/api/export`）のHTTP 200、`no-store`・CSPを含むセキュリティヘッダー8項目、匿名8経路のAccessへの302を再確認した。本番390px幅でもナビ3項目の同幅と高さ44pxを確認した。公開versionは`880ece18-fd9a-4c8d-94da-a63a100cbfb3`。
 
 ### ドメインと旧URLの下書き
 
