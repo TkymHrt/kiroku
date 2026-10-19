@@ -1,4 +1,5 @@
 import Markdown from "react-markdown";
+import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 import { safeUrl } from "../lib/formatting";
 
@@ -59,7 +60,7 @@ export function MarkdownPreview({
         </p>
       )}
       <Markdown
-        remarkPlugins={[remarkGfm, taskPositions]}
+        remarkPlugins={[remarkGfm, remarkBreaks, taskPositions]}
         urlTransform={safeUrl}
         components={{
           a: ({ node: _node, ...props }) => (

@@ -151,13 +151,19 @@ test(titles[1], async ({ page, request, diaryDate }) => {
   await page.getByRole('tab', { name: '編集', exact: true }).click();
   await source(page).press('X');
   await expect.poll(() => sourceText(page)).toBe('abXcdef');
-  await source(page).fill('- [ ] 同じ項目\n- [ ] 同じ項目');
+  const taskBody = '前文\n続き\n\n- [ ] 同じ項目\n  説明の続き\n- [ ] 同じ項目';
+  await source(page).fill(taskBody);
   await page.getByRole('tab', { name: 'プレビュー', exact: true }).click();
-  const checkboxes = page.getByLabel('日記のプレビュー').getByRole('checkbox');
+  const preview = page.getByLabel('日記のプレビュー');
+  await expect(preview.locator('br')).toHaveCount(2);
+  const checkboxes = preview.getByRole('checkbox');
   await expect(checkboxes).toHaveCount(2);
   await checkboxes.nth(1).check();
   await expect(checkboxes.nth(0)).not.toBeChecked(); await expect(checkboxes.nth(1)).toBeChecked();
-  await saved(request, diaryDate, '- [ ] 同じ項目\n- [x] 同じ項目');
+  const checkedBody = '前文\n続き\n\n- [ ] 同じ項目\n  説明の続き\n- [x] 同じ項目';
+  await saved(request, diaryDate, checkedBody);
+  await page.getByRole('tab', { name: '編集', exact: true }).click();
+  await expect.poll(() => sourceText(page)).toBe(checkedBody);
 });
 
 test(titles[2], async ({ page, context, diaryDate }) => {
@@ -357,7 +363,28 @@ test(titles[12], async ({ page, request, diaryDate }, info) => {
   await expect(navigation.getByRole('button', { name: '日記一覧', exact: true })).toHaveAttribute('aria-current', 'page');
   await expect(page.getByRole('button', { name: 'きろく 日記一覧へ', exact: true }).locator('svg')).toHaveCount(0);
   await expect(diaryRow(page, diaryDate)).toHaveCount(1);
+  const expectEqualMobileNavigation = async () => {
+    if (info.project.name !== 'mobile') return;
+    const buttons = await navigation.getByRole('button').evaluateAll(elements => elements.map(element => {
+      const bounds = element.getBoundingClientRect();
+      return { width: bounds.width, height: bounds.height, left: bounds.left, right: bounds.right,
+        contentFits: element.scrollWidth <= element.clientWidth };
+    }));
+    expect(buttons).toHaveLength(3);
+    for (const button of buttons) {
+      expect(Math.abs(button.width - buttons[0].width)).toBeLessThan(1);
+      expect(button.height).toBe(buttons[0].height);
+      expect(button.height).toBeGreaterThanOrEqual(44);
+      expect(button.contentFits).toBe(true);
+    }
+    expect(buttons[0].left).toBeGreaterThanOrEqual(16);
+    expect(buttons[2].right).toBeLessThanOrEqual(page.viewportSize()!.width - 16);
+  };
+  await expectEqualMobileNavigation();
   if (info.project.name === 'mobile') {
+    await page.setViewportSize({ width: 320, height: 844 });
+    await expectEqualMobileNavigation();
+    await page.setViewportSize({ width: 390, height: 844 });
     const firstDiary = await page.locator('.diary-row').first().boundingBox();
     expect(firstDiary?.y).toBeLessThan(220);
   }
@@ -384,11 +411,13 @@ test(titles[12], async ({ page, request, diaryDate }, info) => {
   await page.getByRole('button', { name: '日記一覧に戻る', exact: true }).click();
   await navigation.getByRole('button', { name: '設定', exact: true }).click();
   await expect(navigation.getByRole('button', { name: '設定', exact: true })).toHaveAttribute('aria-current', 'page');
+  await expectEqualMobileNavigation();
   await expect(page.getByRole('heading', { name: 'データのエクスポート', exact: true })).toBeVisible();
   await capture('settings');
   await mutate(request, diaryDate, 'trash');
   await navigation.getByRole('button', { name: 'ゴミ箱', exact: true }).click();
   await expect(navigation.getByRole('button', { name: 'ゴミ箱', exact: true })).toHaveAttribute('aria-current', 'page');
+  await expectEqualMobileNavigation();
   await expect(diaryRow(page, diaryDate)).toHaveCount(1);
   await capture('trash');
 });

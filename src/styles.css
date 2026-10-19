@@ -1214,15 +1214,17 @@ button:hover:not(:disabled) {
   }
   .sidebar nav {
     grid-column: 1/-1;
-    flex-direction: row;
-    gap: 24px;
-    padding: 0 2px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
   }
   .nav-item {
     border-radius: 0;
     border-bottom: 2px solid transparent;
+    justify-content: center;
     gap: 7px;
-    padding: 10px 2px;
+    padding: 10px 8px;
+    min-width: 0;
     font-size: 12px;
     min-height: 44px;
   }
