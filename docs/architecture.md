@@ -69,14 +69,14 @@ previewはreact-markdown＋remark-gfmで現在本文を描画し、生HTMLを実
 
 ## HTTP・公開境界
 
-| Method / path | 契約 |
-|---|---|
-| GET `/api/session` | 認証確認。本人以外へ本文を返さない。 |
-| GET `/api/diaries` | 通常/ゴミ箱一覧。`before`日付cursor、`limit`初期20（1〜100）。本文を含まないsummary。 |
-| GET `/api/diaries/:date` | `{diary, epoch, absenceToken}`。未作成はnull、ゴミ箱も状態付きで返す。absenceTokenはその日のreceiptに基づく不在世代の照合値。 |
-| POST `/api/diaries/:date` | 明示kindによる条件付き書込。create/update/trash/restore/purge。 |
-| GET `/api/diaries/:date/neighbors` | D1の有効日記の前後日。端末だけの未同期日はclient側で統合。 |
-| GET `/api/export` | `{formatVersion:1, exportedAt, epoch, snapshotToken, diaries, nextCursor}`。3件/page。継続は`after=nextCursor&snapshotToken=最初のtoken`。設定画面で1つのJSONへまとめ、内部token/cursorは出力しない。 |
+| Method / path                      | 契約                                                                                                                                                                                                  |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET `/api/session`                 | 認証確認。本人以外へ本文を返さない。                                                                                                                                                                  |
+| GET `/api/diaries`                 | 通常/ゴミ箱一覧。`before`日付cursor、`limit`初期20（1〜100）。本文を含まないsummary。                                                                                                                 |
+| GET `/api/diaries/:date`           | `{diary, epoch, absenceToken}`。未作成はnull、ゴミ箱も状態付きで返す。absenceTokenはその日のreceiptに基づく不在世代の照合値。                                                                         |
+| POST `/api/diaries/:date`          | 明示kindによる条件付き書込。create/update/trash/restore/purge。                                                                                                                                       |
+| GET `/api/diaries/:date/neighbors` | D1の有効日記の前後日。端末だけの未同期日はclient側で統合。                                                                                                                                            |
+| GET `/api/export`                  | `{formatVersion:1, exportedAt, epoch, snapshotToken, diaries, nextCursor}`。3件/page。継続は`after=nextCursor&snapshotToken=最初のtoken`。設定画面で1つのJSONへまとめ、内部token/cursorは出力しない。 |
 
 JSON error: `{ code, message, diary?, epoch?, absenceToken? }`。400は入力/日付/件数不正、401は認証要求、403は本人/CSRF拒否、409は競合/epoch変更/ID再利用/export途中変更、413は本文上限、415はContent-Type不正、503は一時障害/設定やDB準備不足。本文エラーをログへ埋めず短い一般文へ変える。
 

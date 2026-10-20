@@ -1,4 +1,4 @@
-import { defineEnv, string } from 'void/env';
+import { defineEnv, string } from "void/env";
 
 // Optional for loopback development only. Middleware fails closed in production
 // unless all three values are configured as Void production secrets.

@@ -1,7 +1,7 @@
-import { defineMiddleware } from 'void';
-import { env } from 'void/env';
-import { errorResponse } from '../server/errors';
-import { assertCsrf, authenticate, securityHeaders } from '../server/security';
+import { defineMiddleware } from "void";
+import { env } from "void/env";
+import { errorResponse } from "../server/errors";
+import { assertCsrf, authenticate, securityHeaders } from "../server/security";
 
 export default defineMiddleware(async (c, next) => {
   try {

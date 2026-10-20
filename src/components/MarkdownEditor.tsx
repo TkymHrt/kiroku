@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Annotation, EditorState, type Extension } from "@codemirror/state";
 import {
   EditorView,
@@ -7,26 +7,11 @@ import {
   highlightActiveLine,
   drawSelection,
 } from "@codemirror/view";
-import {
-  defaultKeymap,
-  history,
-  historyKeymap,
-  undo,
-  redo,
-} from "@codemirror/commands";
+import { defaultKeymap, history, historyKeymap, undo, redo } from "@codemirror/commands";
 import { markdown } from "@codemirror/lang-markdown";
 import { syntaxHighlighting, HighlightStyle } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
-import {
-  Bold,
-  Italic,
-  Heading,
-  List,
-  ListOrdered,
-  ListTodo,
-  Undo2,
-  Redo2,
-} from "lucide-react";
+import { Bold, Italic, Heading, List, ListOrdered, ListTodo, Undo2, Redo2 } from "lucide-react";
 import { formatSource, type FormatAction } from "../lib/formatting";
 
 interface Props {
@@ -70,17 +55,14 @@ const highlighting = HighlightStyle.define([
   { tag: tags.quote, color: "#637064" },
 ]);
 
-export function MarkdownEditor({
-  value,
-  onChange,
-  hidden,
-  readOnly = false,
-}: Props) {
+export function MarkdownEditor({ value, onChange, hidden, readOnly = false }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
   const change = useRef(onChange);
   const [composing, setComposing] = useState(false);
-  change.current = onChange;
+  useLayoutEffect(() => {
+    change.current = onChange;
+  }, [onChange]);
 
   useEffect(() => {
     if (!host.current) return;
@@ -103,9 +85,7 @@ export function MarkdownEditor({
       EditorView.updateListener.of((update) => {
         if (
           update.docChanged &&
-          !update.transactions.every((transaction) =>
-            transaction.annotation(externalChange),
-          )
+          !update.transactions.every((transaction) => transaction.annotation(externalChange))
         )
           change.current(update.state.doc.toString());
       }),
@@ -129,12 +109,12 @@ export function MarkdownEditor({
       editor.destroy();
       view.current = null;
     };
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- The value effect below syncs text without rebuilding CodeMirror and losing undo history.
   }, [readOnly]);
 
   useEffect(() => {
     const editor = view.current;
-    if (!editor || editor.state.doc.toString() === value || editor.composing)
-      return;
+    if (!editor || editor.state.doc.toString() === value || editor.composing) return;
     const selection = editor.state.selection.main;
     editor.dispatch({
       changes: { from: 0, to: editor.state.doc.length, insert: value },
@@ -156,10 +136,7 @@ export function MarkdownEditor({
       const inset = viewport
         ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
         : 0;
-      document.documentElement.style.setProperty(
-        "--keyboard-inset",
-        `${inset}px`,
-      );
+      document.documentElement.style.setProperty("--keyboard-inset", `${inset}px`);
     };
     viewport?.addEventListener("resize", update);
     viewport?.addEventListener("scroll", update);
@@ -202,11 +179,7 @@ export function MarkdownEditor({
     <div className="source-editor" hidden={hidden}>
       <div ref={host} className="codemirror-host" />
       {!readOnly && (
-        <div
-          className="format-toolbar"
-          role="toolbar"
-          aria-label="Markdown入力補助"
-        >
+        <div className="format-toolbar" role="toolbar" aria-label="Markdown入力補助">
           {actions.map(([action, label, Icon]) => (
             <button
               key={action}

@@ -36,17 +36,10 @@ export function shiftCalendarDay(value: string, amount: number): string {
 
 export function shiftCalendarMonth(value: string, amount: number): string {
   const { year, month, day } = dateParts(value);
-  const index = Math.max(
-    0,
-    Math.min(9999 * 12 - 1, (year - 1) * 12 + month - 1 + amount),
-  );
+  const index = Math.max(0, Math.min(9999 * 12 - 1, (year - 1) * 12 + month - 1 + amount));
   const nextYear = Math.floor(index / 12) + 1;
   const nextMonth = (index % 12) + 1;
-  return dateKey(
-    nextYear,
-    nextMonth,
-    Math.min(day, monthLength(nextYear, nextMonth)),
-  );
+  return dateKey(nextYear, nextMonth, Math.min(day, monthLength(nextYear, nextMonth)));
 }
 
 /** A stable six-week grid; null cells only occur beyond the supported YYYY date bounds. */
@@ -62,11 +55,7 @@ export function calendarDays(value: string): (string | null)[] {
   });
 }
 
-export function calendarKeyDate(
-  value: string,
-  key: string,
-  shiftKey = false,
-): string | null {
+export function calendarKeyDate(value: string, key: string, shiftKey = false): string | null {
   switch (key) {
     case "ArrowLeft":
       return shiftCalendarDay(value, -1);

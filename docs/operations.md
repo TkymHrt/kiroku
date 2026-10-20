@@ -1,6 +1,6 @@
 # 開発・公開・復旧手順
 
-更新日 2026-10-19。2026-10-18にVoid CLIでWorkers / D1へ初回公開し、本人のAccessログインと架空データの保存・削除を確認した。現在の公開先は[kiroku.tkymhrt.dpdns.org](https://kiroku.tkymhrt.dpdns.org/)。本人のMFA有効化と実D1での1MBバックアップ復元も確認した。設定と確認範囲は[公開記録](deployment.md)、残る受入項目は[受入表](verification.md)を参照する。
+更新日 2026-10-20。2026-10-18にVoid CLIでWorkers / D1へ初回公開し、本人のAccessログインと架空データの保存・削除を確認した。現在の公開先は[kiroku.tkymhrt.dpdns.org](https://kiroku.tkymhrt.dpdns.org/)。本人のMFA有効化と実D1での1MBバックアップ復元も確認した。設定と確認範囲は[公開記録](deployment.md)、残る受入項目は[受入表](verification.md)を参照する。
 
 ## ローカル開発
 
@@ -14,13 +14,15 @@ bun run dev
 
 VoidのD1開発データはローカルに置く。開発に本番の接続情報を使わない。初回に空のローカルD1へmigrationを適用する。Voidの標準手順は`bunx void db migrate`。schemaを変更したら`bunx void db generate`でmigrationを作り、生成SQLを読んで既存データへの影響を確認する。通常のschema変更を複数CLIで管理しない。[Void D1](https://void.cloud/guide/database/d1)
 
-リポジトリの`package.json`にある型検査・unit/API/E2E・buildを実行する。DB変更時は加えて次の架空データ試験を行う。
+リポジトリの `bun run check` はOxlint・Oxfmtの整形チェック・型検査・unit・Workers連携・buildを実行する。整形の適用は `bun run format`、E2Eは `bun run test:e2e` で個別に行う。Windowsでは `mise exec --` を付ける。DB変更時は加えて次の架空データ試験を行う。
 
 ```powershell
-python scripts/backup_restore.py self-test
+python scripts/backup_restore.py self-test --report test-results/local-backup-proof.json
 ```
 
 この試験は現行SQL migrationから空SQLiteを作り、1,000,000バイト本文（日本語、絵文字、CRLF、引用符）、空本文、ゴミ箱、操作履歴を入れる。SQL出力→空SQLite復元→全表digest/本文UTF-8 SHA-256比較、同じ転送処理によるパラメータ分割復元、epoch回転を検証する。SQL文上限を模擬したSQLite試験であり実D1試験ではない。本文は一時ディレクトリへ保存して終了時削除、証跡は本文を含まないJSONだけ。
+
+検証CIは `.github/workflows/ci.yml` で管理し、PR・mainへのpushで `bun run check` とこのローカル復元試験を実行する。ツールは `mise.toml`、依存関係は `bun.lock` に従う。E2Eと実Cloudflare試験はCIに含めず、本番の認証情報やリソースは使わない。整形対象からはDBの生成メタデータ、`void.lock.json`、既存のバックアップ検証証跡を除く。
 
 ## Accessの初回設定
 
@@ -42,7 +44,7 @@ bunx void connect --platform cloudflare
 bunx void deploy --platform cloudflare
 ```
 
-Voidがbuild、リソース確保、migration、deployを管理する。生成された`void.config.ts`/`void.lock.json`は必要に応じてバージョン管理する。`cf init/dev/build/deploy`で別構成を追加しない。課金が必要な選択肢を有効にする前は本人へ確認する。CI/CDや常設クラウド検証環境は作らない。[Void deployment](https://void.cloud/guide/deployment)
+Voidがbuild、リソース確保、migration、deployを管理する。生成された`void.config.ts`/`void.lock.json`は必要に応じてバージョン管理する。`cf init/dev/build/deploy`で別構成を追加しない。課金が必要な選択肢を有効にする前は本人へ確認する。検証CIからはデプロイせず、常設クラウド検証環境は作らない。[Void deployment](https://void.cloud/guide/deployment)
 
 Access保護後の再deployでは、保護されたreadinessへのアクセスに短期の本人トークンを`CF_ACCESS_TOKEN`としてdeployプロセスへ渡す。2026-10-19に、標準の`cf access login`からブラウザで本人承認を行い、JWT取得からVoidの通常staged deployまで成功した。`CLOUDFLARE_WORKERS_SUBDOMAIN`も指定し、readinessの候補versionId照合後にactivateされた。
 

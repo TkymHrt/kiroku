@@ -80,9 +80,7 @@ const conflictTitle = "別の画面で日記が変更されています";
 const recoveryTitle = "日記の保存状態を確認してください";
 
 function httpStatus(value: number): number | undefined {
-  return Number.isInteger(value) && value >= 400 && value <= 599
-    ? value
-    : undefined;
+  return Number.isInteger(value) && value >= 400 && value <= 599 ? value : undefined;
 }
 
 function issue(
@@ -122,10 +120,7 @@ function localConflictIssue(): UiError {
   };
 }
 
-export function describeError(
-  error: unknown,
-  operation: ErrorOperation,
-): UiError {
+export function describeError(error: unknown, operation: ErrorOperation): UiError {
   if (error instanceof DraftRevisionConflict) return localConflictIssue();
 
   const name = error instanceof Error ? error.name : "";
@@ -305,11 +300,7 @@ export function describeError(
       );
   }
 
-  if (
-    error instanceof TypeError ||
-    name === "AbortError" ||
-    name === "TimeoutError"
-  ) {
+  if (error instanceof TypeError || name === "AbortError" || name === "TimeoutError") {
     return issue(
       operation,
       "NETWORK_UNAVAILABLE",
@@ -370,11 +361,7 @@ export function describeDraftProblem(problem: DraftProblem): UiError {
 export function errorReport(error: UiError, operation: ErrorOperation): string {
   const code = safeCodes.has(error.code) ? error.code : "UNKNOWN_ERROR";
   const status = httpStatus(error.status ?? 0);
-  const safeTitle = [
-    ...Object.values(titles),
-    conflictTitle,
-    recoveryTitle,
-  ].includes(error.title)
+  const safeTitle = [...Object.values(titles), conflictTitle, recoveryTitle].includes(error.title)
     ? error.title
     : titles[operation];
   return [

@@ -22,9 +22,7 @@ function taskPositions() {
         node.position?.start.offset !== undefined
       ) {
         const start = node.position.start.offset;
-        const marker = source
-          .slice(start)
-          .match(/^[\t ]*(?:[-+*]|\d+[.)])\s+\[([ xX])\]/);
+        const marker = source.slice(start).match(/^[\t ]*(?:[-+*]|\d+[.)])\s+\[([ xX])\]/);
         if (marker) {
           const offset = start + marker[0].lastIndexOf("[") + 1;
           node.data = {
@@ -54,11 +52,7 @@ export function MarkdownPreview({
 }) {
   return (
     <article className="markdown-preview" aria-label="日記のプレビュー">
-      {!body && (
-        <p className="empty-preview">
-          まだ本文がありません。編集タブから記録できます。
-        </p>
-      )}
+      {!body && <p className="empty-preview">まだ本文がありません。編集タブから記録できます。</p>}
       <Markdown
         remarkPlugins={[remarkGfm, remarkBreaks, taskPositions]}
         urlTransform={safeUrl}
@@ -91,11 +85,7 @@ export function MarkdownPreview({
                   onChange={() => {
                     const at = Number(offset);
                     if (body[at - 1] === "[" && body[at + 1] === "]")
-                      onChange(
-                        body.slice(0, at) +
-                          (checked ? " " : "x") +
-                          body.slice(at + 1),
-                      );
+                      onChange(body.slice(0, at) + (checked ? " " : "x") + body.slice(at + 1));
                   }}
                 />
                 <div>{children}</div>

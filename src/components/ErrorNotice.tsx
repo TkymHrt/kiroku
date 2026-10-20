@@ -47,12 +47,7 @@ export function ErrorNotice({
         <div className="banner-actions issue-actions">
           {danger && children}
           {issue.recovery === "auth" && (
-            <a
-              className="button issue-primary"
-              href="/"
-              target="_blank"
-              rel="noopener"
-            >
+            <a className="button issue-primary" href="/" target="_blank" rel="noopener">
               ログイン画面を開く <ExternalLink size={15} />
             </a>
           )}
@@ -68,9 +63,7 @@ export function ErrorNotice({
           )}
           {!danger && children}
         </div>
-        {waiting && (
-          <p>サーバーからの案内により、再試行まで少し待っています。</p>
-        )}
+        {waiting && <p>サーバーからの案内により、再試行まで少し待っています。</p>}
         <button className="text-button issue-report" onClick={onCopyReport}>
           <Copy size={14} /> エラー情報をコピー
         </button>

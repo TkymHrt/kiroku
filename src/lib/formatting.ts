@@ -1,10 +1,4 @@
-export type FormatAction =
-  | "heading"
-  | "bullet"
-  | "number"
-  | "check"
-  | "bold"
-  | "italic";
+export type FormatAction = "heading" | "bullet" | "number" | "check" | "bold" | "italic";
 export interface FormatEdit {
   from: number;
   to: number;
@@ -62,25 +56,17 @@ export function formatSource(
     number: /^\d+\. /,
     check: /^[-+*] \[[ xX]\] /,
   };
-  const allActive = lines.every((line) =>
-    patterns[action].test(line.trimStart()),
-  );
+  const allActive = lines.every((line) => patterns[action].test(line.trimStart()));
   const changes = lines.map((line, index) => {
     const indent = line.match(/^\s*/)?.[0] ?? "";
     const rest = line.slice(indent.length);
-    const prefix =
-      rest.match(/^(?:#{1,6} |[-+*] \[[ xX]\] |[-+*] |\d+\. )/)?.[0] ?? "";
+    const prefix = rest.match(/^(?:#{1,6} |[-+*] \[[ xX]\] |[-+*] |\d+\. )/)?.[0] ?? "";
     let next = "";
     if (action === "heading") {
       const level = rest.match(/^(#{1,6}) /)?.[1].length ?? 0;
       next = level >= 3 ? "" : "#".repeat(level + 1) + " ";
     } else if (!allActive)
-      next =
-        action === "bullet"
-          ? "- "
-          : action === "number"
-            ? `${index + 1}. `
-            : "- [ ] ";
+      next = action === "bullet" ? "- " : action === "number" ? `${index + 1}. ` : "- [ ] ";
     return {
       text: indent + next + rest.slice(prefix.length),
       delta: next.length - prefix.length,
@@ -92,9 +78,7 @@ export function formatSource(
   const deltaBefore = changes
     .slice(0, beforeSelection + 1)
     .reduce((sum, line) => sum + line.delta, 0);
-  const deltaEnd = changes
-    .slice(0, endLine + 1)
-    .reduce((sum, line) => sum + line.delta, 0);
+  const deltaEnd = changes.slice(0, endLine + 1).reduce((sum, line) => sum + line.delta, 0);
   return {
     from: start,
     to: end,
@@ -105,8 +89,8 @@ export function formatSource(
 }
 
 export function safeUrl(url: string): string {
+  // oxlint-disable-next-line no-control-regex -- Strip control characters before checking the URL scheme to reject obfuscated unsafe URLs.
   const normalized = url.replace(/[\u0000-\u0020\u007f]/g, "");
-  if (/^(https?:|mailto:)/i.test(normalized) || normalized.startsWith("#"))
-    return url;
+  if (/^(https?:|mailto:)/i.test(normalized) || normalized.startsWith("#")) return url;
   return "";
 }

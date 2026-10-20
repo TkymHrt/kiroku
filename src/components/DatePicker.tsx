@@ -1,12 +1,6 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
-import {
-  CalendarDays,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  X,
-} from "lucide-react";
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { isDiaryDate, tokyoToday } from "../lib/types";
 import {
   WEEKDAYS,
@@ -49,18 +43,14 @@ export function DatePicker({
   const dialogId = useId();
   const { year, month, day } = dateParts(focusedDate);
   const days = calendarDays(focusedDate);
-  const weeks = Array.from({ length: 6 }, (_, index) =>
-    days.slice(index * 7, index * 7 + 7),
-  );
+  const weeks = Array.from({ length: 6 }, (_, index) => days.slice(index * 7, index * 7 + 7));
   const displayDate = selectedDate.replaceAll("-", "/");
 
   useEffect(() => {
     if (!open) return;
     const element = dialog.current;
     element?.showModal();
-    element
-      ?.querySelector<HTMLButtonElement>(`[data-date="${focusedDate}"]`)
-      ?.focus();
+    element?.querySelector<HTMLButtonElement>(`[data-date="${focusedDate}"]`)?.focus();
     return () => element?.close();
     // Opening always resets focusedDate first. Changing months must not reopen the dialog.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -69,9 +59,7 @@ export function DatePicker({
   useEffect(() => {
     if (!open || !moveFocus.current) return;
     moveFocus.current = false;
-    dialog.current
-      ?.querySelector<HTMLButtonElement>(`[data-date="${focusedDate}"]`)
-      ?.focus();
+    dialog.current?.querySelector<HTMLButtonElement>(`[data-date="${focusedDate}"]`)?.focus();
   }, [focusedDate, open]);
 
   function close() {
@@ -87,26 +75,12 @@ export function DatePicker({
   }
 
   function changeMonth(nextYear: number, nextMonth: number) {
-    setFocusedDate(
-      dateKey(
-        nextYear,
-        nextMonth,
-        Math.min(day, monthLength(nextYear, nextMonth)),
-      ),
-    );
+    setFocusedDate(dateKey(nextYear, nextMonth, Math.min(day, monthLength(nextYear, nextMonth))));
   }
 
   function handleCalendarKey(event: KeyboardEvent<HTMLDivElement>) {
-    if (
-      !(event.target instanceof HTMLButtonElement) ||
-      !event.target.dataset.date
-    )
-      return;
-    const next = calendarKeyDate(
-      event.target.dataset.date,
-      event.key,
-      event.shiftKey,
-    );
+    if (!(event.target instanceof HTMLButtonElement) || !event.target.dataset.date) return;
+    const next = calendarKeyDate(event.target.dataset.date, event.key, event.shiftKey);
     if (!next) return;
     event.preventDefault();
     moveFocus.current = next !== focusedDate;
@@ -178,9 +152,7 @@ export function DatePicker({
                 className="date-picker-month-button"
                 aria-label="前の月"
                 disabled={year === 1 && month === 1}
-                onClick={() =>
-                  setFocusedDate(shiftCalendarMonth(focusedDate, -1))
-                }
+                onClick={() => setFocusedDate(shiftCalendarMonth(focusedDate, -1))}
               >
                 <ChevronLeft size={20} aria-hidden="true" />
               </button>
@@ -190,9 +162,7 @@ export function DatePicker({
                     className="date-picker-select"
                     aria-label="年"
                     value={year}
-                    onChange={(event) =>
-                      changeMonth(Number(event.target.value), month)
-                    }
+                    onChange={(event) => changeMonth(Number(event.target.value), month)}
                   >
                     {calendarYears(year).map((option) => (
                       <option key={option} value={option}>
@@ -207,9 +177,7 @@ export function DatePicker({
                     className="date-picker-select"
                     aria-label="月"
                     value={month}
-                    onChange={(event) =>
-                      changeMonth(year, Number(event.target.value))
-                    }
+                    onChange={(event) => changeMonth(year, Number(event.target.value))}
                   >
                     {Array.from({ length: 12 }, (_, index) => (
                       <option key={index} value={index + 1}>
@@ -225,19 +193,14 @@ export function DatePicker({
                 className="date-picker-month-button"
                 aria-label="次の月"
                 disabled={year === 9999 && month === 12}
-                onClick={() =>
-                  setFocusedDate(shiftCalendarMonth(focusedDate, 1))
-                }
+                onClick={() => setFocusedDate(shiftCalendarMonth(focusedDate, 1))}
               >
                 <ChevronRight size={20} aria-hidden="true" />
               </button>
             </div>
             <div className="date-picker-weekdays" aria-hidden="true">
               {WEEKDAYS.map((weekday, index) => (
-                <span
-                  key={weekday}
-                  className={`weekday-tone weekday-tone-${index}`}
-                >
+                <span key={weekday} className={`weekday-tone weekday-tone-${index}`}>
                   {weekday}
                 </span>
               ))}

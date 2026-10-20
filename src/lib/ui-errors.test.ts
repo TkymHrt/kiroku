@@ -22,9 +22,7 @@ describe("plain-language error guidance", () => {
     "explains a lost connection during %s without leaking browser exception text",
     (operation, title) => {
       const result = describeError(
-        new TypeError(
-          "Failed to fetch: https://example.com/private?token=secret",
-        ),
+        new TypeError("Failed to fetch: https://example.com/private?token=secret"),
         operation,
       );
       expect(result).toMatchObject({
@@ -33,18 +31,14 @@ describe("plain-language error guidance", () => {
         recovery: "retry",
       });
       expect(result.message).toContain("インターネット接続");
-      expect(JSON.stringify(result)).not.toMatch(
-        /Failed to fetch|https:|token|secret/,
-      );
+      expect(JSON.stringify(result)).not.toMatch(/Failed to fetch|https:|token|secret/);
     },
   );
 
   it.each([401, 403])(
     "provides reauthentication for HTTP %s with the current operation title",
     (status) => {
-      expect(
-        describeError(new AppRequestError(status, "AUTH_REQUIRED"), "list"),
-      ).toMatchObject({
+      expect(describeError(new AppRequestError(status, "AUTH_REQUIRED"), "list")).toMatchObject({
         title: "一覧を読み込めませんでした",
         code: "AUTH_REQUIRED",
         recovery: "auth",
@@ -54,22 +48,26 @@ describe("plain-language error guidance", () => {
   );
 
   it("distinguishes temporary failures, limits and interrupted exports", () => {
-    expect(
-      describeError(new AppRequestError(429, "SECRET_UNKNOWN"), "export"),
-    ).toMatchObject({ code: "RATE_LIMITED", recovery: "retry", status: 429 });
-    expect(
-      describeError(new AppRequestError(503, "SERVER_ERROR"), "list"),
-    ).toMatchObject({ code: "SERVER_UNAVAILABLE", recovery: "retry" });
-    expect(
-      describeError(new AppRequestError(504, "SERVER_ERROR"), "open"),
-    ).toMatchObject({ code: "REQUEST_TIMEOUT", recovery: "retry" });
-    expect(
-      describeError(new AppRequestError(409, "EXPORT_CHANGED"), "export"),
-    ).toMatchObject({ code: "EXPORT_CHANGED", recovery: "retry" });
-    expect(
-      describeError(new AppRequestError(409, "EXPORT_CHANGED"), "export")
-        .message,
-    ).toContain("保存が終わってから");
+    expect(describeError(new AppRequestError(429, "SECRET_UNKNOWN"), "export")).toMatchObject({
+      code: "RATE_LIMITED",
+      recovery: "retry",
+      status: 429,
+    });
+    expect(describeError(new AppRequestError(503, "SERVER_ERROR"), "list")).toMatchObject({
+      code: "SERVER_UNAVAILABLE",
+      recovery: "retry",
+    });
+    expect(describeError(new AppRequestError(504, "SERVER_ERROR"), "open")).toMatchObject({
+      code: "REQUEST_TIMEOUT",
+      recovery: "retry",
+    });
+    expect(describeError(new AppRequestError(409, "EXPORT_CHANGED"), "export")).toMatchObject({
+      code: "EXPORT_CHANGED",
+      recovery: "retry",
+    });
+    expect(describeError(new AppRequestError(409, "EXPORT_CHANGED"), "export").message).toContain(
+      "保存が終わってから",
+    );
   });
 
   it.each([
@@ -87,10 +85,7 @@ describe("plain-language error guidance", () => {
   ] as const)(
     "maps the known %s %s condition to an actionable explanation",
     (status, code, recovery) => {
-      const result = describeError(
-        new AppRequestError(status, code),
-        "operation",
-      );
+      const result = describeError(new AppRequestError(status, code), "operation");
       expect(result).toMatchObject({ code, recovery, status });
       expect(result.message).toMatch(/[ぁ-んァ-ン一-龯]/);
       expect(result.message).not.toContain(code);
@@ -98,10 +93,7 @@ describe("plain-language error guidance", () => {
   );
 
   it("protects oversized text before asking the user to shorten it", () => {
-    const result = describeError(
-      new AppRequestError(413, "BODY_TOO_LARGE"),
-      "sync",
-    );
+    const result = describeError(new AppRequestError(413, "BODY_TOO_LARGE"), "sync");
     expect(result.message).toContain("1,000,000バイト");
     expect(result.message.indexOf("まず本文をコピー")).toBeLessThan(
       result.message.indexOf("本文を短く"),
@@ -110,19 +102,17 @@ describe("plain-language error guidance", () => {
   });
 
   it("distinguishes storage exhaustion and concurrent local edits from server or network failure", () => {
-    const full = describeError(
-      new DOMException("secret text", "QuotaExceededError"),
-      "storage",
-    );
+    const full = describeError(new DOMException("secret text", "QuotaExceededError"), "storage");
     expect(full).toMatchObject({
       code: "LOCAL_STORAGE_FULL",
       recovery: "retry",
     });
     expect(full.message).toContain("空き容量");
     expect(full.message).toContain("画面を閉じず");
-    expect(
-      describeError(new Error("unknown storage internals"), "storage"),
-    ).toMatchObject({ code: "LOCAL_STORAGE_UNAVAILABLE", recovery: "retry" });
+    expect(describeError(new Error("unknown storage internals"), "storage")).toMatchObject({
+      code: "LOCAL_STORAGE_UNAVAILABLE",
+      recovery: "retry",
+    });
     const conflict = describeError(new DraftRevisionConflict(null), "storage");
     expect(conflict).toMatchObject({
       code: "LOCAL_DRAFT_CHANGED",
@@ -142,16 +132,11 @@ describe("plain-language error guidance", () => {
       ).code,
     ).toBe("LOCAL_STORAGE_UNAVAILABLE");
     expect(
-      describeError(
-        new Error("保存または競合解決を完了してから操作してください。"),
-        "operation",
-      ),
+      describeError(new Error("保存または競合解決を完了してから操作してください。"), "operation"),
     ).toMatchObject({ code: "SAVE_REQUIRED", recovery: "none" });
     expect(
       describeError(
-        new Error(
-          "サーバー版が再び更新されました。新しい内容を確認してください。",
-        ),
+        new Error("サーバー版が再び更新されました。新しい内容を確認してください。"),
         "operation",
       ),
     ).toMatchObject({ code: "CONFLICT", recovery: "none" });
@@ -185,25 +170,22 @@ describe("durable draft guidance", () => {
     (kind, code, recovery) => {
       const problem: DraftProblem = {
         kind,
-        message:
-          "Failed to fetch secret diary token=private https://private.example",
+        message: "Failed to fetch secret diary token=private https://private.example",
         epoch: "sensitive-epoch",
       };
       const result = describeDraftProblem(problem);
       expect(result).toMatchObject({ code, recovery });
-      expect(JSON.stringify(result)).not.toMatch(
-        /Failed|secret|token|private|sensitive-epoch/,
-      );
+      expect(JSON.stringify(result)).not.toMatch(/Failed|secret|token|private|sensitive-epoch/);
     },
   );
 
   it("makes saved local text and text that may exist only on screen clearly different", () => {
-    expect(
-      describeDraftProblem({ kind: "network", message: "" }).message,
-    ).toContain("この端末に保存されています");
-    expect(
-      describeDraftProblem({ kind: "storage", message: "" }).message,
-    ).toContain("この画面にだけ残っている可能性");
+    expect(describeDraftProblem({ kind: "network", message: "" }).message).toContain(
+      "この端末に保存されています",
+    );
+    expect(describeDraftProblem({ kind: "storage", message: "" }).message).toContain(
+      "この画面にだけ残っている可能性",
+    );
     for (const kind of ["conflict", "recovery"] as const) {
       const message = describeDraftProblem({ kind, message: "" }).message;
       expect(message).toContain("両方の本文");
@@ -246,10 +228,7 @@ describe("privacy-preserving error copying", () => {
     expect(report).toContain("分類: UNKNOWN_ERROR");
     expect(report).toContain("表示: 操作を完了できませんでした");
     expect(report).not.toMatch(/diary-private|https:|token|secret@|app.ts|abc/);
-    const request = describeError(
-      new AppRequestError(400, `INVALID_${privateText}`),
-      "operation",
-    );
+    const request = describeError(new AppRequestError(400, `INVALID_${privateText}`), "operation");
     expect(request.code).toBe("INVALID_INPUT");
     expect(errorReport(request, "operation")).not.toContain(privateText);
   });
@@ -266,10 +245,7 @@ describe("privacy-preserving error copying", () => {
     ] satisfies ErrorOperation[]) {
       const exception = new Error("private diary");
       exception.stack = "private stack with token";
-      const result = errorReport(
-        describeError(exception, operation),
-        operation,
-      );
+      const result = errorReport(describeError(exception, operation), operation);
       expect(result).not.toMatch(/private|stack|token|HTTP:/);
     }
     const invalid = describeError(new AppRequestError(NaN, "private"), "list");

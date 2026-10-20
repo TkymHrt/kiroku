@@ -1,11 +1,4 @@
-import {
-  lazy,
-  Suspense,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { flushSync } from "react-dom";
 import {
   Check,
@@ -21,7 +14,6 @@ import {
   LoaderCircle,
   LogOut,
   PenLine,
-  RefreshCw,
   Settings,
   ShieldCheck,
   Trash2,
@@ -77,8 +69,7 @@ const stateLabels: Record<SaveStatus, string> = {
   error: "保存できていません",
 };
 const dateObject = (date: string) => new Date(`${date}T12:00:00+09:00`);
-const weekdayTone = (date: string) =>
-  `weekday-tone weekday-tone-${dateObject(date).getUTCDay()}`;
+const weekdayTone = (date: string) => `weekday-tone weekday-tone-${dateObject(date).getUTCDay()}`;
 const prettyDate = (
   date: string,
   options: Intl.DateTimeFormatOptions = {
@@ -104,11 +95,7 @@ function downloadBlob(blob: Blob, filename: string) {
   setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
 
-function downloadText(
-  body: string,
-  filename: string,
-  type = "text/markdown;charset=utf-8",
-) {
+function downloadText(body: string, filename: string, type = "text/markdown;charset=utf-8") {
   downloadBlob(new Blob([body], { type }), filename);
 }
 
@@ -135,9 +122,7 @@ function SaveState({
     <span className={`save-state state-${status}`} role="status">
       <Icon
         size={15}
-        className={
-          status === "syncing" || status === "local-saving" ? "spinning" : ""
-        }
+        className={status === "syncing" || status === "local-saving" ? "spinning" : ""}
       />
       {label ?? (empty ? "まだ記録されていません" : stateLabels[status])}
     </span>
@@ -185,9 +170,7 @@ export default function App() {
   if (!engineRef.current) engineRef.current = new DiarySyncEngine();
   const engine = engineRef.current;
   const [tick, setTick] = useState(0);
-  const [session, setSession] = useState<
-    "loading" | "ready" | "locked" | "error"
-  >("loading");
+  const [session, setSession] = useState<"loading" | "ready" | "locked" | "error">("loading");
   const [email, setEmail] = useState("");
   const [page, setPage] = useState<Page>("list");
   const [date, setDate] = useState(tokyoToday());
@@ -273,11 +256,7 @@ export default function App() {
       redirect: "manual",
       credentials: "same-origin",
     });
-    if (
-      response.status === 401 ||
-      response.status === 403 ||
-      response.type === "opaqueredirect"
-    ) {
+    if (response.status === 401 || response.status === 403 || response.type === "opaqueredirect") {
       if (sessionRef.current === "ready") setNeedsAuth(true);
       else {
         engine.stop();
@@ -312,9 +291,7 @@ export default function App() {
         append
           ? [
               ...previous,
-              ...response.items.filter(
-                (item) => !previous.some((p) => p.date === item.date),
-              ),
+              ...response.items.filter((item) => !previous.some((p) => p.date === item.date)),
             ]
           : response.items,
       );
@@ -324,9 +301,7 @@ export default function App() {
         [trash ? "trash" : "list"]: false,
       }));
       setNotice("");
-      setIssue((previous) =>
-        previous?.operation === "list" ? null : previous,
-      );
+      setIssue((previous) => (previous?.operation === "list" ? null : previous));
     } catch (error) {
       setListFailure((previous) => ({
         ...previous,
@@ -343,11 +318,8 @@ export default function App() {
     setSession("loading");
     setIssue(null);
     try {
-      const current = await api<{ authenticated: boolean; email: string }>(
-        "/api/session",
-      );
-      if (!current.authenticated)
-        throw new AppRequestError(401, "AUTH_REQUIRED");
+      const current = await api<{ authenticated: boolean; email: string }>("/api/session");
+      if (!current.authenticated) throw new AppRequestError(401, "AUTH_REQUIRED");
       if (sequence !== authSequence.current) return;
       setEmail(current.email);
       await engine.start();
@@ -395,6 +367,7 @@ export default function App() {
       sessionChannel.current = null;
       window.removeEventListener("focus", focus);
     };
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- Mount owns this subscription; callbacks read the current session and active date through refs.
   }, []);
 
   useEffect(() => {
@@ -402,7 +375,7 @@ export default function App() {
       const draft = engine.getDraft(date);
       if (draft) setBody(draft.body);
     }
-  }, [tick, date, page, opening]);
+  }, [engine, tick, date, page, opening]);
   useEffect(() => {
     if (!toast) return;
     const timeout = setTimeout(() => setToast(""), 3500);
@@ -432,8 +405,7 @@ export default function App() {
     setMerge(null);
     setNotice("");
     setIssue(null);
-    if (target === "list" || target === "trash")
-      await loadList(target === "trash");
+    if (target === "list" || target === "trash") await loadList(target === "trash");
     window.scrollTo({ top: 0 });
   }
 
@@ -475,8 +447,7 @@ export default function App() {
       }>(`/api/diaries/${target}/neighbors`);
       if (sequence === openSequence.current) setNeighbors(response);
     } catch {
-      if (sequence === openSequence.current)
-        setNeighbors({ previous: null, next: null });
+      if (sequence === openSequence.current) setNeighbors({ previous: null, next: null });
     }
   }
 
@@ -491,16 +462,12 @@ export default function App() {
   const deleted = !!current?.diary?.deletedAt;
   const unsynced = drafts.filter((draft) => draft.dirty || draft.pending);
   const byteCount = bodyBytes(body);
-  const conflict =
-    current?.problem && ["conflict", "recovery"].includes(current.problem.kind);
+  const conflict = current?.problem && ["conflict", "recovery"].includes(current.problem.kind);
   const ageWarning =
-    !!current?.unsyncedSince &&
-    Date.now() - Date.parse(current.unsyncedSince) >= 86_400_000;
+    !!current?.unsyncedSince && Date.now() - Date.parse(current.unsyncedSince) >= 86_400_000;
 
   function mergedList(trash: boolean): DiarySummary[] {
-    const result = new Map(
-      (trash ? trashItems : items).map((item) => [item.date, item]),
-    );
+    const result = new Map((trash ? trashItems : items).map((item) => [item.date, item]));
     for (const draft of drafts) {
       if (draft.tombstone) {
         result.delete(draft.date);
@@ -513,16 +480,11 @@ export default function App() {
           draft.pending ||
           draft.problem?.kind === "conflict" ||
           draft.problem?.kind === "recovery" ||
-          (draft.diary.id === listed?.id &&
-            draft.diary.version >= listed.version);
+          (draft.diary.id === listed?.id && draft.diary.version >= listed.version);
         if (!pending) continue;
-        if (!!draft.diary.deletedAt === trash)
-          result.set(draft.date, draft.diary);
+        if (!!draft.diary.deletedAt === trash) result.set(draft.date, draft.diary);
         else result.delete(draft.date);
-      } else if (
-        !trash &&
-        (draft.body || draft.pending || draft.problem?.kind === "conflict")
-      ) {
+      } else if (!trash && (draft.body || draft.pending || draft.problem?.kind === "conflict")) {
         result.set(draft.date, {
           id: "",
           date: draft.date,
@@ -558,11 +520,7 @@ export default function App() {
   }
 
   async function copy(text = body) {
-    await copyText(
-      text,
-      "本文を選択してコピー",
-      "Markdown全文をコピーしました。",
-    );
+    await copyText(text, "本文を選択してコピー", "Markdown全文をコピーしました。");
   }
 
   async function copyReport(error: UiError, operation: ErrorOperation) {
@@ -625,10 +583,7 @@ export default function App() {
       const nextPage = await api<ExportPage>(
         `/api/export?after=${encodeURIComponent(after)}&snapshotToken=${encodeURIComponent(first.snapshotToken)}`,
       );
-      if (
-        nextPage.epoch !== first.epoch ||
-        nextPage.snapshotToken !== first.snapshotToken
-      )
+      if (nextPage.epoch !== first.epoch || nextPage.snapshotToken !== first.snapshotToken)
         throw new AppRequestError(409, "EXPORT_CHANGED");
       append(nextPage.diaries);
       after = nextPage.nextCursor;
@@ -668,12 +623,10 @@ export default function App() {
     const result = engine.getDraft(date);
     if (result?.problem || result?.pending) {
       // The date's actionable save notice owns the failure and recovery steps.
-      if (!result?.problem)
-        setNotice("操作をこの端末に保存しました。接続が戻ると処理を続けます。");
+      if (!result?.problem) setNotice("操作をこの端末に保存しました。接続が戻ると処理を続けます。");
       return;
     }
-    if (kind === "purge" || kind === "trash")
-      await navigate(kind === "purge" ? "trash" : "list");
+    if (kind === "purge" || kind === "trash") await navigate(kind === "purge" ? "trash" : "list");
     else {
       setBody(result?.body ?? "");
       setToast("日記を復元しました。");
@@ -712,15 +665,13 @@ export default function App() {
         if (!(await canLeave())) return;
         sessionChannel.current?.postMessage("logout");
         lockDisplay();
-        if (email !== "local-development")
-          window.location.assign("/cdn-cgi/access/logout");
+        if (email !== "local-development") window.location.assign("/cdn-cgi/access/logout");
       },
     });
   }
 
   const list = mergedList(page === "trash");
-  const readFailure =
-    current?.problem?.kind === "network" && !current.dirty && !current.pending;
+  const readFailure = current?.problem?.kind === "network" && !current.dirty && !current.pending;
   const draftIssue = readFailure
     ? {
         ...describeError(new TypeError(), "open"),
@@ -733,10 +684,7 @@ export default function App() {
       : null;
   const authIssue = needsAuth
     ? {
-        error: describeError(
-          new AppRequestError(401, "AUTH_REQUIRED"),
-          "session",
-        ),
+        error: describeError(new AppRequestError(401, "AUTH_REQUIRED"), "session"),
         operation: "session" as const,
         retry: resumeAfterLogin,
       }
@@ -753,8 +701,7 @@ export default function App() {
   };
   function renderIssue(display: DisplayIssue, sessionScreen = false) {
     const authentication = display.error.recovery === "auth";
-    const retry =
-      authentication && !sessionScreen ? resumeAfterLogin : display.retry;
+    const retry = authentication && !sessionScreen ? resumeAfterLogin : display.retry;
     const retryAction = retry
       ? async () => {
           await retry();
@@ -765,11 +712,7 @@ export default function App() {
       <ErrorNotice
         issue={display.error}
         busy={busy}
-        retry={
-          retryAction
-            ? () => void work(retryAction, display.operation, retry)
-            : undefined
-        }
+        retry={retryAction ? () => void work(retryAction, display.operation, retry) : undefined}
         retryLabel={
           authentication
             ? sessionScreen
@@ -809,10 +752,7 @@ export default function App() {
           >
             すべて選択
           </button>
-          <button
-            className="button primary"
-            onClick={() => setManualCopy(null)}
-          >
+          <button className="button primary" onClick={() => setManualCopy(null)}>
             閉じる
           </button>
         </div>
@@ -836,23 +776,13 @@ export default function App() {
             ) : (
               <>
                 <h2>ログインして日記をひらく</h2>
-                <p>
-                  保存済みの下書きはこの端末に残っています。ログイン後に日記を表示できます。
-                </p>
+                <p>保存済みの下書きはこの端末に残っています。ログイン後に日記を表示できます。</p>
                 <div className="session-actions">
-                  <a
-                    className="button primary"
-                    href="/"
-                    target="_blank"
-                    rel="noopener"
-                  >
+                  <a className="button primary" href="/" target="_blank" rel="noopener">
                     ログイン画面を開く
                     <ExternalLink size={16} />
                   </a>
-                  <button
-                    className="button"
-                    onClick={() => void authenticate()}
-                  >
+                  <button className="button" onClick={() => void authenticate()}>
                     ログイン後に再確認
                   </button>
                 </div>
@@ -895,15 +825,9 @@ export default function App() {
         </button>
         <nav aria-label="メインナビゲーション">
           <button
-            className={
-              page === "list" || page === "diary"
-                ? "nav-item active"
-                : "nav-item"
-            }
+            className={page === "list" || page === "diary" ? "nav-item active" : "nav-item"}
             onClick={() => void navigate("list")}
-            aria-current={
-              page === "list" || page === "diary" ? "page" : undefined
-            }
+            aria-current={page === "list" || page === "diary" ? "page" : undefined}
           >
             <Home size={19} />
             日記一覧
@@ -945,14 +869,11 @@ export default function App() {
       </aside>
 
       <div className="workspace">
-        <main
-          className={`main-content ${page === "diary" ? "diary-content" : ""}`}
-        >
+        <main className={`main-content ${page === "diary" ? "diary-content" : ""}`}>
           {globalIssue &&
             !(
               page === "diary" &&
-              (localError ||
-                (draftIssue && globalIssue.error.recovery === "auth"))
+              (localError || (draftIssue && globalIssue.error.recovery === "auth"))
             ) &&
             renderIssue(globalIssue)}
           {notice && (
@@ -964,9 +885,7 @@ export default function App() {
 
           {(page === "list" || page === "trash") && (
             <>
-              <h1 className="sr-only">
-                {page === "trash" ? "ゴミ箱" : "日記一覧"}
-              </h1>
+              <h1 className="sr-only">{page === "trash" ? "ゴミ箱" : "日記一覧"}</h1>
               {page === "list" && (
                 <div className="list-tools">
                   <DatePicker
@@ -1030,21 +949,15 @@ export default function App() {
                             <span className={`weekday ${weekdayTone(item.date)}`}>
                               {prettyDate(item.date, { weekday: "long" })}
                             </span>
-                            {item.date === tokyoToday() && (
-                              <span className="today-tag">今日</span>
-                            )}
+                            {item.date === tokyoToday() && <span className="today-tag">今日</span>}
                           </span>
                           <SaveState
                             label={
-                              draft?.problem?.kind === "network" &&
-                              !draft.dirty &&
-                              !draft.pending
+                              draft?.problem?.kind === "network" && !draft.dirty && !draft.pending
                                 ? "読み込みできていません"
                                 : undefined
                             }
-                            status={
-                              draft ? engine.getStatus(item.date) : "saved"
-                            }
+                            status={draft ? engine.getStatus(item.date) : "saved"}
                           />
                         </span>
                         <ChevronRight size={19} />
@@ -1052,25 +965,19 @@ export default function App() {
                     </div>
                   );
                 })}
-                {!list.length &&
-                  !loading &&
-                  !listFailure[page === "trash" ? "trash" : "list"] && (
-                    <div className="empty-state">
-                      <p>
-                        {page === "trash"
-                          ? "ゴミ箱は空です"
-                          : "日記はまだありません"}
-                      </p>
-                      {page === "list" && (
-                        <button
-                          className="button primary"
-                          onClick={() => void openDiary(tokyoToday())}
-                        >
-                          今日の日記をひらく
-                        </button>
-                      )}
-                    </div>
-                  )}
+                {!list.length && !loading && !listFailure[page === "trash" ? "trash" : "list"] && (
+                  <div className="empty-state">
+                    <p>{page === "trash" ? "ゴミ箱は空です" : "日記はまだありません"}</p>
+                    {page === "list" && (
+                      <button
+                        className="button primary"
+                        onClick={() => void openDiary(tokyoToday())}
+                      >
+                        今日の日記をひらく
+                      </button>
+                    )}
+                  </div>
+                )}
                 {loading && (
                   <div className="loading-line">
                     <LoaderCircle size={19} className="spinning" />
@@ -1139,18 +1046,10 @@ export default function App() {
                 <SaveState
                   status={readFailure ? "unsynced" : status}
                   label={
-                    opening
-                      ? "読み込み中"
-                      : readFailure
-                        ? "読み込みできていません"
-                        : undefined
+                    opening ? "読み込み中" : readFailure ? "読み込みできていません" : undefined
                   }
                   empty={
-                    !current?.diary &&
-                    !body &&
-                    !current?.dirty &&
-                    !current?.problem &&
-                    !opening
+                    !current?.diary && !body && !current?.dirty && !current?.problem && !opening
                   }
                 />
               </div>
@@ -1166,8 +1065,7 @@ export default function App() {
                         onClick={() =>
                           setConfirm({
                             title: "日記を復元しますか",
-                            description:
-                              "サーバーの更新番号を確認して、通常の一覧に戻します。",
+                            description: "サーバーの更新番号を確認して、通常の一覧に戻します。",
                             label: "復元する",
                             action: () => applyMutation("restore"),
                           })
@@ -1207,37 +1105,32 @@ export default function App() {
                   {backupActions(true)}
                 </ErrorNotice>
               )}
-              {draftIssue &&
-                !conflict &&
-                !localError &&
-                byteCount <= MAX_BODY_BYTES && (
-                  <ErrorNotice
-                    issue={draftIssue}
-                    retryAfterUntil={current?.retryAfterUntil}
-                    danger={current?.problem?.kind === "storage"}
-                    busy={busy}
-                    retry={() =>
-                      void work(
-                        current?.problem?.kind === "auth"
-                          ? resumeAfterLogin
-                          : () => engine.retry(date),
-                        "sync",
-                      )
-                    }
-                    retryLabel={
+              {draftIssue && !conflict && !localError && byteCount <= MAX_BODY_BYTES && (
+                <ErrorNotice
+                  issue={draftIssue}
+                  retryAfterUntil={current?.retryAfterUntil}
+                  danger={current?.problem?.kind === "storage"}
+                  busy={busy}
+                  retry={() =>
+                    void work(
                       current?.problem?.kind === "auth"
-                        ? "ログイン後に保存を再開"
-                        : readFailure
-                          ? "日記を読み直す"
-                          : "保存を再試行"
-                    }
-                    onCopyReport={() =>
-                      void copyReport(draftIssue, readFailure ? "open" : "sync")
-                    }
-                  >
-                    {backupActions(current?.problem?.kind === "storage")}
-                  </ErrorNotice>
-                )}
+                        ? resumeAfterLogin
+                        : () => engine.retry(date),
+                      "sync",
+                    )
+                  }
+                  retryLabel={
+                    current?.problem?.kind === "auth"
+                      ? "ログイン後に保存を再開"
+                      : readFailure
+                        ? "日記を読み直す"
+                        : "保存を再試行"
+                  }
+                  onCopyReport={() => void copyReport(draftIssue, readFailure ? "open" : "sync")}
+                >
+                  {backupActions(current?.problem?.kind === "storage")}
+                </ErrorNotice>
+              )}
               {ageWarning && (
                 <div className="banner">
                   <CloudOff size={19} />
@@ -1249,17 +1142,11 @@ export default function App() {
               )}
               {byteCount > MAX_BODY_BYTES && (
                 <ErrorNotice
-                  issue={describeError(
-                    new AppRequestError(413, "BODY_TOO_LARGE"),
-                    "sync",
-                  )}
+                  issue={describeError(new AppRequestError(413, "BODY_TOO_LARGE"), "sync")}
                   danger
                   onCopyReport={() =>
                     void copyReport(
-                      describeError(
-                        new AppRequestError(413, "BODY_TOO_LARGE"),
-                        "sync",
-                      ),
+                      describeError(new AppRequestError(413, "BODY_TOO_LARGE"), "sync"),
                       "sync",
                     )
                   }
@@ -1287,17 +1174,12 @@ export default function App() {
                     <h3>この端末の本文</h3>
                     <pre>{body || "（空の本文）"}</pre>
                     <div className="banner-actions">
-                      <button
-                        className="text-button"
-                        onClick={() => void copy()}
-                      >
+                      <button className="text-button" onClick={() => void copy()}>
                         コピー
                       </button>
                       <button
                         className="text-button"
-                        onClick={() =>
-                          downloadText(body, `diary-${date}-local.md`)
-                        }
+                        onClick={() => downloadText(body, `diary-${date}-local.md`)}
                       >
                         Markdown保存
                       </button>
@@ -1316,9 +1198,7 @@ export default function App() {
                     <div className="banner-actions">
                       <button
                         className="text-button"
-                        onClick={() =>
-                          void copy(current.problem!.server?.body ?? "")
-                        }
+                        onClick={() => void copy(current.problem!.server?.body ?? "")}
                       >
                         コピー
                       </button>
@@ -1361,10 +1241,7 @@ export default function App() {
                       端末版を採用
                     </button>
                     {merge === null ? (
-                      <button
-                        className="button primary"
-                        onClick={() => setMerge(body)}
-                      >
+                      <button className="button primary" onClick={() => setMerge(body)}>
                         手動で統合する
                       </button>
                     ) : (
@@ -1386,11 +1263,7 @@ export default function App() {
               )}
               <div className="editor-surface">
                 <div className="editor-top">
-                  <div
-                    className="mode-tabs"
-                    role="tablist"
-                    aria-label="表示モード"
-                  >
+                  <div className="mode-tabs" role="tablist" aria-label="表示モード">
                     <button
                       role="tab"
                       id="edit-tab"
@@ -1462,20 +1335,14 @@ export default function App() {
                       hidden={mode !== "preview"}
                     >
                       {mode === "preview" && (
-                        <MarkdownPreview
-                          body={body}
-                          onChange={edit}
-                          readOnly={deleted}
-                        />
+                        <MarkdownPreview body={body} onChange={edit} readOnly={deleted} />
                       )}
                     </div>
                   </Suspense>
                 )}
                 <div className="editor-footer">
                   <span>Markdown</span>
-                  <span
-                    className={byteCount > MAX_BODY_BYTES ? "warning-text" : ""}
-                  >
+                  <span className={byteCount > MAX_BODY_BYTES ? "warning-text" : ""}>
                     {byteCount.toLocaleString("ja-JP")} / 1,000,000 bytes
                   </span>
                 </div>
@@ -1523,9 +1390,7 @@ export default function App() {
                 <button
                   className="button primary"
                   disabled={busy}
-                  onClick={() =>
-                    void work(exportDiaries, "export", exportDiaries)
-                  }
+                  onClick={() => void work(exportDiaries, "export", exportDiaries)}
                 >
                   <Download size={17} />
                   JSONを一括エクスポート
@@ -1594,11 +1459,7 @@ export default function App() {
         <Modal title={confirm.title} close={() => !busy && setConfirm(null)}>
           <p>{confirm.description}</p>
           <div className="dialog-actions">
-            <button
-              className="button"
-              disabled={busy}
-              onClick={() => setConfirm(null)}
-            >
+            <button className="button" disabled={busy} onClick={() => setConfirm(null)}>
               キャンセル
             </button>
             <button

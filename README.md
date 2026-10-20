@@ -28,19 +28,25 @@ Void CLIのコマンドはBunから起動し、Nodeを必要とする内部ツ�
 - 手動競合解決、ゴミ箱、復元、確認付き完全削除。最新本文コピー・Markdown保存、削除状態を含むJSON一括出力。
 - Access JWTの署名・発行者・対象アプリ・有効期限・本人メールを検証。CSRF、no-store、CSP。公開設定が無い場合は拒否。
 
-一覧に本文抜粋は表示しません。添付、検索、Keepインポート、汎用メモ、AI、CI/CDは含みません。
+一覧に本文抜粋は表示しません。添付、検索、Keepインポート、汎用メモ、AI、自動デプロイは含みません。
 
 2026-10-19の改善で、スマートフォン上部のナビを画面の端から端まで3等分し、各項目の全幅を押せるようにしました。日付選択の年・月の余白と曜日の色も揃え、本文のEnter1回をプレビューでも改行表示します。保存・コピー・Markdown出力のソース本文は変更しません。
 
 ## 検証
 
 ```powershell
+mise exec -- bun run lint
+mise exec -- bun run format:check
 mise exec -- bun run check
 mise exec -- bun run test:e2e
-mise exec -- python scripts/backup_restore.py self-test
+mise exec -- python scripts/backup_restore.py self-test --report test-results/local-backup-proof.json
 ```
 
-`check`は型チェック、Vitest、公式Cloudflare Workers Vitest連携、本番ビルドを実行します。E2Eはインストール済みMicrosoft EdgeをChromiumエンジンとして使い、1440px / 390pxを検証します。Android実機試験とは区別します。テストの架空データは2080年/2081年の予約日付だけに作成し、その日付だけを片付けます。実データを登録した環境では実行しないでください。
+`check`はOxlint、Oxfmtの整形チェック、型チェック、Vitest、公式Cloudflare Workers Vitest連携、本番ビルドを実行します。整形を適用するときは `mise exec -- bun run format` を使います。生成済みマイグレーションのメタデータ、Voidのリソースlock、バックアップの検証証跡は整形対象から除外しています。
+
+GitHub Actionsの検証CIはPRとmainへのpushで `check` とローカル復元試験を実行します。Cloudflareの認証情報や本番リソースは使わず、自動デプロイは行いません。
+
+E2Eは別途、インストール済みMicrosoft EdgeをChromiumエンジンとして使い、1440px / 390pxを検証します。Android実機試験とは区別します。テストの架空データは2080年/2081年の予約日付だけに作成し、その日付だけを片付けます。実データを登録した環境では実行しないでください。
 
 2026-10-19に型チェック・単体テスト91件・Workers連携4件・ビルドと、ソース固定後のE2E40件が成功しています。2026-10-18には実D1で1,000,000バイト本文を含むSQLバックアップの復元と、一時DB2件の削除も確認しました。Android実機、別アカウントでの実ログイン拒否、実Access期限切れ、復旧後の端末整合性は未確認です。本番DBを復元試験には使いません。
 

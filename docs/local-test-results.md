@@ -10,19 +10,19 @@ VoidでAccess保護後の再deployが成功した。独自ドメイン・旧work
 
 実施日: **2026-10-18（日本時間）**。ローカルは架空データのみで検証。同日に初回公開と本番の架空データsmokeも実施した。クラウド設定と残る確認項目は[公開記録](deployment.md)・[受入表](verification.md)を参照。
 
-| 検証 | 結果 | 対象 |
-|---|---|---|
-| `bun run typecheck` | 成功 | Void型生成とTypeScript型検査 |
-| `bun run test` | 86件成功 | IndexedDB/同期24件、API/D1/認証19件、入力補助/日付6件、カレンダー境界・操作5件、エラー分類と診断コピー32件 |
-| `bun run test:workers` | 4件成功 | 公式Cloudflare Vitestプラグイン、ローカルworkerd/D1、再送・古い未送信create・1MB・本番認証fail-closed |
-| `bun run test:e2e` | **40/40件、単一実行で成功** | ソース固定後のEdge Chromium。PC 1440×960とモバイル相当390×844、各20件 |
-| `bun run build` | 成功 | Workersとブラウザの本番用出力 |
-| `python scripts/backup_restore.py self-test` | 成功 | SQL→空SQLiteと小パラメータ復元、1,000,000 UTF-8 bytes一致、操作履歴・世代・index保持 |
-| `python scripts/backup_restore.py remote-proof --run-remote` | 成功 | 実D1でSQL export→空D1への復元、1,000,000バイト本文を含む全表一致、epoch回転、一時DB2件の削除 |
-| 標準MiniflareのASSETS配信 | 成功 | HTML/JS応答の`_headers`全8項目一致。本番認証後応答の直接観測ではない |
-| 初回本番smoke | 成功 | 本人SSO、架空日記の作成/保存/ゴミ箱/復元/完全削除、匿名8経路のAccessへの302 |
-| 独自ドメイン公開 | 成功 | `kiroku.tkymhrt.dpdns.org`で匿名8経路のAccessへの302、Edge本人SSOで日記一覧の取得完了（空一覧）。再deploy・DB migrationなし |
-| アカウントMFA | 確認済み | 本人申告とCloudflare APIで有効化済みを確認 |
+| 検証                                                         | 結果                        | 対象                                                                                                                        |
+| ------------------------------------------------------------ | --------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `bun run typecheck`                                          | 成功                        | Void型生成とTypeScript型検査                                                                                                |
+| `bun run test`                                               | 86件成功                    | IndexedDB/同期24件、API/D1/認証19件、入力補助/日付6件、カレンダー境界・操作5件、エラー分類と診断コピー32件                  |
+| `bun run test:workers`                                       | 4件成功                     | 公式Cloudflare Vitestプラグイン、ローカルworkerd/D1、再送・古い未送信create・1MB・本番認証fail-closed                       |
+| `bun run test:e2e`                                           | **40/40件、単一実行で成功** | ソース固定後のEdge Chromium。PC 1440×960とモバイル相当390×844、各20件                                                       |
+| `bun run build`                                              | 成功                        | Workersとブラウザの本番用出力                                                                                               |
+| `python scripts/backup_restore.py self-test`                 | 成功                        | SQL→空SQLiteと小パラメータ復元、1,000,000 UTF-8 bytes一致、操作履歴・世代・index保持                                        |
+| `python scripts/backup_restore.py remote-proof --run-remote` | 成功                        | 実D1でSQL export→空D1への復元、1,000,000バイト本文を含む全表一致、epoch回転、一時DB2件の削除                                |
+| 標準MiniflareのASSETS配信                                    | 成功                        | HTML/JS応答の`_headers`全8項目一致。本番認証後応答の直接観測ではない                                                        |
+| 初回本番smoke                                                | 成功                        | 本人SSO、架空日記の作成/保存/ゴミ箱/復元/完全削除、匿名8経路のAccessへの302                                                 |
+| 独自ドメイン公開                                             | 成功                        | `kiroku.tkymhrt.dpdns.org`で匿名8経路のAccessへの302、Edge本人SSOで日記一覧の取得完了（空一覧）。再deploy・DB migrationなし |
+| アカウントMFA                                                | 確認済み                    | 本人申告とCloudflare APIで有効化済みを確認                                                                                  |
 
 ブラウザ検証は入力後作成、自動保存、カーソル保持、重複チェック項目、HTML/画像/URLの安全性、オフライン編集と再起動復旧、端末競合、空本文、ゴミ箱/復元/完全削除と古端末、未同期コピー/Markdown、JSONへのゴミ箱データ包含、認証切れ後の編集と退避、明示ログアウト後に両タブの本文DOMを除去して下書きを保持することを確認した。
 

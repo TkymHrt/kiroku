@@ -51,8 +51,7 @@ export interface ApiProblem {
   absenceToken?: string | null;
 }
 export const MAX_BODY_BYTES = 1_000_000;
-export const bodyBytes = (body: string): number =>
-  new TextEncoder().encode(body).byteLength;
+export const bodyBytes = (body: string): number => new TextEncoder().encode(body).byteLength;
 
 export function tokyoToday(now = new Date()): string {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -69,8 +68,5 @@ export function tokyoToday(now = new Date()): string {
 export function isDiaryDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || value < "0001-01-01") return false;
   const parsed = new Date(`${value}T00:00:00.000Z`);
-  return (
-    !Number.isNaN(parsed.getTime()) &&
-    parsed.toISOString().slice(0, 10) === value
-  );
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 }
