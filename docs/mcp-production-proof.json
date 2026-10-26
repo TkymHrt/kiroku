@@ -1,0 +1,282 @@
+{
+  "checkedAt": "2026-10-20T22:09:01.458Z",
+  "origin": "https://kiroku.tkymhrt.dpdns.org",
+  "mcpUrl": "https://kiroku.tkymhrt.dpdns.org/mcp",
+  "passed": true,
+  "checks": [
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/",
+      "method": "GET",
+      "status": 302,
+      "expected": 302,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/session",
+      "method": "GET",
+      "status": 302,
+      "expected": 302,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/diaries",
+      "method": "GET",
+      "status": 302,
+      "expected": 302,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/diaries/2099-12-31",
+      "method": "GET",
+      "status": 302,
+      "expected": 302,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/diaries/2099-12-31/neighbors",
+      "method": "GET",
+      "status": 302,
+      "expected": 302,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/export",
+      "method": "GET",
+      "status": 302,
+      "expected": 302,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/__void/ready",
+      "method": "GET",
+      "status": 302,
+      "expected": 302,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/favicon.svg",
+      "method": "GET",
+      "status": 302,
+      "expected": 302,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/",
+      "method": "GET",
+      "status": 302,
+      "expected": 302,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/session",
+      "method": "GET",
+      "status": 302,
+      "expected": 302,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/diaries",
+      "method": "GET",
+      "status": 302,
+      "expected": 302,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/diaries/2099-12-31",
+      "method": "GET",
+      "status": 302,
+      "expected": 302,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/diaries/2099-12-31/neighbors",
+      "method": "GET",
+      "status": 302,
+      "expected": 302,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/export",
+      "method": "GET",
+      "status": 302,
+      "expected": 302,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/__void/ready",
+      "method": "GET",
+      "status": 302,
+      "expected": 302,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/favicon.svg",
+      "method": "GET",
+      "status": 302,
+      "expected": 302,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/mcp",
+      "method": "GET",
+      "status": 401,
+      "expected": 401,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/session",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/diaries",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/export",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/session",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/diaries/2099-12-31",
+      "method": "POST",
+      "status": 403,
+      "expected": 403,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/mcp",
+      "method": "GET",
+      "status": 405,
+      "expected": 405,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/mcp",
+      "method": "POST",
+      "status": 403,
+      "expected": 403,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/mcp",
+      "method": "POST",
+      "status": 403,
+      "expected": 403,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/mcp?probe=1",
+      "method": "POST",
+      "status": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/mcp",
+      "method": "POST",
+      "status": 403,
+      "expected": 403,
+      "passed": true
+    }
+  ],
+  "officialSdk": {
+    "initialize": true,
+    "listTools": [
+      {
+        "name": "list_diaries",
+        "readOnly": true
+      },
+      {
+        "name": "get_diary",
+        "readOnly": true
+      },
+      {
+        "name": "search_diaries",
+        "readOnly": true
+      },
+      {
+        "name": "list_pending_summaries",
+        "readOnly": true
+      },
+      {
+        "name": "save_summary",
+        "readOnly": false
+      }
+    ],
+    "ping": true
+  },
+  "browserAccessPolicyUnchanged": true,
+  "liveWorkerVersion": "1c1a39a7-cbed-4f35-a142-89b8d981ba49",
+  "migrationsApplied": 3,
+  "existingDiaryAndReceiptDigestsUnchanged": true,
+  "databaseEpochUnchanged": true,
+  "backup": {
+    "encryptedWith": "Windows DPAPI CurrentUser",
+    "sqlBytes": 95147,
+    "liveTableDigestsMatched": true,
+    "dpapiRoundtripMatched": true,
+    "plaintextWrittenToDisk": false
+  },
+  "mcpAccess": {
+    "id": "c28b8ff3-073a-4df4-888e-8eb846699eec",
+    "audience": "aebe3c756dbb6c391bf0c0194a1d32457401127e11b3dd507704131f1c8c05df",
+    "path": "kiroku.tkymhrt.dpdns.org/mcp",
+    "ownerOnly": true,
+    "ownerPolicySemanticallyVerifiedAfterRedirectRestriction": true,
+    "loopbackRedirectsAllowed": false,
+    "localhostRedirectsAllowed": false,
+    "managedOAuth": true
+  },
+  "productionDiaryWrites": 0,
+  "productionDiaryTextLogged": false
+}

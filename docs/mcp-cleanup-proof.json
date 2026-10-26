@@ -1,0 +1,24 @@
+{
+  "checkedAt": "2026-10-20T15:57:24.001Z",
+  "temporaryWorker": {
+    "name": "kiroku-mcp-check-20261021",
+    "deleted": true
+  },
+  "temporaryDatabase": {
+    "name": "kiroku-mcp-check-20261021-db",
+    "id": "269be123-3b6c-4d48-87ee-095e619bd3a5",
+    "deleted": true
+  },
+  "temporaryAccess": {
+    "id": "8d2099ad-1d31-45fc-93bd-4f8324f49c5e",
+    "deleted": true
+  },
+  "dailyTestTask": "paused in ChatGPT UI",
+  "oneOffTestTasks": "completed",
+  "testPluginConnection": "disconnected in ChatGPT UI; Connect button confirmed",
+  "productionUntouched": true,
+  "localTemporaryCheckout": {
+    "path": "C:/Users/TkymHrt/AppData/Local/Temp/kiroku-mcp-proof-jJO1m6",
+    "removal": "blocked by automatic approval policy; left in place"
+  }
+}

@@ -1,5 +1,7 @@
 # MVP受入と公開判定
 
+2026-10-21の追加MCP機能は[MCP検証記録](mcp-verification.md)を参照。実ChatGPT接続・一時クラウド・拡張した復元試験を既存MVPの公開判定と区別する。同日07時台に本人の指示で[本番公開](mcp-deployment.md)を行い、匿名拒否・本人接続・既存データ一致を確認した。
+
 初回基準日 2026-10-18、更新確認 2026-10-19。Accessで保護した初回公開と[独自ドメインでの公開](https://kiroku.tkymhrt.dpdns.org/)は完了した。本人のMFA有効化もCloudflare APIで確認した。`未確認`は失敗とも成功とも扱わず、自動テストと実機/本番の確認を区別する。実データの利用開始前に残る必須項目の証跡を揃える。
 
 実行済みの検証は[local-test-results.md](local-test-results.md)と[公開記録](deployment.md)にまとめた。PC/390px相当のEdge Chromiumで、ソース固定後のE2E40ケースが単一実行ですべて成功した。Vitest86件、公式Workers連携4件、ビルドも成功した。実D1復元と本人SSOでの本番操作も確認したが、Android実機の合格を意味しない。

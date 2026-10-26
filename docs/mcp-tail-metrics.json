@@ -1,0 +1,112 @@
+{
+  "checkedAt": "2026-10-20T15:39:07.225Z",
+  "worker": "kiroku-mcp-check-20261021",
+  "samples": [
+    {
+      "timestamp": 1792510593434,
+      "outcome": "ok",
+      "cpuTime": 18,
+      "wallTime": 78,
+      "eventType": "POST",
+      "keys": [
+        "wallTime",
+        "cpuTime",
+        "truncated",
+        "executionModel",
+        "outcome",
+        "scriptVersion",
+        "scriptName",
+        "diagnosticsChannelEvents",
+        "exceptions",
+        "logs",
+        "eventTimestamp",
+        "event"
+      ]
+    },
+    {
+      "timestamp": 1792510593713,
+      "outcome": "ok",
+      "cpuTime": 2,
+      "wallTime": 3,
+      "eventType": "POST",
+      "keys": [
+        "wallTime",
+        "cpuTime",
+        "truncated",
+        "executionModel",
+        "outcome",
+        "scriptVersion",
+        "scriptName",
+        "diagnosticsChannelEvents",
+        "exceptions",
+        "logs",
+        "eventTimestamp",
+        "event"
+      ]
+    },
+    {
+      "timestamp": 1792510593895,
+      "outcome": "ok",
+      "cpuTime": 8,
+      "wallTime": 30,
+      "eventType": "GET",
+      "keys": [
+        "wallTime",
+        "cpuTime",
+        "truncated",
+        "executionModel",
+        "outcome",
+        "scriptVersion",
+        "scriptName",
+        "diagnosticsChannelEvents",
+        "exceptions",
+        "logs",
+        "eventTimestamp",
+        "event"
+      ]
+    },
+    {
+      "timestamp": 1792510594007,
+      "outcome": "ok",
+      "cpuTime": 2,
+      "wallTime": 3,
+      "eventType": "POST",
+      "keys": [
+        "wallTime",
+        "cpuTime",
+        "truncated",
+        "executionModel",
+        "outcome",
+        "scriptVersion",
+        "scriptName",
+        "diagnosticsChannelEvents",
+        "exceptions",
+        "logs",
+        "eventTimestamp",
+        "event"
+      ]
+    },
+    {
+      "timestamp": 1792510594166,
+      "outcome": "ok",
+      "cpuTime": 11,
+      "wallTime": 74,
+      "eventType": "POST",
+      "keys": [
+        "wallTime",
+        "cpuTime",
+        "truncated",
+        "executionModel",
+        "outcome",
+        "scriptVersion",
+        "scriptName",
+        "diagnosticsChannelEvents",
+        "exceptions",
+        "logs",
+        "eventTimestamp",
+        "event"
+      ]
+    }
+  ],
+  "tailDeleted": true
+}

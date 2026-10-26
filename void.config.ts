@@ -9,6 +9,7 @@ export default defineConfig({
     name: "kiroku",
     workers_dev: true,
     preview_urls: false,
+    routes: [{ pattern: "kiroku.tkymhrt.dpdns.org", custom_domain: true }],
     observability: { enabled: false },
   },
 });

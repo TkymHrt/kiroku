@@ -299,21 +299,26 @@ export async function getExportPage(db: Connection, after = "", snapshotToken?: 
       "INVALID_INPUT",
       "エクスポートの継続条件がありません。最初から実行してください。",
     );
-  const [metadata, revisionResult, rows] = await db.batch<
+  const [metadata, revisionResult, summaryRevisionResult, rows] = await db.batch<
     Row | { value: string } | { revision: number }
   >([
     db.prepare("SELECT value FROM app_meta WHERE key = 'database_epoch'"),
     db.prepare("SELECT COALESCE(MAX(rowid), 0) AS revision FROM mutation_receipts"),
+    db.prepare("SELECT COALESCE(MAX(rowid), 0) AS revision FROM summary_mutation_receipts"),
     db
       .prepare(
-        `SELECT ${columns} FROM diaries WHERE diary_date > ? ORDER BY diary_date ASC LIMIT 3`,
+        `SELECT d.*, s.summary AS ai_summary, s.source_version, s.source_epoch,
+          s.revision AS summary_revision, s.updated_at AS summary_updated_at
+          FROM diaries d LEFT JOIN diary_summaries s ON s.diary_id = d.id
+          WHERE d.diary_date > ? ORDER BY d.diary_date ASC LIMIT 3`,
       )
       .bind(after),
   ]);
   const epoch = (metadata.results[0] as { value: string } | undefined)?.value;
   if (!epoch) throw new ApiError(503, "DATABASE_NOT_READY", "データベースの準備ができていません。");
   const revision = (revisionResult.results[0] as { revision: number }).revision;
-  const currentToken = `${epoch}:${revision}`;
+  const summaryRevision = (summaryRevisionResult.results[0] as { revision: number }).revision;
+  const currentToken = `${epoch}:${revision}:${summaryRevision}`;
   if (snapshotToken !== undefined && snapshotToken !== currentToken) {
     throw new ApiError(
       409,
@@ -323,9 +328,29 @@ export async function getExportPage(db: Connection, after = "", snapshotToken?: 
       epoch,
     );
   }
-  const diaries = (rows.results as Row[]).map(toDiary);
+  const diaries = (
+    rows.results as (Row & {
+      ai_summary: string | null;
+      source_version: number;
+      source_epoch: string;
+      summary_revision: number;
+      summary_updated_at: string;
+    })[]
+  ).map((row) => ({
+    ...toDiary(row),
+    aiSummary:
+      row.ai_summary === null
+        ? null
+        : {
+            summary: row.ai_summary,
+            sourceVersion: row.source_version,
+            sourceEpoch: row.source_epoch,
+            revision: row.summary_revision,
+            updatedAt: row.summary_updated_at,
+          },
+  }));
   return {
-    formatVersion: 1,
+    formatVersion: 2,
     exportedAt: new Date().toISOString(),
     epoch,
     snapshotToken: currentToken,

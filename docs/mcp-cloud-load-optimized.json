@@ -1,0 +1,269 @@
+{
+  "startedAt": "2026-10-20T15:43:19.306Z",
+  "kind": "real-access-protected-worker",
+  "bodyBytes": 1000000,
+  "worker": "kiroku-mcp-check-20261021",
+  "seedMeta": {
+    "served_by": "v3-prod",
+    "served_by_region": "APAC",
+    "served_by_colo": "KIX",
+    "served_by_primary": true,
+    "timings": {
+      "sql_duration_ms": 2.2767
+    },
+    "duration": 2.2767,
+    "changes": 1,
+    "last_row_id": 2,
+    "changed_db": true,
+    "size_after": 1093632,
+    "rows_read": 0,
+    "rows_written": 4,
+    "total_attempts": 1
+  },
+  "chunkCount": 20,
+  "bodySha256": "15ffef5d0451364db2cd6bd529e84152033551467e1a01226411d5b5e42a2259",
+  "fullBodyMatched": false,
+  "prefixMatched": true,
+  "database": {
+    "results": [
+      {
+        "diaries": 2,
+        "summaries": 1,
+        "sourceVersion": 1
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "APAC",
+      "served_by_colo": "KIX",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.2099
+      },
+      "duration": 0.2099,
+      "changes": 0,
+      "last_row_id": 2,
+      "changed_db": false,
+      "size_after": 1093632,
+      "rows_read": 4,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  },
+  "usage": [
+    {
+      "day": "2026-10-21",
+      "calls": 137,
+      "searches": 3,
+      "read_characters": 1284000
+    }
+  ],
+  "passed": true,
+  "cleanup": {
+    "served_by": "v3-prod",
+    "served_by_region": "APAC",
+    "served_by_colo": "KIX",
+    "served_by_primary": true,
+    "timings": {
+      "sql_duration_ms": 0.3249
+    },
+    "duration": 0.3249,
+    "changes": 1,
+    "last_row_id": 2,
+    "changed_db": true,
+    "size_after": 94208,
+    "rows_read": 1,
+    "rows_written": 1,
+    "total_attempts": 1
+  },
+  "calls": [
+    {
+      "tool": "get_diary",
+      "status": 200,
+      "wallMs": 1163.5679,
+      "bytes": 12887
+    },
+    {
+      "tool": "get_diary",
+      "status": 200,
+      "wallMs": 231.10940000000028,
+      "bytes": 12902
+    },
+    {
+      "tool": "get_diary",
+      "status": 200,
+      "wallMs": 199.96720000000005,
+      "bytes": 12892
+    },
+    {
+      "tool": "get_diary",
+      "status": 200,
+      "wallMs": 298.04269999999997,
+      "bytes": 12892
+    },
+    {
+      "tool": "get_diary",
+      "status": 200,
+      "wallMs": 245.19760000000042,
+      "bytes": 12892
+    },
+    {
+      "tool": "get_diary",
+      "status": 200,
+      "wallMs": 196.8742000000002,
+      "bytes": 12892
+    },
+    {
+      "tool": "get_diary",
+      "status": 200,
+      "wallMs": 342.1178,
+      "bytes": 12892
+    },
+    {
+      "tool": "get_diary",
+      "status": 200,
+      "wallMs": 196.46059999999943,
+      "bytes": 12892
+    },
+    {
+      "tool": "get_diary",
+      "status": 200,
+      "wallMs": 141.15970000000016,
+      "bytes": 12894
+    },
+    {
+      "tool": "get_diary",
+      "status": 200,
+      "wallMs": 198.03420000000006,
+      "bytes": 12896
+    },
+    {
+      "tool": "get_diary",
+      "status": 200,
+      "wallMs": 232.51350000000002,
+      "bytes": 12896
+    },
+    {
+      "tool": "get_diary",
+      "status": 200,
+      "wallMs": 198.61210000000028,
+      "bytes": 12896
+    },
+    {
+      "tool": "get_diary",
+      "status": 200,
+      "wallMs": 415.95880000000034,
+      "bytes": 12896
+    },
+    {
+      "tool": "get_diary",
+      "status": 200,
+      "wallMs": 143.41419999999925,
+      "bytes": 12896
+    },
+    {
+      "tool": "get_diary",
+      "status": 200,
+      "wallMs": 202.09160000000156,
+      "bytes": 12896
+    },
+    {
+      "tool": "get_diary",
+      "status": 200,
+      "wallMs": 240.13450000000012,
+      "bytes": 12896
+    },
+    {
+      "tool": "get_diary",
+      "status": 200,
+      "wallMs": 95.36909999999989,
+      "bytes": 12896
+    },
+    {
+      "tool": "get_diary",
+      "status": 200,
+      "wallMs": 93.60629999999946,
+      "bytes": 12896
+    },
+    {
+      "tool": "get_diary",
+      "status": 200,
+      "wallMs": 111.125,
+      "bytes": 12896
+    },
+    {
+      "tool": "get_diary",
+      "status": 200,
+      "wallMs": 109.63580000000002,
+      "bytes": 12896
+    },
+    {
+      "tool": "list_diaries",
+      "status": 200,
+      "wallMs": 125.09950000000026,
+      "bytes": 473
+    },
+    {
+      "tool": "list_diaries",
+      "status": 200,
+      "wallMs": 95.18639999999868,
+      "bytes": 473
+    },
+    {
+      "tool": "list_diaries",
+      "status": 200,
+      "wallMs": 103.97239999999874,
+      "bytes": 473
+    },
+    {
+      "tool": "list_diaries",
+      "status": 200,
+      "wallMs": 135.65790000000015,
+      "bytes": 473
+    },
+    {
+      "tool": "list_diaries",
+      "status": 200,
+      "wallMs": 203.05129999999917,
+      "bytes": 473
+    },
+    {
+      "tool": "list_diaries",
+      "status": 200,
+      "wallMs": 234.66769999999997,
+      "bytes": 473
+    },
+    {
+      "tool": "list_diaries",
+      "status": 200,
+      "wallMs": 104.95099999999911,
+      "bytes": 473
+    },
+    {
+      "tool": "list_diaries",
+      "status": 200,
+      "wallMs": 108.07360000000153,
+      "bytes": 473
+    },
+    {
+      "tool": "list_diaries",
+      "status": 200,
+      "wallMs": 180.52359999999862,
+      "bytes": 473
+    },
+    {
+      "tool": "list_diaries",
+      "status": 200,
+      "wallMs": 111.08140000000094,
+      "bytes": 473
+    },
+    {
+      "tool": "search_diaries",
+      "status": 200,
+      "wallMs": 132.52769999999873,
+      "bytes": 365
+    }
+  ],
+  "finishedAt": "2026-10-20T15:43:33.783Z"
+}

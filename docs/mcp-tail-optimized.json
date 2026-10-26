@@ -1,0 +1,238 @@
+{
+  "checkedAt": "2026-10-20T15:44:32.366Z",
+  "worker": "kiroku-mcp-check-20261021",
+  "samples": [
+    {
+      "timestamp": 1792511003998,
+      "outcome": "ok",
+      "cpuTime": 20,
+      "wallTime": 639,
+      "eventType": "POST",
+      "keys": [
+        "wallTime",
+        "cpuTime",
+        "truncated",
+        "executionModel",
+        "outcome",
+        "scriptVersion",
+        "scriptName",
+        "diagnosticsChannelEvents",
+        "exceptions",
+        "logs",
+        "eventTimestamp",
+        "event"
+      ]
+    },
+    {
+      "timestamp": 1792511004871,
+      "outcome": "ok",
+      "cpuTime": 6,
+      "wallTime": 38,
+      "eventType": "POST",
+      "keys": [
+        "wallTime",
+        "cpuTime",
+        "truncated",
+        "executionModel",
+        "outcome",
+        "scriptVersion",
+        "scriptName",
+        "diagnosticsChannelEvents",
+        "exceptions",
+        "logs",
+        "eventTimestamp",
+        "event"
+      ]
+    },
+    {
+      "timestamp": 1792511005148,
+      "outcome": "ok",
+      "cpuTime": 4,
+      "wallTime": 35,
+      "eventType": "POST",
+      "keys": [
+        "wallTime",
+        "cpuTime",
+        "truncated",
+        "executionModel",
+        "outcome",
+        "scriptVersion",
+        "scriptName",
+        "diagnosticsChannelEvents",
+        "exceptions",
+        "logs",
+        "eventTimestamp",
+        "event"
+      ]
+    },
+    {
+      "timestamp": 1792511005299,
+      "outcome": "ok",
+      "cpuTime": 4,
+      "wallTime": 84,
+      "eventType": "POST",
+      "keys": [
+        "wallTime",
+        "cpuTime",
+        "truncated",
+        "executionModel",
+        "outcome",
+        "scriptVersion",
+        "scriptName",
+        "diagnosticsChannelEvents",
+        "exceptions",
+        "logs",
+        "eventTimestamp",
+        "event"
+      ]
+    },
+    {
+      "timestamp": 1792511005595,
+      "outcome": "ok",
+      "cpuTime": 5,
+      "wallTime": 42,
+      "eventType": "POST",
+      "keys": [
+        "wallTime",
+        "cpuTime",
+        "truncated",
+        "executionModel",
+        "outcome",
+        "scriptVersion",
+        "scriptName",
+        "diagnosticsChannelEvents",
+        "exceptions",
+        "logs",
+        "eventTimestamp",
+        "event"
+      ]
+    },
+    {
+      "timestamp": 1792511005833,
+      "outcome": "ok",
+      "cpuTime": 5,
+      "wallTime": 46,
+      "eventType": "POST",
+      "keys": [
+        "wallTime",
+        "cpuTime",
+        "truncated",
+        "executionModel",
+        "outcome",
+        "scriptVersion",
+        "scriptName",
+        "diagnosticsChannelEvents",
+        "exceptions",
+        "logs",
+        "eventTimestamp",
+        "event"
+      ]
+    },
+    {
+      "timestamp": 1792511006065,
+      "outcome": "ok",
+      "cpuTime": 4,
+      "wallTime": 139,
+      "eventType": "POST",
+      "keys": [
+        "wallTime",
+        "cpuTime",
+        "truncated",
+        "executionModel",
+        "outcome",
+        "scriptVersion",
+        "scriptName",
+        "diagnosticsChannelEvents",
+        "exceptions",
+        "logs",
+        "eventTimestamp",
+        "event"
+      ]
+    },
+    {
+      "timestamp": 1792511006381,
+      "outcome": "ok",
+      "cpuTime": 4,
+      "wallTime": 35,
+      "eventType": "POST",
+      "keys": [
+        "wallTime",
+        "cpuTime",
+        "truncated",
+        "executionModel",
+        "outcome",
+        "scriptVersion",
+        "scriptName",
+        "diagnosticsChannelEvents",
+        "exceptions",
+        "logs",
+        "eventTimestamp",
+        "event"
+      ]
+    },
+    {
+      "timestamp": 1792511006564,
+      "outcome": "ok",
+      "cpuTime": 5,
+      "wallTime": 35,
+      "eventType": "POST",
+      "keys": [
+        "wallTime",
+        "cpuTime",
+        "truncated",
+        "executionModel",
+        "outcome",
+        "scriptVersion",
+        "scriptName",
+        "diagnosticsChannelEvents",
+        "exceptions",
+        "logs",
+        "eventTimestamp",
+        "event"
+      ]
+    },
+    {
+      "timestamp": 1792511006714,
+      "outcome": "ok",
+      "cpuTime": 4,
+      "wallTime": 92,
+      "eventType": "POST",
+      "keys": [
+        "wallTime",
+        "cpuTime",
+        "truncated",
+        "executionModel",
+        "outcome",
+        "scriptVersion",
+        "scriptName",
+        "diagnosticsChannelEvents",
+        "exceptions",
+        "logs",
+        "eventTimestamp",
+        "event"
+      ]
+    },
+    {
+      "timestamp": 1792511006960,
+      "outcome": "ok",
+      "cpuTime": 5,
+      "wallTime": 37,
+      "eventType": "POST",
+      "keys": [
+        "wallTime",
+        "cpuTime",
+        "truncated",
+        "executionModel",
+        "outcome",
+        "scriptVersion",
+        "scriptName",
+        "diagnosticsChannelEvents",
+        "exceptions",
+        "logs",
+        "eventTimestamp",
+        "event"
+      ]
+    }
+  ],
+  "tailDeleted": true
+}

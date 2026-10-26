@@ -117,4 +117,6 @@ python scripts/backup_restore.py restore-empty-d1 --sql 'X:/Encrypted/KirokuBack
 
 ## 無料枠の確認
 
+MCP追加後の本人限定OAuth設定、日次タスク、要約履歴・永久receipt、読取予算、復旧時の扱いは[MCP運用](mcp-operations.md)と[実測・公開判定](mcp-verification.md)を参照。DBバックアップ前はMCP経路も停止し、復元は親表から子表へ適用して外部キーを確認する。要約を含むJSONは形式版2だが、要約履歴・receiptまで含むSQL退避の代用にはしない。
+
 D1 Freeは1DB 500MB、最大10DB、account全体5GB、Time Travel7日。1日1MB近い本文を増やすと容量が先に制約になる。本文を持たないreceiptも永久保持のため増える。Cloudflare管理画面でWorkers/D1のリクエスト・行読み書き・保存量を確認し、上限接近時はJSON退避や運用を見直す。自動課金やPaid有効化はしない。

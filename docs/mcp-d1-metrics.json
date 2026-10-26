@@ -1,0 +1,28 @@
+{
+  "checkedAt": "2026-10-20T15:53:01.670Z",
+  "scope": "temporary fake-data database; all setup, protocol, load, and ChatGPT activity on UTC date",
+  "database": "kiroku-mcp-check-20261021-db",
+  "data": {
+    "viewer": {
+      "accounts": [
+        {
+          "d1AnalyticsAdaptiveGroups": [
+            {
+              "dimensions": {
+                "databaseId": "269be123-3b6c-4d48-87ee-095e619bd3a5",
+                "date": "2026-10-20"
+              },
+              "sum": {
+                "readQueries": 450,
+                "rowsRead": 777,
+                "rowsWritten": 216,
+                "writeQueries": 169
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "errors": null
+}

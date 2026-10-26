@@ -1,5 +1,7 @@
 # 初回公開記録
 
+2026-10-21のMCP追加公開は[MCP本番公開記録](mcp-deployment.md)を参照。既存Worker・D1・独自ドメインへ反映し、MCP用のpath別Accessアプリを追加した。
+
 初回公開日：**2026-10-18（日本時間）**。
 
 - 公開リポジトリ：[TkymHrt/kiroku](https://github.com/TkymHrt/kiroku)

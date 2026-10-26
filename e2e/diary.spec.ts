@@ -354,6 +354,28 @@ test(titles[7], async ({ page, context, request, diaryDate }) => {
 
 test(titles[8], async ({ page, request, diaryDate }) => {
   await mutate(request, diaryDate, "create", "trash export body");
+  const call = async (name: string, args: Record<string, unknown>) => {
+    const response = await request.post("/mcp", {
+      headers: { accept: "application/json, text/event-stream" },
+      data: { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name, arguments: args } },
+    });
+    expect(response.ok()).toBe(true);
+    const result = (await response.json()).result;
+    expect(result.isError).toBeUndefined();
+    return JSON.parse(result.content[0].text);
+  };
+  const source = await call("get_diary", { date: diaryDate });
+  expect(source.complete).toBe(true);
+  await call("save_summary", {
+    mutationId: crypto.randomUUID(),
+    date: diaryDate,
+    diaryId: source.id,
+    sourceVersion: source.version,
+    epoch: source.epoch,
+    expectedRevision: source.summaryRevision,
+    summary: "検証用本文を保存した。",
+    sourceToken: source.sourceToken,
+  });
   await mutate(request, diaryDate, "trash");
   await page.goto("/");
   await page.getByRole("button", { name: "設定", exact: true }).click();
@@ -364,10 +386,11 @@ test(titles[8], async ({ page, request, diaryDate }) => {
     formatVersion: number;
     diaries: Diary[];
   };
-  expect(data.formatVersion).toBe(1);
+  expect(data.formatVersion).toBe(2);
   expect(data.diaries.find((item) => item.date === diaryDate)).toMatchObject({
     body: "trash export body",
     deletedAt: expect.any(String),
+    aiSummary: { summary: "検証用本文を保存した。", sourceVersion: 1, revision: 1 },
   });
 });
 

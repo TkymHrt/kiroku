@@ -123,6 +123,15 @@ def fixture() -> sqlite3.Connection:
     ]:
         connection.execute("INSERT INTO mutation_receipts VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                            (mutation, fingerprint * 64, identity, date, kind, version, epoch, stamp))
+    for identity in ["fixture-near-limit", "fixture-trash"]:
+        for revision in [1, 2]:
+            connection.execute("INSERT INTO summary_history VALUES (?, ?, ?, ?, ?, ?)",
+                               (identity, revision, 7, epoch, f"架空の要約 {revision} 🍵", stamp))
+        connection.execute("INSERT INTO diary_summaries VALUES (?, ?, ?, ?, ?, ?)",
+                           (identity, 7, epoch, 2, "架空の要約 2 🍵", stamp))
+    connection.execute("INSERT INTO summary_mutation_receipts VALUES (?, ?, ?, ?, ?, ?, ?)",
+                       ("fixture-summary-operation", "e" * 64, "fixture-near-limit", 7, 2, epoch, stamp))
+    connection.execute("INSERT INTO mcp_daily_usage VALUES (?, ?, ?, ?)", ("2026-10-20", 10, 2, 24000))
     connection.commit()
     return connection
 
@@ -131,6 +140,7 @@ class LocalD1:
     """SQLite stand-in exercising the same small-SQL transfer plan, not real D1."""
     def __init__(self):
         self.connection = sqlite3.connect(":memory:")
+        self.connection.execute("PRAGMA foreign_keys=ON")
         self.connection.row_factory = sqlite3.Row
         self.max_sql_bytes = 0
         self.max_parameter_bytes = 0
@@ -202,7 +212,18 @@ def transfer(source: sqlite3.Connection, target: Any) -> None:
     for item in schema:
         if item["type"] == "table":
             target.query(item["sql"])
-    for table in table_names:
+    # Insert parents before children while keeping D1 foreign keys enforced.
+    remaining = set(table_names)
+    ordered: list[str] = []
+    while remaining:
+        ready = sorted(table for table in remaining if not {
+            row["table"] for row in source.execute(f"PRAGMA foreign_key_list({q(table)})")
+        }.intersection(remaining))
+        if not ready:
+            raise RuntimeError("Cyclic foreign keys require a reviewed restore plan")
+        ordered.extend(ready)
+        remaining.difference_update(ready)
+    for table in ordered:
         info = source.execute(f"PRAGMA table_info({q(table)})").fetchall()
         primary = [r["name"] for r in sorted(info, key=lambda r: r["pk"]) if r["pk"]]
         columns = [r["name"] for r in info]
@@ -252,8 +273,10 @@ def target_snapshot(source: sqlite3.Connection, target: Any) -> dict[str, Any]:
 
 
 def server_revision(target: Any) -> str:
+    names = {row["name"] for row in target.query("SELECT name FROM sqlite_schema WHERE type='table'")}
+    summary_revision = " || ':' || (SELECT COALESCE(MAX(rowid), 0) FROM summary_mutation_receipts)" if "summary_mutation_receipts" in names else ""
     rows = target.query("SELECT value || ':' || (SELECT COALESCE(MAX(rowid), 0) "
-                        "FROM mutation_receipts) AS revision FROM app_meta WHERE key='database_epoch'")
+                        "FROM mutation_receipts)" + summary_revision + " AS revision FROM app_meta WHERE key='database_epoch'")
     if not rows:
         raise RuntimeError("Database epoch missing; cannot verify export stability")
     return str(rows[0]["revision"])
@@ -266,6 +289,11 @@ def verify_indexes(source: sqlite3.Connection, target: Any) -> list[str]:
     if expected != actual:
         raise RuntimeError("Restored indexes differ from SQL backup")
     return expected
+
+
+def verify_foreign_keys(target: Any) -> None:
+    if target.query("PRAGMA foreign_key_check"):
+        raise RuntimeError("Restored foreign keys are inconsistent")
 
 
 def body_proof(connection: sqlite3.Connection) -> list[dict[str, Any]]:
@@ -301,6 +329,7 @@ def self_test(output: Path) -> None:
         if snapshot(original) != target_snapshot(original, mirror):
             raise RuntimeError("Chunked parameterized restore table digest mismatch")
         indexes = verify_indexes(restored, mirror)
+        verify_foreign_keys(mirror)
         previous_epoch = mirror.query("SELECT value FROM app_meta WHERE key='database_epoch'")[0]["value"]
         epoch = rotate_epoch(mirror)
         if epoch == previous_epoch:
@@ -315,7 +344,8 @@ def self_test(output: Path) -> None:
         report = {"checkedAt": now(), "kind": "local-sqlite-only", "passed": True,
                   "sqlExportImportMatched": True, "chunkedParameterizedTransferMatched": True,
                   "epochRotated": True, "nonemptyTargetRefused": True, "maxSqlBytes": mirror.max_sql_bytes,
-                  "metadataTablesMatched": ["app_meta", "mutation_receipts"], "indexesRestored": indexes,
+                  "metadataTablesMatched": ["app_meta", "mutation_receipts", "summary_mutation_receipts", "mcp_daily_usage"],
+                  "tablesMatched": tables(original), "foreignKeysChecked": True, "indexesRestored": indexes,
                   "maxBoundStringBytes": mirror.max_parameter_bytes,
                   "sqlBackupBytes": sql.stat().st_size, "bodies": body_proof(original),
                   "migrationSha256": {path.name: sha(path.read_bytes())
@@ -387,10 +417,12 @@ def remote_proof(output: Path) -> None:
             if snapshot(exported) != target_snapshot(exported, target):
                 raise RuntimeError("Real D1 restored table digest mismatch")
             indexes = verify_indexes(exported, target)
+            verify_foreign_keys(target)
             rotate_epoch(target)
             report.update({"passed": True, "sqlExportImportMatched": True,
                            "chunkedParameterizedTransferMatched": True, "epochRotated": True,
-                           "metadataTablesMatched": ["app_meta", "mutation_receipts"], "indexesRestored": indexes,
+                           "metadataTablesMatched": ["app_meta", "mutation_receipts", "summary_mutation_receipts", "mcp_daily_usage"],
+                           "tablesMatched": tables(exported), "foreignKeysChecked": True, "indexesRestored": indexes,
                            "bodies": body_proof(exported), "sqlBackupBytes": sql.stat().st_size})
     except Exception as error:
         failed = error
@@ -437,11 +469,13 @@ def restore_empty(args: Any) -> None:
     if snapshot(source) != target_snapshot(source, target):
         raise RuntimeError("Restored D1 content mismatch; do not route application to this database")
     indexes = verify_indexes(source, target)
+    verify_foreign_keys(target)
     rotate_epoch(target)
     write_report(args.report, {"checkedAt": now(), "kind": "real-empty-cloudflare-d1-restore",
         "passed": True, "databaseId": identity, "databaseName": args.expected_name,
         "allTableDigestsMatchedBeforeEpochRotation": True, "epochRotated": True,
-        "metadataTablesMatched": ["app_meta", "mutation_receipts"], "indexesRestored": indexes,
+        "metadataTablesMatched": [name for name in ("app_meta", "mutation_receipts", "summary_mutation_receipts", "mcp_daily_usage") if name in tables(source)],
+        "tablesMatched": tables(source), "foreignKeysChecked": True, "indexesRestored": indexes,
         "sqlSha256": sha(args.sql.read_bytes()), "bodies": body_proof(source),
         "applicationBindingChanged": False})
 

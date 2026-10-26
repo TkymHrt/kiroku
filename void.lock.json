@@ -4,19 +4,25 @@
     "name": "kiroku",
     "workers_dev": true,
     "preview_urls": false,
+    "routes": [
+      {
+        "pattern": "kiroku.tkymhrt.dpdns.org",
+        "custom_domain": true
+      }
+    ],
     "observability": {
       "enabled": false
     }
   },
   "resolved": {
-    "account_id": "7bc1ed6d9b848da05da9416293ea351a",
-    "compatibility_date": "2026-02-24",
     "name": "kiroku",
     "workers_dev": true,
     "preview_urls": false,
     "observability": {
       "enabled": false
     },
+    "account_id": "7bc1ed6d9b848da05da9416293ea351a",
+    "compatibility_date": "2026-02-24",
     "d1_databases": [
       {
         "binding": "DB",
@@ -32,5 +38,5 @@
       }
     ]
   },
-  "text": "// void:published-traffic:v1:eyJ3b3JrZXJzX2RldiI6dHJ1ZSwicHJldmlld191cmxzIjpmYWxzZSwicm91dGVzIjpbeyJwYXR0ZXJuIjoia2lyb2t1LnRreW1ocnQuZHBkbnMub3JnIiwiY3VzdG9tX2RvbWFpbiI6dHJ1ZX1dfQ\n{\n  \"account_id\": \"7bc1ed6d9b848da05da9416293ea351a\",\n  \"compatibility_date\": \"2026-02-24\",\n  \"name\": \"kiroku\",\n  \"workers_dev\": true,\n  \"preview_urls\": false,\n  \"observability\": {\n    \"enabled\": false\n  },\n  \"d1_databases\": [\n    {\n      \"binding\": \"DB\",\n      \"database_name\": \"kiroku-db\",\n      \"database_id\": \"73ffc7a5-fcfd-4ce7-b99f-2f1f3828a7aa\",\n      \"migrations_dir\": \"./db/migrations\"\n    }\n  ],\n  \"routes\": [\n    {\n      \"pattern\": \"kiroku.tkymhrt.dpdns.org\",\n      \"custom_domain\": true\n    }\n  ]\n}\n"
+  "text": "// void:published-traffic:v1:eyJ3b3JrZXJzX2RldiI6dHJ1ZSwicHJldmlld191cmxzIjpmYWxzZSwicm91dGVzIjpbeyJwYXR0ZXJuIjoia2lyb2t1LnRreW1ocnQuZHBkbnMub3JnIiwiY3VzdG9tX2RvbWFpbiI6dHJ1ZX1dfQ\n{\n  \"name\": \"kiroku\",\n  \"workers_dev\": true,\n  \"preview_urls\": false,\n  \"observability\": {\n    \"enabled\": false\n  },\n  \"account_id\": \"7bc1ed6d9b848da05da9416293ea351a\",\n  \"compatibility_date\": \"2026-02-24\",\n  \"d1_databases\": [\n    {\n      \"binding\": \"DB\",\n      \"database_name\": \"kiroku-db\",\n      \"database_id\": \"73ffc7a5-fcfd-4ce7-b99f-2f1f3828a7aa\",\n      \"migrations_dir\": \"./db/migrations\"\n    }\n  ],\n  \"routes\": [\n    {\n      \"pattern\": \"kiroku.tkymhrt.dpdns.org\",\n      \"custom_domain\": true\n    }\n  ]\n}\n"
 }

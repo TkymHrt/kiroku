@@ -1,5 +1,5 @@
 import { sql } from "void/db";
-import { check, index, integer, sqliteTable, text } from "void/schema-d1";
+import { check, index, integer, primaryKey, sqliteTable, text } from "void/schema-d1";
 
 export const diaries = sqliteTable(
   "diaries",
@@ -45,4 +45,61 @@ export const mutationReceipts = sqliteTable(
 export const appMeta = sqliteTable("app_meta", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),
+});
+
+// Summary text never changes the source diary's version. Purge cascades to both
+// current text and history; non-content operation receipts remain indefinitely.
+export const diarySummaries = sqliteTable(
+  "diary_summaries",
+  {
+    diaryId: text("diary_id")
+      .primaryKey()
+      .references(() => diaries.id, { onDelete: "cascade" }),
+    sourceVersion: integer("source_version").notNull(),
+    sourceEpoch: text("source_epoch").notNull(),
+    revision: integer("revision").notNull(),
+    summary: text("summary").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (table) => [
+    check("summary_revision_positive", sql`${table.revision} >= 1`),
+    check("summary_bytes", sql`length(CAST(${table.summary} AS BLOB)) BETWEEN 1 AND 4000`),
+  ],
+);
+
+export const summaryHistory = sqliteTable(
+  "summary_history",
+  {
+    diaryId: text("diary_id")
+      .notNull()
+      .references(() => diaries.id, { onDelete: "cascade" }),
+    revision: integer("revision").notNull(),
+    sourceVersion: integer("source_version").notNull(),
+    sourceEpoch: text("source_epoch").notNull(),
+    summary: text("summary").notNull(),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.diaryId, table.revision] }),
+    check("summary_history_bytes", sql`length(CAST(${table.summary} AS BLOB)) BETWEEN 1 AND 4000`),
+  ],
+);
+
+export const summaryMutationReceipts = sqliteTable("summary_mutation_receipts", {
+  mutationId: text("mutation_id").primaryKey(),
+  requestHash: text("request_hash").notNull(),
+  diaryId: text("diary_id").notNull(),
+  sourceVersion: integer("source_version").notNull(),
+  resultRevision: integer("result_revision").notNull(),
+  epoch: text("epoch").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+
+// Shared by all Worker isolates, rather than an in-memory rate limit. These
+// counters contain no text, query, account identifier or authentication data.
+export const mcpDailyUsage = sqliteTable("mcp_daily_usage", {
+  day: text("day").primaryKey(),
+  calls: integer("calls").notNull().default(0),
+  searches: integer("searches").notNull().default(0),
+  readCharacters: integer("read_characters").notNull().default(0),
 });

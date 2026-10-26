@@ -5,6 +5,7 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { MutationRequest } from "../src/lib/types";
 import { getDiary, getDiaryState, getEpoch, mutateDiary } from "./diaries";
 import { authenticate } from "./security";
+import { getMcpDiary, saveSummary } from "./mcp-service";
 
 const bindings = env as unknown as { DB: D1Database; TEST_MIGRATIONS: D1Migration[] };
 
@@ -92,5 +93,42 @@ describe("official Cloudflare Workers runtime integration", () => {
         false,
       ),
     ).rejects.toMatchObject({ status: 401, code: "AUTH_REQUIRED" });
+  });
+
+  it("saves and replays a summary atomically without changing the source diary", async () => {
+    const db = bindings.DB.withSession("first-primary");
+    const day = "2026-10-18";
+    const original = (await mutateDiary(db, day, create())).diary!;
+    const context = { db, secret: "worker-test-only-mcp-cursor-key-32-characters" };
+    const read = await getMcpDiary(context, { date: day });
+    const request = {
+      mutationId: crypto.randomUUID(),
+      date: day,
+      diaryId: read.id,
+      sourceVersion: read.version,
+      epoch,
+      expectedRevision: read.summaryRevision,
+      summary: "Workers 内の日記を保存した。",
+      sourceToken: read.sourceToken,
+    };
+    expect((await saveSummary(context, request)).appliedRevision).toBe(1);
+    expect((await saveSummary(context, request)).replayed).toBe(true);
+    expect(await getDiary(db, day)).toEqual(original);
+    expect((await getMcpDiary(context, { date: day })).summaryStatus).toBe("current");
+  });
+
+  it("preserves multibyte and embedded NUL bytes across signed chunks", async () => {
+    const day = "2026-10-18";
+    const body = "a".repeat(11999) + "🍵\u0000日本語";
+    await mutateDiary(bindings.DB, day, create(body));
+    const context = {
+      db: bindings.DB.withSession("first-primary"),
+      secret: "worker-test-only-mcp-cursor-key-32-characters",
+    };
+    const first = await getMcpDiary(context, { date: day });
+    expect(first.sourceToken).toBeNull();
+    const last = await getMcpDiary(context, { date: day, cursor: first.nextCursor });
+    expect(first.body + last.body).toBe(body);
+    expect(last.complete).toBe(true);
   });
 });

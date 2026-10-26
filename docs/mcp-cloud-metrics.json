@@ -1,0 +1,33 @@
+{
+  "checkedAt": "2026-10-20T15:35:25.310Z",
+  "kind": "real-workers-graphql-analytics",
+  "worker": "kiroku-mcp-check-20261021",
+  "from": "2026-10-20T15:28:00Z",
+  "to": "2026-10-20T15:35:24.476Z",
+  "data": {
+    "viewer": {
+      "accounts": [
+        {
+          "workersInvocationsAdaptive": [
+            {
+              "dimensions": {
+                "status": "success"
+              },
+              "quantiles": {
+                "cpuTimeP50": 5032,
+                "cpuTimeP90": 6440,
+                "cpuTimeP99": 16649
+              },
+              "sum": {
+                "errors": 0,
+                "requests": 103,
+                "subrequests": 4
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "errors": null
+}

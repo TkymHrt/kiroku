@@ -69,21 +69,39 @@ previewはreact-markdown＋remark-gfmで現在本文を描画し、生HTMLを実
 
 ## HTTP・公開境界
 
-| Method / path                      | 契約                                                                                                                                                                                                  |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GET `/api/session`                 | 認証確認。本人以外へ本文を返さない。                                                                                                                                                                  |
-| GET `/api/diaries`                 | 通常/ゴミ箱一覧。`before`日付cursor、`limit`初期20（1〜100）。本文を含まないsummary。                                                                                                                 |
-| GET `/api/diaries/:date`           | `{diary, epoch, absenceToken}`。未作成はnull、ゴミ箱も状態付きで返す。absenceTokenはその日のreceiptに基づく不在世代の照合値。                                                                         |
-| POST `/api/diaries/:date`          | 明示kindによる条件付き書込。create/update/trash/restore/purge。                                                                                                                                       |
-| GET `/api/diaries/:date/neighbors` | D1の有効日記の前後日。端末だけの未同期日はclient側で統合。                                                                                                                                            |
-| GET `/api/export`                  | `{formatVersion:1, exportedAt, epoch, snapshotToken, diaries, nextCursor}`。3件/page。継続は`after=nextCursor&snapshotToken=最初のtoken`。設定画面で1つのJSONへまとめ、内部token/cursorは出力しない。 |
+| Method / path                      | 契約                                                                                                                                                                                                                                               |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET `/api/session`                 | 認証確認。本人以外へ本文を返さない。                                                                                                                                                                                                               |
+| GET `/api/diaries`                 | 通常/ゴミ箱一覧。`before`日付cursor、`limit`初期20（1〜100）。本文を含まないsummary。                                                                                                                                                              |
+| GET `/api/diaries/:date`           | `{diary, epoch, absenceToken}`。未作成はnull、ゴミ箱も状態付きで返す。absenceTokenはその日のreceiptに基づく不在世代の照合値。                                                                                                                      |
+| POST `/api/diaries/:date`          | 明示kindによる条件付き書込。create/update/trash/restore/purge。                                                                                                                                                                                    |
+| GET `/api/diaries/:date/neighbors` | D1の有効日記の前後日。端末だけの未同期日はclient側で統合。                                                                                                                                                                                         |
+| GET `/api/export`                  | `{formatVersion:2, exportedAt, epoch, snapshotToken, diaries, nextCursor}`。各日記に現在要約`aiSummary`（なければnull）。3件/page。継続は`after=nextCursor&snapshotToken=最初のtoken`。設定画面で1つのJSONへまとめ、内部token/cursorは出力しない。 |
 
 JSON error: `{ code, message, diary?, epoch?, absenceToken? }`。400は入力/日付/件数不正、401は認証要求、403は本人/CSRF拒否、409は競合/epoch変更/ID再利用/export途中変更、413は本文上限、415はContent-Type不正、503は一時障害/設定やDB準備不足。本文エラーをログへ埋めず短い一般文へ変える。
 
-JSON出力のsnapshotTokenはepochとreceiptの最大rowidから作り、pageと同じbatchで取得する。途中で書込があれば409 EXPORT_CHANGEDで全出力をやり直す。Freeの1invocation50 queries・Worker RAM制約があるため、全行をWorkerへ集めたり1レスポンス内で日数分queryを続けたりしない。ブラウザはpageを順次取得して1つのdownloadにするため、非常に大量の全件出力には端末側のメモリ制約が残る。
+JSON出力のsnapshotTokenはepochと本文・要約それぞれのreceiptの最大rowidから作り、pageと同じbatchで取得する。途中で書込があれば409 EXPORT_CHANGEDで全出力をやり直す。Freeの1invocation50 queries・Worker RAM制約があるため、全行をWorkerへ集めたり1レスポンス内で日数分queryを続けたりしない。ブラウザはpageを順次取得して1つのdownloadにするため、非常に大量の全件出力には端末側のメモリ制約が残る。
 
 書込はsame-origin＋JSON契約を検証する。本文API/JSON/downloadはno-store。UIのlogout後は本文を隠し、未同期残存に注意し、端末下書き自体は無断削除しない。Access設定、代替公開URL、期限切れをローカルunitだけで証明できないため公開前の実証項目に残す。
 
-## バックアップの制約
+## ADR 07: 本文と独立したMCP・要約
+
+`POST /mcp`はstateless Streamable HTTPのJSON応答。2025-03-26 / 2025-06-18 / 2025-11-25のinitialize・ping・tools/list・tools/call・通知を扱う。SSEストリーム・サーバー要求・MCPセッションは作らず、GET/DELETEは405。ブラウザAPIのCSRF例外は厳密に`/mcp`だけ。
+
+本番は`MCP_ORIGIN`のHTTPS origin/Host、Origin（存在時は自originまたはhttps://chatgpt.com）を検証する。Managed OAuthはBearerを消費して`Cf-Access-Jwt-Assertion`を転送するため、生のBearerがWorkerへ残ることを前提にしない。`ACCESS_TEAM_DOMAIN`と`MCP_ACCESS_AUD`で署名・issuer・audience・iat/exp・`ACCESS_EMAIL`を既存関数で照合する。`Sec-Fetch-Site`を持つブラウザ送信は拒否する。設定不足は503、匿名・偽造・別人・期限切れを拒否する。loopbackの開発例外だけ維持する。
+
+一覧は最大366日・20件、検索は31日・10件・検索語100 UTF-8 bytesのリテラル部分一致。原文はD1でBLOBとして12000bytesずつ切り出し、WorkerでUTF-8境界へ戻す。NUL・絵文字・CRLFも保持する。HMACで署名したcursorに日記ID・日付・version・epoch・要約revision・次offsetを固定し、改変・途中変更を拒否する。最後の分割だけsourceTokenを返す。完全取得前の要約保存にこのトークンは発行しない。本文・抜粋・URLは非信頼データとツール説明と応答に明記する。
+
+`list_pending_summaries`はTokyoの当日未満を古い順に最大3件返す。現在要約のsource versionまたはepochが違えばstaleとして再処理する。空日は作らない。空本文の既存日記は対象になる。ゴミ箱は全MCP取得から除外する。
+
+`diary_summaries`はdiary IDを主キーに現在要約、source version/epoch、独立revision、更新時刻を持つ。`summary_history`はID/revisionを複合主キーとする。両表の外部キーON DELETE CASCADEにより、完全削除時に本文と同じtransactionで消える。trash/restoreは要約を保持し、本文versionの変更で古くなる。`summary_mutation_receipts`は操作ID、固定payloadのSHA-256、ID/version、適用revision、epoch、時刻だけを無期限保持する。
+
+save_summaryはID・日付・source version・epoch・expectedRevision・最終sourceTokenを照合する。条件付きreceipt INSERT→changes()でgateした現在要約upsert→履歴INSERTを同じD1 batchで実行する。照合はfirst-primary sessionとbatch内で行う。同一ID同内容は元の適用revisionを返し、現在要約を上書きしない。同ID異内容・古い版・削除・同日別ID・復旧後epochは拒否する。既存の本文receipt/absenceTokenの契約には変更を加えない。
+
+`mcp_daily_usage`はTokyo日付単位で全isolate共通の500 tool calls・20検索・原文予約2,000,000bytesを上限にする。`read_characters`列には実際には予約UTF-8バイト数を保存する。原文取得1回につき12000bytesを先に予約し、失敗も加算する。条件付きUPDATEで並行呼出も制限する。前日までのカウンターは次の利用時に削除する。本文・検索語・認証情報は記録しない。1応答100000bytes・1リクエスト32000bytes。通常の日記保存にはこの予算を適用しない。
+
+JSON形式版2は各日記の`aiSummary: {summary, sourceVersion, sourceEpoch, revision, updatedAt} | null`を出力する。ゴミ箱と古い要約もそのまま含む。履歴・receipt・取得予算の完全退避はSQLを使う。SQL復元では親表→子表の順に挿入し、外部キーを無効化せず検証する。復旧後のepoch回転により、すべての古い要約が次回の未処理対象になる。
+
+## バックアップの制約（追加機能後）
 
 SQLバックアップはDB全体（receipt/epochを含む）を対象にし、JSON出力とは用途が異なる。本文約1MBが単一INSERTになるとD1 SQL文上限100KBを超えるため、空SQLiteへSQLを復元した後、空D1へ小さいparameterized SQLで転送する経路を用意した。ローカル実証と実Cloudflare実証を別々に記録する。実行手順・保管3世代・暗号化・復旧判断は[operations.md](operations.md)。

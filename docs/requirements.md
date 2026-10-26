@@ -4,13 +4,17 @@
 
 2026-10-20追記: 利用者の追加指定によりOxlint/Oxfmtと検証専用のGitHub Actions CIを導入する。公開は引き続き手動とし、自動デプロイは含めない。
 
+2026-10-21追記: [MCP実装計画](mcp-implementation-plan.md)をMVP後の追加範囲として採用。本人のChatGPTから日記を参照し、日次要約だけを別表へ保存する。実証状況は[mcp-verification.md](mcp-verification.md)で管理する。
+
 ## 目的・範囲
 
 単一利用者が Android Chrome を中心に、日本時間の日付単位で短い追記を素早く、失いにくく保存する。PC Chrome にも対応。Workers/D1 の無料枠を使い、費用は原則0円。将来の拡張を妨げないが、汎用基盤・AI向け機能は先行実装しない。
 
 MVPには編集・一覧・日付移動、Markdownソース/プレビュー、入力補助、IndexedDB下書き、D1自動同期、復旧・手動競合解決、ゴミ箱・復元・完全削除、コピー・Markdown保存・JSON出力、Access認証、テストと運用・バックアップ・復元手順を含める。
 
-除外: Keepインポート（将来計画にも含めず、過去分はKeepに残す）、独立メモ/ToDo、全文検索、月間カレンダー、画像・ファイル添付、AI要約/MCP/AI書き込み/定期要約、R2自動バックアップ、JSONインポート画面、自動デプロイ、常設クラウド検証環境、Safari/Firefox/iOS個別対応、共同編集、差分ハイライト。
+追加範囲: MCPでの一覧・日本語部分一致検索・原文取得・未要約一覧・要約保存。ChatGPTの既契約枠で毎日00:15 JSTに前日までの未処理日記を日本語200〜400字程度で要約する。遅い同期・追記・失敗は次回回収する。端末だけの下書きは対象外。
+
+除外: Keepインポート（将来計画にも含めず、過去分はKeepに残す）、独立メモ/ToDo、FTS・embedding、月間カレンダー、画像・ファイル添付、AIによる原文編集、任意SQL、要約用UI、Cron/Workers AI、セルフホスト、追加API課金、R2自動バックアップ、JSONインポート画面、自動デプロイ、常設クラウド検証環境、Safari/Firefox/iOS個別対応、共同編集、差分ハイライト。
 
 ## 機能要件
 
@@ -59,7 +63,7 @@ MVPには編集・一覧・日付移動、Markdownソース/プレビュー、�
 
 Void＋React＋TypeScript、Void標準のファイルAPI、Workers、D1＋Void標準Drizzle、Access、CodeMirror 6、react-markdown＋remark-gfm、IndexedDB、Bun、mise。CLIはVoid、追加はcf優先、未対応操作のみWrangler例外。設定を複数CLIで重複管理しない。pbakaus/impeccableを実装支援へ導入。Vitest、Workers Vitest連携、Playwright、Android実機。
 
-diariesの最低限: id、diary_date UNIQUE、body、version、deleted_at、created_at、updated_at。ユーザーテーブル原則なし。mutationId履歴は消失防止テストを満たす最小構造。将来要約は本文と別管理するがMVPに要約テーブル/FTSを作らない。
+diariesの最低限: id、diary_date UNIQUE、body、version、deleted_at、created_at、updated_at。ユーザーテーブル原則なし。mutationId履歴は消失防止テストを満たす最小構造。追加範囲の要約はdiary_summaries・summary_historyへ分離し、本文versionを進めない。summary_mutation_receiptsは本文を含めず無期限保持。完全削除は現在要約と要約履歴も同時削除する。FTSは作らない。
 
 APIは一覧/日付/作成・本文更新/前後日/ゴミ箱/復元/確認付き完全削除/JSON出力。日付・ID・期待version・mutationIdを検証。409競合、認証/入力/サイズ/一時障害を区別。完全削除後の更新を新規作成に変換しない。更新照合は最新DB状態を用いる。
 
@@ -80,4 +84,6 @@ APIは一覧/日付/作成・本文更新/前後日/ゴミ箱/復元/確認付�
 
 追加ヒアリング不要の設計事項: API URL/JSON、DB型/migration、操作ID永続化/重複排除、retry秒、一覧件数、UI、テスト、公開復旧コマンド。
 
-将来: メモ/ToDo/検索/カレンダー/添付/AI検索用要約/MCP・ChatGPT参照書込/定期要約。プラン別MCPと定期タスク連携の可否は着手時再調査。
+追加機能の契約: 読取4ツールはreadOnlyHint=true。save_summaryは書込として宣言し、diary ID・source version・epoch・要約revision・全文取得トークンを照合する。mutationIdとpayloadを送信前に固定し、同内容の再送は重複適用しない。競合時は停止する。JSON出力は形式版2で各日記に現在要約aiSummaryを付ける。要約履歴・receiptの完全退避はSQLを使う。
+
+将来: メモ/ToDo/FTS検索/カレンダー/添付。AIによる原文編集は今回も含めない。

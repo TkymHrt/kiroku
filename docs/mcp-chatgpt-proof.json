@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-10-20T15:52:23.336Z",
+  "chat": "https://chatgpt.com/c/6ad78a23-0360-83ee-b0ee-29fa1279f807",
+  "manualSummaryObservedInD1": true,
+  "manualSourceVersion": 1,
+  "manualSummaryRevision": 1,
+  "appendedSourceVersion": 3,
+  "manualResponseRendering": "ChatGPT showed unable to load response; D1 write independently confirmed",
+  "scheduledExecution": "passed: no manual approval after scheduling",
+  "scheduledFor": "2026-10-21T00:52:54+09:00",
+  "scheduledObservedAt": "2026-10-20T15:54:19.094Z",
+  "scheduledDatabase": {
+    "version": 3,
+    "source_version": 3,
+    "revision": 3,
+    "updated_at": "2026-10-20T15:54:12.911Z",
+    "summary_bytes": 746,
+    "history_count": 3,
+    "receipt_count": 3
+  },
+  "taskName": "きろくMCP回収再検証",
+  "dailyTask": "きろくMCP日次要約検証; daily 00:15 Asia/Tokyo; created through ChatGPT chat"
+}
