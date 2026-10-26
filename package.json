@@ -24,7 +24,6 @@
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "^1.4.4",
-    "@cloudflare/workers-types": "^5.20261016.1",
     "@modelcontextprotocol/inspector": "^2.11.0",
     "@modelcontextprotocol/sdk": "^1.32.1",
     "@playwright/test": "^1.64.1",
@@ -33,25 +32,28 @@
     "@vitejs/plugin-react": "^6.1.2",
     "fake-indexeddb": "^6.2.6",
     "miniflare": "^4.20260730.0",
-    "oxfmt": "^0.74.0",
-    "oxlint": "^1.89.0",
-    "typescript": "^7.0.2",
-    "vite": "^8.0.10",
-    "vitest": "^5.0.5",
-    "void": "^1.1.11"
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.4.0",
+    "vite-plus": "1.4.0",
+    "vitest": "5.0.5",
+    "void": "1.2.1"
   },
   "name": "kiroku",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "vp dev",
+    "build": "vp run cached-build",
+    "build:fresh": "vp run --no-cache cached-build",
     "prepare": "void prepare",
-    "typecheck": "void prepare && tsc --noEmit",
-    "test": "vitest run",
+    "typecheck": "void prepare && vp check --no-fmt --no-lint",
+    "test": "vp test run",
     "test:e2e": "playwright test",
-    "test:workers": "vitest run --config server/vitest.workers.config.ts",
-    "lint": "oxlint --deny-warnings",
-    "format": "oxfmt",
-    "format:check": "oxfmt --check",
-    "check": "bun run lint && bun run format:check && bun run typecheck && bun run test && bun run test:workers && bun run build"
+    "test:workers": "vp test run --config server/vitest.workers.config.ts",
+    "lint": "vp lint --deny-warnings",
+    "format": "vp fmt",
+    "format:check": "vp fmt --check",
+    "check": "void prepare && vp check --deny-warnings && bun run test && bun run test:workers && bun run build"
+  },
+  "overrides": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.4.0",
+    "vitest": "5.0.5"
   }
 }

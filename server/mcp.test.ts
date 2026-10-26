@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { Miniflare } from "miniflare";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vite-plus/test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { Diary, MutationRequest } from "../src/lib/types";
@@ -99,13 +99,14 @@ describe("MCP and independent summary persistence on D1", () => {
     return (await db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).first<{ n: number }>())!.n;
   }
   function rpc(body: unknown, headers: HeadersInit = {}) {
+    const requestHeaders = new Headers({
+      "content-type": "application/json",
+      accept: "application/json, text/event-stream",
+    });
+    new Headers(headers).forEach((value, key) => requestHeaders.set(key, value));
     return new Request("http://localhost/mcp", {
       method: "POST",
-      headers: {
-        "content-type": "application/json",
-        accept: "application/json, text/event-stream",
-        ...headers,
-      },
+      headers: requestHeaders,
       body: typeof body === "string" ? body : JSON.stringify(body),
     });
   }

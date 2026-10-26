@@ -1,7 +1,7 @@
 /// <reference types="@cloudflare/vitest-plugin/types" />
 import { env } from "cloudflare:workers";
 import { applyD1Migrations, type D1Migration } from "cloudflare:test";
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it } from "vite-plus/test";
 import type { MutationRequest } from "../src/lib/types";
 import { getDiary, getDiaryState, getEpoch, mutateDiary } from "./diaries";
 import { authenticate } from "./security";

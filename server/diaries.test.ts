@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { Miniflare } from "miniflare";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vite-plus/test";
 import type { Diary, MutationRequest } from "../src/lib/types";
 import {
   getExportPage,

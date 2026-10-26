@@ -822,6 +822,8 @@ test(titles[17], async ({ page, context, request, diaryDate }, info) => {
   await saved(request, diaryDate, "保存済みの本文");
   await expect(page.locator(".diary-heading .save-state")).toHaveText("保存済み");
   await page.evaluate(() => {
+    // Keep the original method for restoration; the wrapper calls it with apply(this, args).
+    // oxlint-disable-next-line typescript/unbound-method
     const original = IDBObjectStore.prototype.put;
     (window as unknown as { __restoreDraftWrites: () => void }).__restoreDraftWrites = () => {
       IDBObjectStore.prototype.put = original;

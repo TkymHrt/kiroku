@@ -21,9 +21,10 @@
 
 ## 開発と検証
 
-ツールはmise.toml、依存関係はbun.lockに従いBunを使う。Windowsでは内部ツール用Nodeも指定版を使い、コマンドに `mise exec --` を付ける。初回起動はREADME.md。
+ツールはmise.toml、依存関係はbun.lockに従いBunを使う。開発・検証・buildはローカルVite+、型生成・DB・公開はVoid。Windowsでは内部ツール用Nodeも指定版を使い、コマンドに `mise exec --` を付ける。初回起動はREADME.md。
 
-- `bun run check` はLint・整形チェック・型・単体・Workers連携・build。個別実行はpackage.jsonのscriptsを使い、整形適用は `bun run format`。
+- `bun run check` はVoidの型生成、Vite+のLint・整形チェック・型、単体・Workers連携・build。`vp check` 単独は静的検査のみ。設定はvite.config.mtsへ集約し、Workers連携だけserver/vitest.workers.config.tsを使う。個別実行はpackage.jsonのscripts、整形適用は `bun run format`。
+- エージェントの反復ビルドは `bun run build` を使う。vite.config.mtsのcached-buildタスクでキャッシュを標準利用し、入力変更やキャッシュなしでは通常ビルドする。Void生成物を入力から除きdistだけを復元する。`check` 内のbuildも同じ。強制再ビルドが必要な場合だけ `bun run build:fresh` を使う。静的検査・単体・Workers連携は毎回実行し、deployのbuildはVoidに任せる。Vite+更新時はvite aliasと同梱vitestのoverrideを揃える。
 - E2Eは `bun run test:e2e` で別実行。既存127.0.0.1:5173を使い、2080年/2081年の予約日付を作成・削除する。実データのある環境では実行しない。Edgeのローカル試験をAndroid/本番Accessの実証にしない。
 - DB構造・復元変更時は `mise exec -- python scripts/backup_restore.py self-test --report test-results/local-backup-proof.json`。実D1試験は運用手順に従い、架空データの一時DBだけを使う。
 - CIはPR/main pushでcheckとローカル復元を実行する。自動デプロイ・常設クラウド検証・有料化は対象外。

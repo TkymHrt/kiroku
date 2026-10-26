@@ -1,5 +1,0 @@
-{
-  "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "sortPackageJson": false,
-  "ignorePatterns": ["db/migrations/meta/**", "docs/*-backup-proof.json", "void.lock.json"]
-}

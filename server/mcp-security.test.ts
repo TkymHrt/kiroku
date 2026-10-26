@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { exportJWK, generateKeyPair, SignJWT } from "jose";
 import { authenticateMcp } from "./mcp-security";
 import { assertCsrf } from "./security";

@@ -24,7 +24,16 @@ mise exec -- bun run dev
 
 通常は `http://127.0.0.1:5173/` を開きます。データはローカルD1とブラウザのIndexedDBへ保存します。認証を省略するのは開発モードのloopbackだけです。開発サーバーを外部公開しないでください。
 
-ツール版は `mise.toml`、依存関係は `bun.lock` に従います。Windowsでは内部ツール用のNodeも含め、`mise exec --` から実行します。
+ツール版は `mise.toml`、依存関係は `bun.lock` に従います。Windowsでは内部ツール用のNodeも含め、`mise exec --` から実行します。Vite+はプロジェクト内の依存として使うため、グローバルインストールは不要です。
+
+| 管理するもの                           | 設定・ツール                                                                |
+| -------------------------------------- | --------------------------------------------------------------------------- |
+| Node・Bun・Pythonの版                  | `mise.toml`                                                                 |
+| 依存関係                               | Bun・`package.json`・`bun.lock`                                             |
+| 開発・ビルド・単体・Lint・整形・型検査 | Vite+・`vite.config.mts`。Workers連携だけ `server/vitest.workers.config.ts` |
+| 型生成・migration・Cloudflare公開      | Void・`void.config.ts`・`void.lock.json`                                    |
+
+Vite+の[公式手動導入手順](https://viteplus.dev/guide/local-cli)に従い、`vite` aliasをVite+と同じ版、`vitest` overrideを同梱版に固定しています。更新時は `mise exec -- bunx --no-install vp migrate` で揃え、`vp toolchain` と `bun run check` を確認します。Voidも[Vite+を標準選択肢](https://void.cloud/guide/quickstart)にしています。
 
 ## 検証
 
@@ -33,7 +42,17 @@ mise exec -- bun run check
 mise exec -- python scripts/backup_restore.py self-test --report test-results/local-backup-proof.json
 ```
 
-`check` はLint・整形チェック・型検査・単体・Workers連携・ビルドを実行します。整形の適用は `mise exec -- bun run format`。CIも検証とローカル復元試験だけを行います。
+`check` はVoidの型生成後、Vite+でLint・整形チェック・型検査・単体・Workers連携・ビルドを実行します。整形の適用は `mise exec -- bun run format`。Vite+の `vp check` 単独は静的検査だけで、単体やビルドを含む全検証には `bun run check` を使います。CIも検証とローカル復元試験だけを行います。
+
+普段のビルドはキャッシュを標準利用します。エージェントの反復作業でも次を使います。
+
+```powershell
+mise exec -- bun run build
+```
+
+内部では `vp run cached-build` を使います。入力が同じなら `dist/` を復元し、入力が変わった・キャッシュがない場合は通常ビルドして成功結果を保存します。キャッシュ保存の対象外になってもビルド自体は実行されます。ビルド本体の失敗はそのまま失敗として扱います。
+
+Void生成物を入力から除外するタスクを `vite.config.mts` に定義しています。ソース・設定・lock・環境変数は[Vite+の自動追跡](https://viteplus.dev/guide/automatic-data-tracking)に任せ、キャッシュは `node_modules/.vite/task-cache` に置きます。`check` 内のビルドも同じキャッシュを使い、静的検査・単体・Workers連携は毎回実行します。強制再ビルドは `mise exec -- bun run build:fresh`。手動公開時のビルドはVoidに任せます。CIへのキャッシュ転送は、保存・復元の時間もかかる[実験的な機能](https://viteplus.dev/guide/github-actions-cache)のため追加していません。
 
 E2Eは別途 `mise exec -- bun run test:e2e` を使います。既存の `127.0.0.1:5173` を再利用し、Edgeで2080年/2081年の架空データを作成・削除します。実データのある環境では実行しないでください。Android実機の確認とは区別します。
 

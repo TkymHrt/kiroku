@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { formatSource, safeUrl } from "./formatting";
 import { bodyBytes, isDiaryDate, tokyoToday } from "./types";
 

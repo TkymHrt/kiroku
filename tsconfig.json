@@ -9,18 +9,7 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["void/env", "vite/client"]
+    "types": ["void/env", "vite-plus/client"]
   },
-  "include": [
-    "src",
-    "pages",
-    "routes",
-    "middleware",
-    "crons",
-    "queues",
-    "db",
-    "server",
-    "env.ts",
-    "worker-configuration.d.ts"
-  ]
+  "include": ["src", "pages", "routes", "middleware", "crons", "queues", "db", "server", "env.ts"]
 }

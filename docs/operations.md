@@ -4,7 +4,7 @@
 
 ## ローカル開発
 
-初回起動は [README](../README.md#ローカル起動) を使う。ツール版はmise、依存関係はBunに従い、Windowsでは `mise exec --` を付ける。開発はローカルD1を使い、本番の接続情報を使わない。
+初回起動は [README](../README.md#ローカル起動) を使う。miseでツール版、Bunで依存関係、Vite+で開発・検証・ビルド、Voidで型生成・DB・公開を管理する。Windowsでは `mise exec --` を付ける。開発はローカルD1を使い、本番の接続情報を使わない。
 
 ```powershell
 mise exec -- bunx void db generate
@@ -39,26 +39,23 @@ PR・mainへのpushで `.github/workflows/ci.yml` が `check` とローカル復
 
 型・必要テスト・migrationレビュー後、確認結果を受入表へ記録する。実データの利用開始前には残るAndroid実機・別アカウント拒否・実Access期限切れ等を確認する。
 
+別端末での初回接続だけ `mise exec -- bunx void connect --platform cloudflare` を実行する。以後は次のコマンドを使う。
+
 ```powershell
-mise exec -- bunx void connect --platform cloudflare
 mise exec -- bunx void deploy --platform cloudflare
 ```
 
-Voidがbuild・リソース・migration・deployを管理する。生成物を直接編集せず、設定とlockの差分を管理する。cfで別のアプリ構成を追加しない。常設クラウド検証環境は作らず、課金が必要な選択肢は有効化前に本人へ確認する。
+Voidがbuild・リソース・migration・deployを管理する。通常の開発・公開にcf CLIやWranglerの直接実行は不要。生成物を直接編集せず、設定とlockの差分を管理する。常設クラウド検証環境は作らず、課金が必要な選択肢は有効化前に本人へ確認する。
 
 Access保護後のreadiness確認は次の手順を使う。
 
-1. `cf access login` の標準出力を表示せず受け取り、ブラウザで本人認証する。
+1. 公開時だけ、Cloudflare公式の `cloudflared access token --app=https://kiroku.23-h-takayama-nutfes.workers.dev` で本人セッションを取得する。標準出力のJWTは表示せず変数へ受け取る。未認証ならブラウザで本人認証する。これはVoidのCloudflareアカウント認証とは別。
 2. 短期JWTを当該deployプロセスだけのCF_ACCESS_TOKENへ渡す。preview無効の構成では送信先確認用に `CLOUDFLARE_WORKERS_SUBDOMAIN=23-h-takayama-nutfes` も同じプロセスへ渡す。
 3. 終了後は成功・失敗にかかわらずトークンを環境変数から除く。引数・Git・ログへ記録しない。readiness失敗をAccess policyの緩和やpreview有効化で回避しない。
 
-追加リソース操作はcfを優先し、`mise exec -- bunx cf cli search "export D1 database"` とhelp/schema・dry-runで対象と引数を確認する。Void/cfが対応しない操作だけWranglerを例外使用できる。SQL exportの例は次のとおり。
+SQL退避・分割復元は下記の既存スクリプトを使う。Voidの `db export` はローカル用で、リモート退避の代用にしない。Time TravelはVoidの `db restore`、Access policy・復旧用D1作成はCloudflare管理画面で対象を確認して行う。[VoidのCloudflare連携](https://void.cloud/integrations/cloudflare)・[DBコマンド](https://void.cloud/reference/cli/database)・[AccessのCLI認証](https://developers.cloudflare.com/cloudflare-one/tutorials/cli/) を参照する。
 
-```powershell
-mise exec -- bunx wrangler d1 export DATABASE_NAME --remote --output 'X:/Encrypted/KirokuBackup/diary-YYYYMMDD-before-change.sql'
-```
-
-コピー前に実DB名・保存先・local/remoteを確認する。観測ログは無効にし、公開後は匿名拒否・本人接続・配信物・ヘッダーを確認する。架空データを使った試験と実データへの操作を区別する。
+実DB名・保存先・local/remoteを確認する。観測ログは無効にし、公開後は匿名拒否・本人接続・配信物・ヘッダーを確認する。架空データを使った試験と実データへの操作を区別する。
 
 ### ドメインと旧URLの下書き
 
@@ -103,14 +100,14 @@ mise exec -- python scripts/backup_restore.py remote-proof --run-remote --report
 
 1. データと障害範囲を確認する。必要ならAccessを管理者専用にして書込を止め、可能なら現DBを新しい世代へ退避する。MCPも停止し、端末未同期本文はコピー/Markdownで確保する。IndexedDBを消さない。
 2. コードrollbackとDB復元を別々に判断する。Voidのproject status/logsを確認する。project rollbackはmigrationを戻さないため、旧コードと現DBの互換性も確認する。
-3. SQL復旧はVoid管理情報と整合する新しい空D1 `kiroku-recovery-*` を使う。cfで対象を確認して作成し、UUID・名前・空であることを再確認して次を実行する。
+3. SQL復旧はVoid管理情報と整合する新しい空D1 `kiroku-recovery-*` を使う。Cloudflare管理画面で対象accountを確認して作成し、UUID・名前・空であることを再確認して次を実行する。
 
 ```powershell
 mise exec -- python scripts/backup_restore.py restore-empty-d1 --sql 'X:/Encrypted/KirokuBackup/SELECTED.sql' --database-id NEW_EMPTY_UUID --confirm-empty-database-id NEW_EMPTY_UUID --expected-name kiroku-recovery-YYYYMMDD --report 'X:/Encrypted/KirokuBackup/recovery-proof.json'
 ```
 
 4. 全表一致とepoch回転の成功後、VoidのD1 bindingを復旧先へ更新し、migration/コードの整合性を確認して手動deployする。スクリプトはbindingや本番DBを変更しない。元DBは調査・復帰判断が終わるまで残す。
-5. Time Travelを選ぶ場合はVoidのrestore command/ブックマークを確認する。指定時点後の全書込を捨てる操作で、Free保持7日を超えた点には戻せない。書込再開前にapp_meta.database_epochを新UUIDへ回転し、旧epochを再利用しない。
+5. Time Travelを選ぶ場合は、Voidのdeployがmigration前に表示した `void db restore --platform cloudflare --bookmark BOOKMARK`、または `void db restore --platform cloudflare --timestamp ISO_TIME` を使う。対象DBと復元時点を確認し、`--yes` を付けず対話で実行する。指定時点後の全書込を捨てる操作で、Free保持7日を超えた点には戻せない。コードは戻らずmigration適用履歴は戻るため、次のdeploy前に問題のmigrationを修正する。書込再開前にapp_meta.database_epochを新UUIDへ回転し、旧epochを再利用しない。
 6. Android/PCでepoch不一致による同期停止を確認し、本人が端末版と復旧後のサーバー版を比較して再適用する。古いversionが一致してもそのまま送らない。各端末を確認してから書込を再開する。
 
 復元試験で本番DBを上書きしない。完全削除本文もSQL世代・Time Travelには残り得る。ブラウザデータ削除・端末喪失・容量不足による下書き消失は保証外で、日常のJSON出力・Markdown退避は本人が判断する。

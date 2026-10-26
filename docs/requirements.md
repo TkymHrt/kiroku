@@ -57,7 +57,7 @@
 
 ## 技術・データ・API
 
-Void + React + TypeScript、Workers/D1、Drizzle、Access、CodeMirror 6、react-markdown + remark-gfm、IndexedDB、Bun/miseを使用する。CLIとmigration管理はVoidに統一し、追加操作はcf、未対応操作だけWranglerを使う。検証にはVitest・Workers連携・PlaywrightとAndroid実機を使う。
+Void + React + TypeScript、Workers/D1、Drizzle、Access、CodeMirror 6、react-markdown + remark-gfm、IndexedDB、Bun/miseを使用する。開発・静的検査・単体・buildはVite+、型生成・DB・公開・Time TravelはVoidに統一する。cf CLIの導入は不要。Access policy・復旧用D1作成はCloudflare管理画面、リモートSQL退避・分割復元は既存スクリプト、公開時のAccess本人セッション取得はcloudflaredを使う。検証にはWorkers連携・PlaywrightとAndroid実機も使う。
 
 日記は日付一意で、本文・更新番号・削除状態・UTC作成更新時刻を持つ。APIの入力と更新前提を検証し、認証・入力不正・競合・サイズ超過・一時障害を区別する。完全削除後の更新を新規作成へ変換しない。詳細な型・DB・再送処理は [設計](architecture.md) を参照する。
 

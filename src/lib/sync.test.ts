@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vite-plus/test";
 import { IDBFactory } from "fake-indexeddb";
 import { DraftRepository, DraftRevisionConflict, emptyDraft } from "./drafts";
 import { DiarySyncEngine, retryAfterMilliseconds } from "./sync";
@@ -57,7 +57,7 @@ class FakeServer {
   failure: Response | null = null;
   beforePost: ((day: string) => Promise<void>) | null = null;
   fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-    const day = String(input).split("/").at(-1)!;
+    const day = (input instanceof Request ? input.url : input.toString()).split("/").at(-1)!;
     if (this.auth) return json({ code: "AUTH_REQUIRED", message: "認証切れ" }, 401);
     if (init?.method !== "POST")
       return json({
