@@ -34,3 +34,11 @@ Edgeで架空日付2099-12-31の作成→保存→ゴミ箱→復元→完全削
 390px幅でナビは0–130 / 130–260 / 260–390px、高さ44px。各領域両端のhit判定、矢印右余白12px、曜日3色、footerが「今日」のみであることを確認した。本番のブラウザ検証は読取だけで、書込は0件。
 
 単体91件・Workers4件・型・build・E2E40件が成功し、フォーカス微調整後の関連2件も成功した。詳細は [ローカル検証](local-test-results.md) と [UI変更](ui-refinement.md)。Android実機や実Access期限切れの合格には含めない。
+
+## 2026-10-27の環境更新
+
+commit `c15876c` をmainへpushし、[CI](https://github.com/TkymHrt/kiroku/actions/runs/40350393285)の静的検査・単体110件・Workers6件・build・ローカル復元試験が成功した。Void 1.2.1 / Vite+ 1.4.0、通常のbuildとcheck内のbuildでキャッシュを標準利用する構成へ更新した。
+
+Voidのstaged deployで既存Workerへ反映し、version `54331dbc-78bf-49eb-abdd-f08e9c157d7c` がliveになった。D1は全3件のmigrationが適用済みで、新しいmigrationはない。Worker/DB identity、独自ドメイン、旧URL、Access、preview無効、観測ログ無効を維持した。
+
+[確認JSON](toolchain-production-proof.json)の32項目で、両originの本人認証付きHTML・session・readiness・faviconが200、HTML/sessionの8セキュリティヘッダー、配信JS/CSSのローカルbuildとのSHA-256一致、匿名8経路のHEADがAccessへ302になることを確認した。日記本文の取得・変更、実データE2E、DB復元は行っていない。

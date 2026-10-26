@@ -1,0 +1,170 @@
+{
+  "checkedAt": "2026-10-26T15:38:56.6403351Z",
+  "gitCommit": "c15876cfba6948dd359a2f227aaa3634316ce000",
+  "checks": [
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/",
+      "securityHeadersMatched": 8
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "asset": "/assets/index-CHcgJbx7.js",
+      "sha256Matched": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "asset": "/assets/index-2vWVncS7.css",
+      "sha256Matched": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/session",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/session",
+      "securityHeadersMatched": 8
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/__void/ready",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/favicon.svg",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/",
+      "securityHeadersMatched": 8
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "asset": "/assets/index-CHcgJbx7.js",
+      "sha256Matched": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "asset": "/assets/index-2vWVncS7.css",
+      "sha256Matched": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/session",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/session",
+      "securityHeadersMatched": 8
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/__void/ready",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/favicon.svg",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/",
+      "anonymousStatus": 302
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/session",
+      "anonymousStatus": 302
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/diaries",
+      "anonymousStatus": 302
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/diaries/2080-01-01",
+      "anonymousStatus": 302
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/diaries/2080-01-01/neighbors",
+      "anonymousStatus": 302
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/export",
+      "anonymousStatus": 302
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/__void/ready",
+      "anonymousStatus": 302
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/favicon.svg",
+      "anonymousStatus": 302
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/",
+      "anonymousStatus": 302
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/session",
+      "anonymousStatus": 302
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/diaries",
+      "anonymousStatus": 302
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/diaries/2080-01-01",
+      "anonymousStatus": 302
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/diaries/2080-01-01/neighbors",
+      "anonymousStatus": 302
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/export",
+      "anonymousStatus": 302
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/__void/ready",
+      "anonymousStatus": 302
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/favicon.svg",
+      "anonymousStatus": 302
+    }
+  ],
+  "diaryReads": 0,
+  "diaryWrites": 0,
+  "workerVersion": "54331dbc-78bf-49eb-abdd-f08e9c157d7c",
+  "ciUrl": "https://github.com/TkymHrt/kiroku/actions/runs/40350393285"
+}
