@@ -1,84 +1,36 @@
 # 初回公開記録
 
-2026-10-21のMCP追加公開は[MCP本番公開記録](mcp-deployment.md)を参照。既存Worker・D1・独自ドメインへ反映し、MCP用のpath別Accessアプリを追加した。
+初回公開は2026-10-18 JST。手順は [運用](operations.md)、最新のMCP公開は [mcp-deployment.md](mcp-deployment.md)、未確認項目は [受入表](verification.md) を参照する。
 
-初回公開日：**2026-10-18（日本時間）**。
+| 対象        | 設定                                                                                  |
+| ----------- | ------------------------------------------------------------------------------------- |
+| リポジトリ  | [TkymHrt/kiroku](https://github.com/TkymHrt/kiroku)、初回main bd8d65b                 |
+| アプリ      | [きろく](https://kiroku.tkymhrt.dpdns.org/)                                           |
+| 旧URL       | [workers.dev](https://kiroku.23-h-takayama-nutfes.workers.dev/)、Access保護付きで維持 |
+| Worker / D1 | kiroku / kiroku-db、binding DB                                                        |
+| 管理        | Void CLI、void.config.ts、void.lock.json。手動公開、課金変更なし                      |
 
-- 公開リポジトリ：[TkymHrt/kiroku](https://github.com/TkymHrt/kiroku)
-- 初回mainコミット：`bd8d65b`
-- アプリ：[きろく](https://kiroku.tkymhrt.dpdns.org/)
-- 旧URL：[workers.dev](https://kiroku.23-h-takayama-nutfes.workers.dev/)（Access保護付きで維持）
-- 実行環境：Cloudflare Workers、Worker名`kiroku`
-- データベース：Cloudflare D1、DB名`kiroku-db`、binding名`DB`
+## 認証と公開口
 
-Void CLIでbuild・D1確保・migration適用・deployを実行した。リソース情報は`void.lock.json`、公開口と観測ログの設定は`void.config.ts`へ記録する。GitHubへのpushとCloudflareへの公開はローカルから手動で行い、CI/CDは導入していない。課金設定は変更していない。
+Accessのworker destinationで全経路を保護した。Allowは本人メール完全一致のIncludeとCloudflare IdPのRequire。Application/Policy sessionは168時間、Global sessionは未変更。preview URLと観測ログは無効。CLI互換のためBinding Cookieは無効、HttpOnlyは維持した。
 
-## Accessと公開口
+ACCESS_TEAM_DOMAIN・ACCESS_AUD・ACCESS_EMAILを登録し、WorkerでもJWTを照合する。本人MFAは申告とCloudflare APIで確認した。独自ドメインは同日Voidのdomain addで既存Workerへ接続し、再deploy・migrationは行っていない。
 
-単一Workerを対象にするself-hosted Accessアプリの`worker` destinationで、画面・API・静的ファイル・Void内部経路を含む全経路を保護した。Allow policyのIncludeは本人の完全一致メールアドレスだけ、RequireはCloudflare IdPだけとし、メンバー全体を許可するpolicyは設けていない。
+## 公開後の確認
 
-Application / Policy sessionは168時間（7日）。共通Global sessionは他アプリへの影響を避けるため変更していない。preview URLと観測ログは無効にした。CLIとの互換性のため、このアプリのBinding Cookieは無効、HttpOnlyは維持した。
+匿名で `/`・`/api/session`・`/api/diaries`・日付API・neighbors・`/api/export`・`/__void/ready`・`/favicon.svg` の8経路がAccessへ302。独自ドメインと旧URLで本人SSOも確認した。
 
-Workerには次のサーバーsecretを登録した。値は公開資料へ記載しない。
+Edgeで架空日付2099-12-31の作成→保存→ゴミ箱→復元→完全削除を確認し、終了時の日記件数は0件。実D1の一時DBでは1,000,000バイト本文のSQL退避・分割復元・全表一致・epoch回転・2DB削除が成功した。[復元証跡](remote-backup-proof.json)。
 
-- `ACCESS_TEAM_DOMAIN`
-- `ACCESS_AUD`
-- `ACCESS_EMAIL`
+型・単体86件・Workers4件・build・ソース固定後のE2E40件が成功。初回の8セキュリティヘッダーは標準Miniflareでの確認で、本番認証後の直接確認は翌日の更新で行った。
 
-WorkerでもAccess JWTの署名・issuer・audience・有効期限・本人メールを照合する。認証設定が欠けた場合はfail closedとする。
+## 2026-10-19の更新
 
-## 独自ドメインでの公開
+| 更新                                 | 公開version・確認                                                                                                                    |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| スマホナビの等幅化・単改行プレビュー | 880ece18-fd9a-4c8d-94da-a63a100cbfb3。Access保護後のstaged deploy、両originのアセット一致、認証付き4経路200と8ヘッダー、匿名8経路302 |
+| 全幅タップ範囲・日付選択・曜日色     | commit 7fc25c1、version 9058adbc-8d40-4705-905d-12f5c87e11cc。両originの配信物一致とAccess維持                                       |
 
-同日、既存のCloudflare zone内の未使用ホスト`kiroku.tkymhrt.dpdns.org`をVoidの`domain add`で既存Workerへ接続した。DNS・TLS・Workerの公開口を同期し、アプリの再deployやDB migrationは行っていない。Void設定・lock差分をcommitし、課金設定は変更していない。
+390px幅でナビは0–130 / 130–260 / 260–390px、高さ44px。各領域両端のhit判定、矢印右余白12px、曜日3色、footerが「今日」のみであることを確認した。本番のブラウザ検証は読取だけで、書込は0件。
 
-Workerを対象にしたAccess保護、本人メール1件だけのAllow policy、Cloudflare IdP、168時間のsessionは維持した。本人のMFA有効化申告に加え、Cloudflare APIでも有効化済みであることを確認した。
-
-新URLでも下記8経路すべてが匿名アクセス時にAccessへ302で移動し、PCのMicrosoft Edgeで本人SSO後に日記一覧の取得完了（空一覧）まで確認した。旧workers.dev URLは、旧URLに残る端末下書きを同期・退避できるよう維持する。IndexedDBはoriginごとに分かれるため、下書きは新URLへ自動移行されない。旧URLで「保存済み」を確認するか、コピー・Markdown保存で退避してから新URLへ移動する。
-
-## 確認した範囲
-
-匿名HTTPで次の8経路を確認し、すべてAccessのログインへ302で移動した。
-
-- `/`
-- `/api/session`
-- `/api/diaries`
-- `/api/diaries/2099-12-31`
-- `/api/diaries/2099-12-31/neighbors`
-- `/api/export`
-- `/__void/ready`
-- `/favicon.svg`
-
-PCのMicrosoft Edgeで本人のSSOを使い実画面を表示した。架空日付`2099-12-31`で、作成→「保存済み」→ゴミ箱→復元→再びゴミ箱→完全削除を確認し、終了後のD1日記件数は0件だった。
-
-実D1では1,000,000 UTF-8バイト本文を含む架空データをSQLへ出力し、新しい空D1へ分割パラメータで復元した。全表・本文の一致、index復元、epoch回転が成功し、試験用DB2件を削除した。[本文を含まない証跡](remote-backup-proof.json)を保存している。
-
-型チェック・単体テスト86件・公式Workers連携4件・ビルドが成功した。ソース固定後のE2E40件も単一実行ですべて成功した。標準MiniflareのASSETS配信でHTML/JSのセキュリティヘッダー8項目の一致を確認したが、本番での認証後応答を直接観測した結果ではない。[検証結果](local-test-results.md)も参照。
-
-## 更新公開（2026-10-19）
-
-スマートフォンのナビ3項目を等幅・中央揃えにし、Markdownの単改行をプレビューでも表示する修正を公開した。本文の保存形式は変えず、DBの新規migrationはない。
-
-Void CLIの通常のstaged deployがreadiness確認・activationまで成功し、この更新時のWorker Versionは`880ece18-fd9a-4c8d-94da-a63a100cbfb3`。Accessで保護されたreadinessには短期の本人JWTを`CF_ACCESS_TOKEN`へ、送信先の明示に`CLOUDFLARE_WORKERS_SUBDOMAIN`を同じdeployプロセスへ渡した。具体的な手順は[運用資料](operations.md)を参照する。
-
-独自ドメインと旧workers.devの両方で、配信されたmain JS・CSS・MarkdownPreview JSがローカルbuildとバイト単位で一致した。独自ドメインのHTML・session・一覧・JSON出力は認証付きでHTTP 200、`no-store`・CSPを含む8ヘッダーを直接確認した。匿名の上記8経路はすべてAccessへ302。本番のモバイル相当表示でもナビ3項目の等幅・高さ44pxを確認した。
-
-型チェック、単体91件、Workers連携4件、E2E40件、本番buildが成功。320px/390px幅のナビ、段落・コード・リスト・同名チェック項目と保存ソースの保持を含む。Android実機確認とは区別する。
-
-## 同日の追加UI調整
-
-ナビを画面端から端まで隙間なく3分割し、表示・背景・下線・押下領域を各1/3に揃えた。日付選択の年/月は矢印を右12pxに配置し、下部の重複する今日の日付を削除した。一覧・編集・カレンダーの曜日には共通の平日/日曜/土曜の色を付けた。
-
-コードcommit `7fc25c1`をVoidで公開し、Worker Version `9058adbc-8d40-4705-905d-12f5c87e11cc`がliveであることを確認した。独自ドメイン・旧workers.devの配信アセットはbuildとバイト一致し、匿名8経路のAccess保護も維持されている。
-
-認証済みの隔離したPlaywrightブラウザで本番を読み取り検証した。390px幅のナビは`0–130 / 130–260 / 260–390px`、高さ44pxで、各領域両端のhit判定が一致した。矢印の右余白12px、曜日3色、footerが「今日」のみであることも確認した。書き込みリクエストは0件。端末内の画面証跡には日記本文を含めていない。
-
-公開前は単体91件・Workers連携4件・型チェック・build・E2E40件が成功し、フォーカス調整後の関連2ケースも成功した。320px/390pxの押下領域と年/月の文字の収まりを含む。詳細は[UI記録](ui-refinement.md)を参照する。
-
-## 残る確認
-
-- Android Chrome実機での日本語IME、キーボード直上ツールバー、コピー/Markdownファイル保存。
-- 別アカウントによる実ログインの拒否。
-- 実Access期限切れ後の下書き保持・再認証・競合確認。
-- Time Travel相当の復旧後に各端末の未同期下書きが停止する実機確認。本番DBを復元試験に使わない。
-
-実データの利用開始前に[受入表](verification.md)の残る項目を確認する。障害運用としての本番Time Travel巻戻し手順は未実施であり、上記の受入確認とは区別する。更新・バックアップ・復旧の手順は[運用資料](operations.md)を参照。
+単体91件・Workers4件・型・build・E2E40件が成功し、フォーカス微調整後の関連2件も成功した。詳細は [ローカル検証](local-test-results.md) と [UI変更](ui-refinement.md)。Android実機や実Access期限切れの合格には含めない。

@@ -8,11 +8,11 @@ web
 
 ## Stack
 
-利用者指定: Void + React + TypeScript、Cloudflare Workers + D1、Drizzle、Bun/mise、CodeMirror 6、react-markdown + remark-gfm。
+Void + React + TypeScript、Cloudflare Workers / D1、Drizzle、Bun/mise、CodeMirror 6、react-markdown + remark-gfm。
 
 ## Users
 
-本人ひとり。Android Chromeで毎日の短い記録を追記し、PC Chromeでも閲覧・編集する。
+本人ひとり。Android Chromeで日々の短い記録を追記し、PC Chromeでも閲覧・編集する。
 
 ## Product Purpose
 
@@ -20,19 +20,19 @@ web
 
 ## Operating Context
 
-認証後は日記一覧。今日への移動、日付指定、記録済みの前後移動。日本時間の日付を使う。編集中に日付を自動変更しない。オフラインでも開いている本文を編集し、再起動時に端末内下書きを復元する。
+認証後は一覧を開く。今日・指定日・記録済みの前後へ移動し、日本時間の日付で編集する。午前0時でも編集中の日付は変えない。開いている本文はオフラインで編集でき、再起動時は端末下書きを復元する。
 
 ## Capabilities and Constraints
 
-端末内下書き、D1自動同期、手動競合解決、ゴミ箱、コピー、Markdown保存、JSON一括出力。1日1件、本文1,000,000 UTF-8 bytes。Cloudflare Accessで本人だけ許可。無料枠。要件の詳細は docs/requirements.md。
+端末保存・D1自動同期・手動競合解決・ゴミ箱・本文出力。1日1件、本文は1,000,000 UTF-8 bytesまで。Accessで本人だけを許可し、無料枠で運用する。MCPでは日記を参照し、要約だけを別に保存する。詳細は [要件](docs/requirements.md)。
 
 ## Evidence on Hand
 
-2026-10-18版の確定要件。実データ・ブランド資産は未提供。名称「きろく」は作業フォルダー名からの実装上の仮称。機能の追加ヒアリングは不要と指定済み。
+2026-10-18の確定要件と、その後のMCP追加要件。名称「きろく」は実装上の仮称で、承認済みのブランド資産はない。実証範囲は [受入表](docs/verification.md) を参照。
 
 ## Product Principles
 
-- 本文の保護を保存成功の見た目より優先する。
+- 本文の保護を優先する。
 - 端末保存とサーバー保存を区別する。
-- 競合した本文を黙って上書きしない。
+- 競合した本文を本人の確認なしに上書きしない。
 - 書く操作に集中できる画面を作る。

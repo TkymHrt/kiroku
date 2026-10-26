@@ -1,20 +1,16 @@
 # 個人用日記・記録管理 MVP 要件
 
-版 1.0 / 基準日 2026-10-18。利用者が提示した確定要件の実装用整理。機能・運用方針を追加ヒアリングで変更せず、実証未完了の項目は公開条件として残す。
-
-2026-10-20追記: 利用者の追加指定によりOxlint/Oxfmtと検証専用のGitHub Actions CIを導入する。公開は引き続き手動とし、自動デプロイは含めない。
-
-2026-10-21追記: [MCP実装計画](mcp-implementation-plan.md)をMVP後の追加範囲として採用。本人のChatGPTから日記を参照し、日次要約だけを別表へ保存する。実証状況は[mcp-verification.md](mcp-verification.md)で管理する。
+2026-10-18の確定要件に、検証CIとMCP・日次要約の追加範囲を反映したもの。実証状況は [受入表](verification.md) と [MCP検証](mcp-verification.md) で管理する。
 
 ## 目的・範囲
 
-単一利用者が Android Chrome を中心に、日本時間の日付単位で短い追記を素早く、失いにくく保存する。PC Chrome にも対応。Workers/D1 の無料枠を使い、費用は原則0円。将来の拡張を妨げないが、汎用基盤・AI向け機能は先行実装しない。
+本人ひとりがAndroid Chromeを中心に、日本時間の日付単位で短い追記を素早く、失いにくく保存する。PC Chromeにも対応し、Workers/D1無料枠と既契約のChatGPT利用枠を使う。追加費用は原則0円。
 
-MVPには編集・一覧・日付移動、Markdownソース/プレビュー、入力補助、IndexedDB下書き、D1自動同期、復旧・手動競合解決、ゴミ箱・復元・完全削除、コピー・Markdown保存・JSON出力、Access認証、テストと運用・バックアップ・復元手順を含める。
+対象は編集・一覧・日付移動、Markdown編集とプレビュー、入力補助、端末下書きとD1同期、手動競合解決、ゴミ箱、本文出力、Access認証、検証と復旧手順。
 
-追加範囲: MCPでの一覧・日本語部分一致検索・原文取得・未要約一覧・要約保存。ChatGPTの既契約枠で毎日00:15 JSTに前日までの未処理日記を日本語200〜400字程度で要約する。遅い同期・追記・失敗は次回回収する。端末だけの下書きは対象外。
+追加範囲はMCPでの一覧・日本語部分一致検索・原文取得・未要約一覧・要約保存。毎日00:15 JSTに前日までの未処理日記を日本語200〜400字程度で要約する。遅い同期・追記・失敗は次回回収し、端末だけの下書きは対象外とする。
 
-除外: Keepインポート（将来計画にも含めず、過去分はKeepに残す）、独立メモ/ToDo、FTS・embedding、月間カレンダー、画像・ファイル添付、AIによる原文編集、任意SQL、要約用UI、Cron/Workers AI、セルフホスト、追加API課金、R2自動バックアップ、JSONインポート画面、自動デプロイ、常設クラウド検証環境、Safari/Firefox/iOS個別対応、共同編集、差分ハイライト。
+対象外はKeepインポート、独立メモ/ToDo、FTS・embedding、月間カレンダー画面、画像・添付、AIによる原文編集、任意SQL、要約用UI、Cron/Workers AI、セルフホスト、追加API課金、R2自動バックアップ、JSONインポート、自動デプロイ、常設クラウド検証環境、共同編集、差分ハイライト。他ブラウザの個別対応も含めない。過去のKeep記録はKeepに残す。
 
 ## 機能要件
 
@@ -38,7 +34,7 @@ MVPには編集・一覧・日付移動、Markdownソース/プレビュー、�
 | FR-16 | 入力後すぐ端末保存、停止後短時間（初期値約1秒）で自動同期。日付移動は端末保存完了後すぐ実行、同期は独立し別日へ誤反映しない。端末保存失敗時に無警告で移動しない。                  |
 | FR-17 | 開いた日記はオフライン追記可。閉じて再起動した時に下書き復元。オフライン新規起動/過去本文閲覧は保証しない。ブラウザデータ削除/容量不足による消失保証なし。                         |
 | FR-18 | 一時障害は延長待機で再試行。online/再表示/手動でも試す。認証切れ・競合・入力不正は無限再送しない。Retry-After尊重。終了後のバックグラウンド同期継続保証なし。                      |
-| FR-19 | mutationIdと更新番号で応答喪失後の重複/古い操作再送を二重適用しない。永続化方法・保持期間は詳細設計で確定。                                                                        |
+| FR-19 | mutationIdと更新番号で応答喪失後の重複/古い操作再送を二重適用しない。receiptは本文を含めず無期限保持。                                                                             |
 | FR-20 | 編集上部へアイコン＋短文を常時表示: 保存済み/端末保存中/端末保存済み/同期中/未同期/再認証要/競合/保存失敗。最新本文のD1確認時だけ保存済み。                                        |
 | FR-21 | 同期警告は解消まで残し、通常は入力を妨げない。端末保存失敗時は消失リスクとコピー/保存案内。未同期24時間以上で手動退避を案内。7日追加ダイアログは必須でない。                       |
 | FR-22 | 本文/削除/復元で更新番号を使う。古い状態を黙って上書きしない。競合日は同期停止、端末/サーバー両方保持。                                                                            |
@@ -61,11 +57,13 @@ MVPには編集・一覧・日付移動、Markdownソース/プレビュー、�
 
 ## 技術・データ・API
 
-Void＋React＋TypeScript、Void標準のファイルAPI、Workers、D1＋Void標準Drizzle、Access、CodeMirror 6、react-markdown＋remark-gfm、IndexedDB、Bun、mise。CLIはVoid、追加はcf優先、未対応操作のみWrangler例外。設定を複数CLIで重複管理しない。pbakaus/impeccableを実装支援へ導入。Vitest、Workers Vitest連携、Playwright、Android実機。
+Void + React + TypeScript、Workers/D1、Drizzle、Access、CodeMirror 6、react-markdown + remark-gfm、IndexedDB、Bun/miseを使用する。CLIとmigration管理はVoidに統一し、追加操作はcf、未対応操作だけWranglerを使う。検証にはVitest・Workers連携・PlaywrightとAndroid実機を使う。
 
-diariesの最低限: id、diary_date UNIQUE、body、version、deleted_at、created_at、updated_at。ユーザーテーブル原則なし。mutationId履歴は消失防止テストを満たす最小構造。追加範囲の要約はdiary_summaries・summary_historyへ分離し、本文versionを進めない。summary_mutation_receiptsは本文を含めず無期限保持。完全削除は現在要約と要約履歴も同時削除する。FTSは作らない。
+日記は日付一意で、本文・更新番号・削除状態・UTC作成更新時刻を持つ。APIの入力と更新前提を検証し、認証・入力不正・競合・サイズ超過・一時障害を区別する。完全削除後の更新を新規作成へ変換しない。詳細な型・DB・再送処理は [設計](architecture.md) を参照する。
 
-APIは一覧/日付/作成・本文更新/前後日/ゴミ箱/復元/確認付き完全削除/JSON出力。日付・ID・期待version・mutationIdを検証。409競合、認証/入力/サイズ/一時障害を区別。完全削除後の更新を新規作成に変換しない。更新照合は最新DB状態を用いる。
+要約は本文と別表に保存し、本文versionを進めない。読取4ツールは `readOnlyHint=true`、`save_summary` は書込として宣言する。保存時はdiary ID・source version・epoch・要約revision・全文取得トークンを照合する。mutationIdとpayloadは送信前に固定し、同内容の再送を重複適用しない。競合時は停止する。
+
+本文・要約のreceiptは本文を含めず無期限保持する。完全削除では現在要約と履歴も同時に削除する。JSON形式版2は各日記に現在要約 `aiSummary` を付け、履歴・receiptの完全退避にはSQLを使う。
 
 ## 運用
 
@@ -80,10 +78,4 @@ APIは一覧/日付/作成・本文更新/前後日/ゴミ箱/復元/確認付�
 
 ## 受入・残る実証
 
-受入14項目と現在の証跡は[verification.md](verification.md)で管理。必須実証: Void/Bun/Workersの構成、Androidキーボード直上/IME、Access期限切れ後復旧、実D1で約1MB SQL退避復元、DB復旧後のversion/下書き整合性。未完了なら公開完了とみなさない。
-
-追加ヒアリング不要の設計事項: API URL/JSON、DB型/migration、操作ID永続化/重複排除、retry秒、一覧件数、UI、テスト、公開復旧コマンド。
-
-追加機能の契約: 読取4ツールはreadOnlyHint=true。save_summaryは書込として宣言し、diary ID・source version・epoch・要約revision・全文取得トークンを照合する。mutationIdとpayloadを送信前に固定し、同内容の再送は重複適用しない。競合時は停止する。JSON出力は形式版2で各日記に現在要約aiSummaryを付ける。要約履歴・receiptの完全退避はSQLを使う。
-
-将来: メモ/ToDo/FTS検索/カレンダー/添付。AIによる原文編集は今回も含めない。
+受入14項目は [受入表](verification.md)、MCPの追加項目は [MCP検証](mcp-verification.md) を参照する。Android IME・キーボード直上の補助バー、実Access期限切れ後の復旧、実D1での約1MB SQL退避復元、DB復旧後の端末整合性を実証する。未完了項目を公開済みという理由で合格にしない。
