@@ -12,7 +12,7 @@ import { markdown } from "@codemirror/lang-markdown";
 import { syntaxHighlighting, HighlightStyle } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
 import { Bold, Italic, Heading, List, ListOrdered, ListTodo, Undo2, Redo2 } from "lucide-react";
-import { formatSource, type FormatAction } from "../lib/formatting";
+import { continueNumberedList, formatSource, type FormatAction } from "../lib/formatting";
 
 interface Props {
   value: string;
@@ -70,7 +70,7 @@ export function MarkdownEditor({ value, onChange, hidden, readOnly = false }: Pr
       history(),
       drawSelection(),
       highlightActiveLine(),
-      keymap.of([...defaultKeymap, ...historyKeymap]),
+      keymap.of([{ key: "Enter", run: continueNumberedList }, ...defaultKeymap, ...historyKeymap]),
       markdown({ addKeymap: false, completeHTMLTags: false }),
       syntaxHighlighting(highlighting),
       theme,

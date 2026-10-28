@@ -1,3 +1,7 @@
+import { commonmarkLanguage, insertNewlineContinueMarkupCommand } from "@codemirror/lang-markdown";
+import { syntaxTree } from "@codemirror/language";
+import { ChangeSet, Text, type StateCommand } from "@codemirror/state";
+
 export type FormatAction = "heading" | "bullet" | "number" | "check" | "bold" | "italic";
 export interface FormatEdit {
   from: number;
@@ -5,6 +9,87 @@ export interface FormatEdit {
   insert: string;
   anchor: number;
   head: number;
+}
+
+const continueMarkup = insertNewlineContinueMarkupCommand({ nonTightLists: false });
+
+/** Leave IME event handling to CodeMirror, including Android's synthesized Enter events. */
+export const continueNumberedList: StateCommand = (target) => {
+  if (target.state.readOnly) return false;
+  for (const range of target.state.selection.ranges) {
+    if (!range.empty) return false;
+    let node = syntaxTree(target.state).resolveInner(range.head, -1);
+    while (node.name !== "ListItem") {
+      if (node.name === "FencedCode" || node.name === "CodeBlock" || !node.parent) return false;
+      node = node.parent;
+    }
+    if (node.parent?.name !== "OrderedList") return false;
+  }
+  return continueMarkup(target);
+};
+
+/** Number only the selected items and an already consecutive run after them. */
+function numberSelection(body: string, edit: FormatEdit, originalLines: string[]): FormatEdit {
+  const candidate = body.slice(0, edit.from) + edit.insert + body.slice(edit.to);
+  const selected = new Map<number, { original: number | null; next: number }>();
+  let offset = edit.from;
+  for (const [index, line] of edit.insert.split("\n").entries()) {
+    const indent = line.match(/^\s*/)?.[0].length ?? 0;
+    const original = originalLines[index].trimStart().match(/^(\d+)\. /);
+    selected.set(offset + indent, {
+      original: original ? Number(original[1]) : null,
+      next: index + 1,
+    });
+    offset += line.length + 1;
+  }
+  const replacements = new Map<number, number>();
+  commonmarkLanguage.parser.parse(candidate).iterate({
+    enter(ref) {
+      if (ref.name !== "OrderedList") return;
+      let previousOriginal = 0;
+      let previousNext = 0;
+      let adjusting = false;
+      for (let item = ref.node.firstChild; item; item = item.nextSibling) {
+        if (item.name !== "ListItem") continue;
+        const marker = candidate.slice(item.from, item.from + 12).match(/^(\d+)[.)]/);
+        if (!marker) continue;
+        const original = Number(marker[1]);
+        const chosen = selected.get(item.from);
+        let next = original;
+        if (chosen) {
+          next = previousNext + 1;
+          chosen.next = next;
+          if (chosen.original !== null) previousOriginal = chosen.original;
+          adjusting = true;
+        } else {
+          if (adjusting && original === previousOriginal + 1) next = previousNext + 1;
+          else adjusting = false;
+          previousOriginal = original;
+        }
+        if (next !== original) replacements.set(item.from, next);
+        previousNext = next;
+      }
+    },
+  });
+  for (const [from, chosen] of selected) replacements.set(from, chosen.next);
+  const changes = [...replacements].map(([from, next]) => ({
+    from,
+    to: from + (candidate.slice(from, from + 12).match(/^\d+/)?.[0].length ?? 0),
+    insert: String(next),
+  }));
+  const extent = changes.reduce(
+    (end, change) => Math.max(end, change.to),
+    edit.from + edit.insert.length,
+  );
+  const numbering = ChangeSet.of(changes, candidate.length);
+  const numbered = numbering.apply(Text.of(candidate.split("\n"))).toString();
+  return {
+    from: edit.from,
+    to: edit.to + extent - (edit.from + edit.insert.length),
+    insert: numbered.slice(edit.from, numbering.mapPos(extent, 1)),
+    anchor: numbering.mapPos(edit.anchor, 1),
+    head: numbering.mapPos(edit.head, 1),
+  };
 }
 
 /** Pure source edits, shared by the CodeMirror toolbar and its boundary tests. */
@@ -57,7 +142,7 @@ export function formatSource(
     check: /^[-+*] \[[ xX]\] /,
   };
   const allActive = lines.every((line) => patterns[action].test(line.trimStart()));
-  const changes = lines.map((line, index) => {
+  const changes = lines.map((line) => {
     const indent = line.match(/^\s*/)?.[0] ?? "";
     const rest = line.slice(indent.length);
     const prefix = rest.match(/^(?:#{1,6} |[-+*] \[[ xX]\] |[-+*] |\d+\. )/)?.[0] ?? "";
@@ -66,7 +151,7 @@ export function formatSource(
       const level = rest.match(/^(#{1,6}) /)?.[1].length ?? 0;
       next = level >= 3 ? "" : "#".repeat(level + 1) + " ";
     } else if (!allActive)
-      next = action === "bullet" ? "- " : action === "number" ? `${index + 1}. ` : "- [ ] ";
+      next = action === "bullet" ? "- " : action === "number" ? "1. " : "- [ ] ";
     return {
       text: indent + next + rest.slice(prefix.length),
       delta: next.length - prefix.length,
@@ -79,13 +164,14 @@ export function formatSource(
     .slice(0, beforeSelection + 1)
     .reduce((sum, line) => sum + line.delta, 0);
   const deltaEnd = changes.slice(0, endLine + 1).reduce((sum, line) => sum + line.delta, 0);
-  return {
+  const edit = {
     from: start,
     to: end,
     insert,
     anchor: Math.max(start, from + deltaBefore),
     head: Math.max(start, to + deltaEnd),
   };
+  return action === "number" && !allActive ? numberSelection(body, edit, lines) : edit;
 }
 
 export function safeUrl(url: string): string {

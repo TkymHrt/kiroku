@@ -31,6 +31,7 @@ const titles = [
   "local storage errors protect the current text and prevent accidental navigation",
   "diary read errors explain unavailable content and retry without changing the server version",
   "server retry deadlines explain the wait and reenable diary recovery automatically",
+  "numbered lists continue from the toolbar and Enter without changing other Markdown input",
 ];
 
 async function getDiary(request: APIRequestContext, date: string): Promise<DiaryResponse> {
@@ -200,6 +201,70 @@ test(titles[1], async ({ page, request, diaryDate }) => {
   await saved(request, diaryDate, checkedBody);
   await page.getByRole("tab", { name: "編集", exact: true }).click();
   await expect.poll(() => sourceText(page)).toBe(checkedBody);
+});
+
+test(titles[20], async ({ page, request, diaryDate }, info) => {
+  await enter(page, diaryDate);
+  await source(page).fill("9. 朝の記録\n次の記録");
+  await source(page).press("Control+End");
+  const number = page.getByRole("button", { name: "番号付きリスト", exact: true });
+  await number.click();
+  await expect.poll(() => sourceText(page)).toBe("9. 朝の記録\n10. 次の記録");
+  await source(page).press("Enter");
+  await expect.poll(() => sourceText(page)).toBe("9. 朝の記録\n10. 次の記録\n11. ");
+  await page.keyboard.insertText("追記");
+  const body = "9. 朝の記録\n10. 次の記録\n11. 追記";
+  await expect.poll(() => sourceText(page)).toBe(body);
+  await mkdir("test-results/numbered-lists", { recursive: true });
+  await page.screenshot({
+    path: `test-results/numbered-lists/${info.project.name}.png`,
+    fullPage: true,
+  });
+  await page.getByRole("tab", { name: "プレビュー", exact: true }).click();
+  const preview = page.getByLabel("日記のプレビュー");
+  await expect(preview.locator("ol")).toHaveAttribute("start", "9");
+  await expect(preview.locator("li")).toHaveText(["朝の記録", "次の記録", "追記"]);
+  await page.getByRole("tab", { name: "編集", exact: true }).click();
+  await source(page).press("Enter");
+  await source(page).press("Enter");
+  await expect.poll(() => sourceText(page)).toBe(body + "\n");
+  await saved(request, diaryDate, body + "\n");
+
+  await source(page).fill("1. 前\n2. 次\n3. その次");
+  await source(page).press("Control+Home");
+  await source(page).press("End");
+  await source(page).press("Enter");
+  await expect.poll(() => sourceText(page)).toBe("1. 前\n2. \n3. 次\n4. その次");
+  await page.getByRole("button", { name: "元に戻す", exact: true }).click();
+  await expect.poll(() => sourceText(page)).toBe("1. 前\n2. 次\n3. その次");
+  await page.getByRole("button", { name: "やり直す", exact: true }).click();
+  await expect.poll(() => sourceText(page)).toBe("1. 前\n2. \n3. 次\n4. その次");
+
+  await source(page).fill("1. 親\n   1. 子");
+  await source(page).press("Control+End");
+  await source(page).press("Enter");
+  await expect.poll(() => sourceText(page)).toBe("1. 親\n   1. 子\n   2. ");
+  await source(page).fill("- 箇条書き");
+  await source(page).press("Control+End");
+  await source(page).press("Enter");
+  await expect.poll(() => sourceText(page)).toBe("- 箇条書き\n");
+
+  await source(page).fill("1. 日本語入力");
+  await source(page).dispatchEvent("compositionstart", { data: "入力" });
+  await source(page).dispatchEvent("compositionupdate", { data: "中" });
+  await page.keyboard.insertText("中");
+  await expect.poll(() => sourceText(page)).toBe("1. 日本語入力中");
+  await expect(number).toBeDisabled();
+  await source(page).dispatchEvent("keydown", {
+    key: "Enter",
+    code: "Enter",
+    keyCode: 229,
+    isComposing: true,
+  });
+  await expect.poll(() => sourceText(page)).toBe("1. 日本語入力中");
+  await source(page).dispatchEvent("compositionend", { data: "中" });
+  await expect(number).toBeEnabled();
+  await saved(request, diaryDate, "1. 日本語入力中");
 });
 
 test(titles[2], async ({ page, context, diaryDate }) => {
