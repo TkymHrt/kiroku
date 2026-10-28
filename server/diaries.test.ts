@@ -233,7 +233,7 @@ describe("D1 diary persistence and durable mutations", () => {
     const diary = (await mutateDiary(db, date, create())).diary!;
     await mutateDiary(db, date, edit(diary, "trash"));
     const result = await getExportPage(db);
-    expect(result.formatVersion).toBe(2);
+    expect(result.formatVersion).toBe(3);
     expect(result.diaries).toHaveLength(1);
     expect(result.diaries[0].body).toBe(diary.body);
     expect(result.diaries[0].deletedAt).not.toBeNull();

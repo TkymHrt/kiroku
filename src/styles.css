@@ -215,7 +215,7 @@ button:hover:not(:disabled) {
   padding: 12px;
   font-size: 14px;
 }
-.today-button svg:last-child {
+.today-button .today-chevron {
   margin-left: auto;
 }
 .sidebar nav {
@@ -760,6 +760,9 @@ button:hover:not(:disabled) {
 .task-list-item > div > p:first-child {
   margin-top: 0;
 }
+.task-description > p:first-child {
+  margin-top: 0;
+}
 .empty-preview {
   color: var(--muted);
   font-size: 14px;
@@ -1161,6 +1164,350 @@ button:hover:not(:disabled) {
 [hidden] {
   display: none !important;
 }
+.mobile-more {
+  display: none;
+}
+.nav-utilities {
+  display: grid;
+  gap: 7px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.notes-workspace {
+  padding-top: 8px;
+}
+.notes-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 22px;
+  margin-bottom: 28px;
+}
+.notes-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  border-radius: 7px;
+  min-height: 44px;
+  padding: 0 12px;
+  flex: 1 1 260px;
+  max-width: 380px;
+  color: var(--muted);
+}
+.notes-search:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.notes-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  outline: none;
+  font-size: 14px;
+  height: 44px;
+}
+.notes-search input:focus-visible {
+  outline: none;
+}
+.notes-search input::placeholder {
+  color: var(--muted);
+}
+.notes-search input::-webkit-search-cancel-button {
+  display: none;
+}
+.notes-search button {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+}
+.notes-scope {
+  display: flex;
+  gap: 4px;
+}
+.notes-scope button {
+  padding: 8px 11px;
+  min-height: 44px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.notes-scope button[aria-pressed="true"] {
+  color: var(--accent);
+  background: var(--accent-light);
+  font-weight: 500;
+}
+.notes-group-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  margin: 28px 0 8px;
+}
+.notes-list > div:first-child .notes-group-heading {
+  margin-top: 0;
+}
+.note-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  gap: 20px;
+  padding: 20px 12px;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+}
+.note-row:hover:not(:disabled) {
+  background: #ebeee7;
+}
+.note-row > svg {
+  color: var(--muted);
+}
+.note-row-content {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 5px;
+}
+.note-row-title {
+  font-size: 16px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.note-row-excerpt {
+  font-size: 13px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.note-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+  min-height: 19px;
+}
+.note-row-meta time {
+  margin-left: auto;
+  white-space: nowrap;
+}
+.note-tasks,
+.note-tasks-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.note-tasks {
+  color: var(--accent);
+}
+.notes-empty {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  text-align: center;
+  padding: 72px 12px;
+}
+.notes-empty > svg {
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.notes-empty h2 {
+  font-size: 18px;
+  font-weight: 500;
+}
+.notes-empty p {
+  color: var(--muted);
+  font-size: 14px;
+  white-space: pre-line;
+  line-height: 1.9;
+}
+.notes-empty .button {
+  margin-top: 6px;
+}
+.note-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-bottom: 22px;
+}
+.note-heading .save-state {
+  font-size: 12px;
+}
+.note-back {
+  min-height: 44px;
+}
+.note-title-area {
+  margin: 0 0 18px;
+}
+.note-title,
+.note-title-input {
+  font-size: 25px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.5;
+}
+.note-title-input {
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  width: 100%;
+  min-width: 0;
+  background: transparent;
+  padding: 4px 0 9px;
+  color: var(--ink);
+}
+.note-title-input::placeholder {
+  color: var(--muted);
+  font-weight: 400;
+}
+.note-title-input:focus-visible {
+  outline-offset: 4px;
+}
+.note-title {
+  overflow-wrap: anywhere;
+  padding-bottom: 9px;
+}
+.note-properties {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 18px;
+}
+.note-properties .text-button {
+  min-height: 44px;
+}
+.note-properties .is-pinned {
+  font-weight: 600;
+}
+.note-updated {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+}
+.note-editor .editor-actions button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.note-editor .task-list-item {
+  gap: 0;
+  min-height: 44px;
+}
+.note-editor .task-toggle {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  margin: -6px 0 0 -12px;
+  cursor: pointer;
+}
+.note-editor .task-toggle input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+}
+.note-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+.note-footer .text-button {
+  min-height: 44px;
+}
+.note-message {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--accent-light);
+  border-radius: 6px;
+  font-size: 13px;
+  margin-top: 18px;
+}
+.note-message .icon-button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.note-conflict {
+  margin-bottom: 24px;
+}
+.note-conflict h2 {
+  margin-bottom: 10px;
+}
+.note-conflict pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 340px;
+  overflow: auto;
+  font: inherit;
+  font-size: 14px;
+}
+.note-merge,
+.note-manual-copy {
+  display: grid;
+  gap: 14px;
+  margin: 18px 0;
+}
+.note-merge label,
+.note-manual-copy label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+}
+.note-merge input,
+.note-merge textarea,
+.note-manual-copy textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 12px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.note-merge textarea,
+.note-manual-copy textarea {
+  min-height: 240px;
+  resize: vertical;
+}
+.more-page h1 {
+  margin: 12px 0 24px;
+}
+.more-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 6px;
+  border-bottom: 1px solid var(--line);
+  width: 100%;
+  text-align: left;
+  font-size: 15px;
+}
+.more-row span {
+  flex: 1;
+}
+.more-page > .text-button {
+  margin-top: 24px;
+  min-height: 44px;
+}
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -1203,6 +1550,63 @@ button:hover:not(:disabled) {
   }
 }
 @media (max-width: 700px) {
+  .nav-utilities {
+    display: none;
+  }
+  .mobile-more {
+    display: flex;
+  }
+  .notes-workspace {
+    padding-top: 12px;
+  }
+  .notes-tools {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-content: stretch;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .notes-search {
+    max-width: none;
+  }
+  .notes-scope {
+    gap: 6px;
+  }
+  .notes-scope button {
+    padding: 8px 12px;
+  }
+  .note-row {
+    padding: 18px 2px;
+    gap: 14px;
+  }
+  .note-row-title {
+    font-size: 15px;
+  }
+  .notes-empty {
+    padding: 44px 0;
+  }
+  .notes-empty h2 {
+    font-size: 17px;
+  }
+  .note-heading {
+    margin-bottom: 14px;
+  }
+  .note-heading .save-state {
+    font-size: 11px;
+  }
+  .note-title,
+  .note-title-input {
+    font-size: 22px;
+  }
+  .note-properties {
+    gap: 4px 14px;
+  }
+  .note-updated {
+    font-size: 11px;
+  }
+  .note-is-open {
+    padding-bottom: 60px;
+  }
   .app-shell {
     display: block;
   }
@@ -1230,11 +1634,16 @@ button:hover:not(:disabled) {
     font-size: 12px;
     min-height: 44px;
   }
-  .today-button svg:last-child {
+  .today-button .today-chevron {
     display: none;
   }
   .today-button svg:first-child {
     width: 16px;
+  }
+  .memo-create-button {
+    gap: 8px;
+    padding: 9px 14px;
+    font-size: 13px;
   }
   .sidebar nav {
     grid-column: 1/-1;

@@ -16,7 +16,7 @@ Void + React + TypeScript、Cloudflare Workers / D1、Drizzle、Bun/mise、CodeM
 
 ## Product Purpose
 
-日付ごとのMarkdown日記を、速く、消失しにくく記録する。Google Keepの過去分は移行しない。
+日付ごとのMarkdown日記と、用件ごとの独立メモを、速く、消失しにくく記録する。Google Keepの過去分は移行しない。
 
 ## Operating Context
 
@@ -24,7 +24,7 @@ Void + React + TypeScript、Cloudflare Workers / D1、Drizzle、Bun/mise、CodeM
 
 ## Capabilities and Constraints
 
-端末保存・D1自動同期・手動競合解決・ゴミ箱・本文出力。1日1件、本文は1,000,000 UTF-8 bytesまで。Accessで本人だけを許可し、無料枠で運用する。MCPでは日記を参照し、要約だけを別に保存する。詳細は [要件](docs/requirements.md)。
+端末保存・D1自動同期・手動競合解決・ゴミ箱・本文出力。日記は1日1件。独立メモは複数作成でき、固定・しまう・検索とMarkdownチェックリストを備える。本文は各1,000,000 UTF-8 bytesまで。Accessで本人だけを許可し、無料枠で運用する。MCPでは日記を参照し、要約だけを別に保存する。詳細は [要件](docs/requirements.md)。
 
 ## Evidence on Hand
 

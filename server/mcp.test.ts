@@ -364,7 +364,7 @@ describe("MCP and independent summary persistence on D1", () => {
     await saveSummary(context, await summary());
     const first = await getExportPage(db);
     const second = await getExportPage(db, first.nextCursor!, first.snapshotToken);
-    expect(first.formatVersion).toBe(2);
+    expect(first.formatVersion).toBe(3);
     expect(second.diaries[0].aiSummary?.revision).toBe(1);
     await saveSummary(context, await summary());
     await expect(getExportPage(db, first.nextCursor!, first.snapshotToken)).rejects.toMatchObject({

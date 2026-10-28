@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-18T01:44:19.141Z",
+  "generatedAt": "2026-10-28T13:54:43.624Z",
   "title": "Design System: きろく",
   "extensions": {
     "colorMeta": {
@@ -347,7 +347,7 @@
     "typographyMeta": {
       "title": {
         "displayName": "Page title",
-        "purpose": "Base h1 style; list, trash, and settings page headings remain screen-reader-only while current navigation supplies visible context."
+        "purpose": "Base h1 style; diary list, diary trash, settings and notes list headings remain screen-reader-only while current navigation supplies visible context. Note detail uses note-title."
       },
       "diary-date": {
         "displayName": "Diary date",
@@ -363,7 +363,7 @@
       },
       "preview": {
         "displayName": "Markdown preview",
-        "purpose": "Rendered diary paragraphs; headings have a separate rendered hierarchy."
+        "purpose": "Shared rendered diary and note paragraphs; headings have a separate rendered hierarchy."
       },
       "label": {
         "displayName": "Control label",
@@ -375,11 +375,27 @@
       },
       "status": {
         "displayName": "Save state",
-        "purpose": "Icon-paired persistence state: 11px in list rows on desktop and mobile, 12px in the diary heading."
+        "purpose": "Icon-paired persistence state: 11px in diary list rows, 12px in diary and desktop note headings, and 11px in mobile note headings."
       },
       "code": {
         "displayName": "Rendered code",
         "purpose": "Monospace only inside Markdown code."
+      },
+      "note-title": {
+        "displayName": "Note detail title",
+        "purpose": "25px optional editable title or preview heading above note properties and the shared writing surface."
+      },
+      "note-title-mobile": {
+        "displayName": "Note detail title, mobile",
+        "purpose": "22px note title at 700px and below."
+      },
+      "note-row-title": {
+        "displayName": "Note row title",
+        "purpose": "16px semibold title above a one-line excerpt; a missing title falls back to body content."
+      },
+      "note-row-title-mobile": {
+        "displayName": "Note row title, mobile",
+        "purpose": "15px note row title at 700px and below."
       }
     },
     "shadows": [
@@ -463,7 +479,7 @@
       "name": "Selected navigation",
       "kind": "nav",
       "refersTo": "navigation-selected",
-      "description": "Current-page navigation supplies visible page context; tonal desktop selection becomes an accent underline on mobile.",
+      "description": "Diary and notes are primary destinations; desktop utilities sit below a divider. Mobile has equal diary, notes, and more destinations, hidden while a detail is open.",
       "html": "<nav class=\"ds-nav\" aria-label=\"メインナビゲーション\"><button type=\"button\" class=\"ds-nav-item\" aria-current=\"page\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"19\" height=\"19\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\"></path><path d=\"M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"></path></svg>日記一覧</button></nav>",
       "css": ".ds-nav-item{font-family:\"Noto Sans JP\", \"Hiragino Kaku Gothic ProN\", \"Yu Gothic\", Meiryo, sans-serif;cursor:pointer;transition:background-color .15s,color .15s;} .ds-nav-item:focus-visible{outline:2px solid var(--accent,#3f5846);outline-offset:4px;} .ds-nav-item:disabled{cursor:default;opacity:.4;} @media(prefers-reduced-motion:reduce){.ds-nav-item{transition:none;}}.ds-nav{padding:12px;background:var(--sidebar,#edf0e8);}.ds-nav-item{display:flex;align-items:center;gap:12px;text-align:left;padding:12px 15px;min-height:46px;border:0;border-radius:6px;background:#dfe6d9;color:#2d4533;font-size:14px;font-weight:600;line-height:1.7;}.ds-nav-item:hover{background:var(--accent-light,#e6ece2);}@media(max-width:700px){.ds-nav-item{gap:7px;padding:10px 2px;min-height:44px;font-size:12px;border-radius:0;background:transparent;border-bottom:2px solid var(--accent,#3f5846);}}"
     },
@@ -503,14 +519,30 @@
       "name": "Writing surface",
       "kind": "card",
       "refersTo": "editor-surface",
-      "description": "Static sample of the paper editor frame and fixed source typography; no CodeMirror runtime is required.",
+      "description": "Shared diary and note paper frame with fixed source typography; static sample requires no CodeMirror runtime.",
       "html": "<section class=\"ds-editor\" aria-label=\"日記の本文\"><div class=\"ds-source\">今日のことを、ここから。</div></section>",
       "css": ".ds-editor{font-family:\"Noto Sans JP\", \"Hiragino Kaku Gothic ProN\", \"Yu Gothic\", Meiryo, sans-serif;background:var(--paper,#fff);border:1px solid var(--line,#dce1d8);border-radius:8px;overflow:clip;}.ds-source{min-height:360px;padding:24px 28px 100px;font-size:16px;font-weight:400;line-height:1.95;color:var(--muted,#637064);}.ds-source::selection{background:#dce6d9;color:#203529;}@media(max-width:700px){.ds-editor{border-radius:7px;}.ds-source{padding:19px 17px 100px;}}"
+    },
+    {
+      "name": "Note finder",
+      "kind": "custom",
+      "refersTo": "note-row",
+      "description": "Content-led single-column note list beginning with search and scope controls, followed by pinned grouping, title, one-line excerpt, unfinished count, and a Tokyo YYYY/MM/DD update date. No visible page title or total count. Sample content is illustrative.",
+      "html": "<section class=\"ds-notes\" aria-label=\"メモの一覧例\"><div class=\"ds-notes-tools\"><label class=\"ds-note-search\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><path d=\"m21 21-4.3-4.3\"></path></svg><input type=\"search\" aria-label=\"メモを検索\" placeholder=\"タイトル・本文を検索\"></label><div class=\"ds-note-scope\" aria-label=\"メモの表示範囲\"><button type=\"button\" aria-pressed=\"true\">メモ</button><button type=\"button\" aria-pressed=\"false\">しまったメモ</button><button type=\"button\" aria-pressed=\"false\">ゴミ箱</button></div></div><h2 class=\"ds-note-group\">固定</h2><button type=\"button\" class=\"ds-note-row\" aria-label=\"買い物をひらく\"><span class=\"ds-note-content\"><span class=\"ds-note-title\">買い物</span><span class=\"ds-note-excerpt\">帰りにスーパーで買うもの。牛乳 洗剤 コーヒー豆</span><span class=\"ds-note-meta\"><span class=\"ds-note-tasks\">未完了 2件</span><time datetime=\"2026-10-28\">2026/10/28</time></span></span><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"m9 18 6-6-6-6\"></path></svg></button></section>",
+      "css": ".ds-notes{font-family:\"Noto Sans JP\",\"Hiragino Kaku Gothic ProN\",\"Yu Gothic\",Meiryo,sans-serif;line-height:1.7;color:var(--ink,#29332d);background:var(--surface,#f5f6f2);}.ds-notes-tools{display:flex;align-items:center;justify-content:space-between;gap:14px 22px;flex-wrap:wrap;margin-bottom:28px;}.ds-note-search{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;flex:1 1 260px;max-width:380px;background:var(--paper,#fff);border:1px solid var(--line,#dce1d8);border-radius:7px;color:var(--muted,#637064);}.ds-note-search:focus-within{outline:2px solid var(--accent,#3f5846);outline-offset:2px;}.ds-note-search input{font:400 14px/1.7 \"Noto Sans JP\",\"Hiragino Kaku Gothic ProN\",\"Yu Gothic\",Meiryo,sans-serif;width:100%;min-width:0;height:44px;padding:0;border:0;outline:none;background:transparent;color:var(--ink,#29332d);}.ds-note-search input::placeholder{color:var(--muted,#637064);}.ds-note-scope{display:flex;gap:4px;}.ds-note-scope button{font:400 13px/1.7 \"Noto Sans JP\",\"Hiragino Kaku Gothic ProN\",\"Yu Gothic\",Meiryo,sans-serif;cursor:pointer;min-height:44px;padding:8px 11px;border:0;border-radius:6px;background:transparent;color:var(--muted,#637064);white-space:nowrap;}.ds-note-scope button[aria-pressed=\"true\"]{color:var(--accent,#3f5846);background:var(--accent-light,#e6ece2);font-weight:500;}.ds-note-group{font-size:12px;font-weight:500;margin:0 0 8px;color:var(--muted,#637064);}.ds-note-row{font-family:\"Noto Sans JP\",\"Hiragino Kaku Gothic ProN\",\"Yu Gothic\",Meiryo,sans-serif;line-height:1.7;cursor:pointer;display:flex;align-items:center;width:100%;gap:20px;padding:20px 12px;text-align:left;border:0;border-bottom:1px solid var(--line,#dce1d8);border-radius:0;background:transparent;color:var(--ink,#29332d);}.ds-note-row:hover:not(:disabled){background:#ebeee7;}.ds-note-row>svg{color:var(--muted,#637064);flex-shrink:0;}.ds-note-content{display:grid;flex:1;min-width:0;gap:5px;}.ds-note-title{font-size:16px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.ds-note-excerpt{font-size:13px;color:var(--muted,#637064);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.ds-note-meta{display:flex;flex-wrap:wrap;align-items:center;gap:16px;font-size:11px;color:var(--muted,#637064);margin-top:4px;min-height:19px;}.ds-note-meta time{margin-left:auto;white-space:nowrap;}.ds-note-tasks{color:var(--accent,#3f5846);}.ds-note-row:focus-visible,.ds-note-scope button:focus-visible{outline:2px solid var(--accent,#3f5846);outline-offset:4px;}.ds-note-row:disabled,.ds-note-scope button:disabled{cursor:default;opacity:.4;}@media(max-width:700px){.ds-notes-tools{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-bottom:22px;}.ds-note-search{max-width:none;}.ds-note-scope{gap:6px;}.ds-note-scope button{padding:8px 12px;}.ds-note-row{padding:18px 2px;gap:14px;}.ds-note-title{font-size:15px;}}"
+    },
+    {
+      "name": "Note checklist",
+      "kind": "custom",
+      "refersTo": "note-task-toggle",
+      "description": "Native note-preview checkbox in a 44px target, named by its own item text. The application binds each item to its original source offset and excludes nested children from the parent name.",
+      "html": "<div class=\"ds-note-preview\"><ul class=\"ds-note-task-list\"><li class=\"ds-note-task-item\"><label class=\"ds-note-task-toggle\"><input type=\"checkbox\" checked aria-labelledby=\"ds-note-task-one\"></label><div id=\"ds-note-task-one\">牛乳</div></li><li class=\"ds-note-task-item\"><label class=\"ds-note-task-toggle\"><input type=\"checkbox\" aria-labelledby=\"ds-note-task-two\"></label><div id=\"ds-note-task-two\">洗剤</div></li></ul></div>",
+      "css": ".ds-note-preview{font-family:\"Noto Sans JP\",\"Hiragino Kaku Gothic ProN\",\"Yu Gothic\",Meiryo,sans-serif;font-size:15px;font-weight:400;line-height:1.95;color:var(--ink,#29332d);background:var(--paper,#fff);padding:27px 29px 55px;}.ds-note-task-list{list-style:none;padding-left:25px;margin:0;}.ds-note-task-item{display:flex;align-items:flex-start;gap:0;min-height:44px;margin:5px 0 5px -22px;}.ds-note-task-toggle{display:grid;place-items:center;width:44px;height:44px;flex-shrink:0;margin:-6px 0 0 -12px;cursor:pointer;}.ds-note-task-toggle input{width:18px;height:18px;margin:0;accent-color:var(--accent,#3f5846);cursor:pointer;}.ds-note-task-toggle input:focus-visible{outline:2px solid var(--accent,#3f5846);outline-offset:4px;}.ds-note-task-toggle input:disabled{cursor:default;opacity:.4;}@media(max-width:700px){.ds-note-preview{padding:21px 18px 40px;}}"
     }
   ],
   "narrative": {
     "northStar": "Reading room",
-    "overview": "A pale green ground, forest actions, graphite text, and open reading space carry the reading-room direction recorded in `.impeccable/surface.md`. Familiar controls and quiet date rows support daily writing. The durable product constraint is that device saving and server saving must remain distinguishable; status has a stable place beside the date and in the list.\n\nThis is a record of the implemented system in `src/styles.css`, `src/components/DatePicker.tsx`, `src/components/MarkdownEditor.tsx`, and `src/App.tsx`, rather than an independently approved brand identity. The name きろく, descriptive palette names, and exact visual values are implementation defaults. Japanese system sans is the established application type choice; there is no display-font treatment or packaged webfont. The wordmark is text only, without an adjacent icon or tagline. The only shipped art asset is the geometric SVG favicon; development review screenshots are not product imagery.",
+    "overview": "A pale green ground, forest actions, graphite text, and open reading space carry the reading-room direction recorded in `.impeccable/surface.md`. Familiar controls and quiet date rows support daily writing. The durable product constraint is that device saving and server saving must remain distinguishable; status has a stable place beside the date and in the list.\n\nThis is a record of the implemented system in `src/styles.css`, `src/components/DatePicker.tsx`, `src/components/MarkdownEditor.tsx`, and `src/App.tsx`, rather than an independently approved brand identity. The name きろく, descriptive palette names, and exact visual values are implementation defaults. Japanese system sans is the established application type choice; there is no display-font treatment or packaged webfont. The wordmark is text only, without an adjacent icon or tagline. The only shipped art asset is the geometric SVG favicon; development review screenshots are not product imagery.\n\n独立メモも同じ淡い緑・白い本文面・線画を継承する。メモはタイトルと本文の手掛かりで探す一列の一覧とし、日記の日付中心の構成と使い分ける。",
     "keyCharacteristics": [
       "Pale ground and white writing surfaces separated by fine borders.",
       "Date-first hierarchy and compact, explicit Japanese save labels.",

@@ -6,6 +6,7 @@ import type { MutationRequest } from "../src/lib/types";
 import { getDiary, getDiaryState, getEpoch, mutateDiary } from "./diaries";
 import { authenticate } from "./security";
 import { getMcpDiary, saveSummary } from "./mcp-service";
+import { getNoteState, mutateNote } from "./notes";
 
 const bindings = env as unknown as { DB: D1Database; TEST_MIGRATIONS: D1Migration[] };
 
@@ -19,6 +20,8 @@ describe("official Cloudflare Workers runtime integration", () => {
     await bindings.DB.batch([
       bindings.DB.prepare("DELETE FROM diaries"),
       bindings.DB.prepare("DELETE FROM mutation_receipts"),
+      bindings.DB.prepare("DELETE FROM notes"),
+      bindings.DB.prepare("DELETE FROM note_mutation_receipts"),
       bindings.DB.prepare("UPDATE app_meta SET value = ? WHERE key = 'database_epoch'").bind(epoch),
     ]);
   });
@@ -76,6 +79,35 @@ describe("official Cloudflare Workers runtime integration", () => {
     const body = "日".repeat(333_333) + "a";
     await mutateDiary(bindings.DB, "2026-10-18", create(body));
     expect((await getDiary(bindings.DB, "2026-10-18"))?.body).toBe(body);
+  });
+
+  it("atomically saves and replays independent note metadata in the Workers runtime", async () => {
+    const db = bindings.DB.withSession("first-primary");
+    const id = crypto.randomUUID();
+    const input = {
+      kind: "create",
+      mutationId: crypto.randomUUID(),
+      id: null,
+      expectedVersion: null,
+      epoch,
+      absenceToken: null,
+      content: { title: "買い物", body: "- [ ] 牛乳\r\n- [x] 洗剤", pinned: true, archived: false },
+    };
+    await mutateNote(db, id, input);
+    expect((await mutateNote(db, id, input)).replayed).toBe(true);
+    expect((await getNoteState(db, id)).note).toMatchObject({ ...input.content, version: 1 });
+    const update = {
+      kind: "update",
+      mutationId: crypto.randomUUID(),
+      id,
+      expectedVersion: 1,
+      epoch,
+      content: { ...input.content, archived: true },
+    };
+    await mutateNote(db, id, update);
+    await expect(
+      mutateNote(db, id, { ...update, mutationId: crypto.randomUUID() }),
+    ).rejects.toMatchObject({ code: "CONFLICT" });
   });
 
   it("fails closed without production Access configuration, even on localhost", async () => {

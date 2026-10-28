@@ -10,6 +10,15 @@ import type {
 import { tokyoToday } from "../src/lib/types";
 
 const origin = "http://127.0.0.1:5173";
+async function openUtility(page: Page, name: "設定" | "ゴミ箱") {
+  await expect(page.getByRole("navigation", { name: "メインナビゲーション" })).toBeVisible();
+  const more = page.getByRole("navigation").getByRole("button", { name: "その他", exact: true });
+  const mobile = await more.isVisible();
+  if (mobile) await more.click();
+  await page
+    .getByRole("button", { name: mobile && name === "ゴミ箱" ? "日記のゴミ箱" : name, exact: true })
+    .click();
+}
 const titles = [
   "opening is read-only until input, then autosaves once per date",
   "source cursor survives preview and duplicate tasks toggle exactly one marker",
@@ -443,7 +452,7 @@ test(titles[8], async ({ page, request, diaryDate }) => {
   });
   await mutate(request, diaryDate, "trash");
   await page.goto("/");
-  await page.getByRole("button", { name: "設定", exact: true }).click();
+  await openUtility(page, "設定");
   const downloadEvent = page.waitForEvent("download");
   await page.getByRole("button", { name: "JSONを一括エクスポート", exact: true }).click();
   const download = await downloadEvent;
@@ -451,7 +460,7 @@ test(titles[8], async ({ page, request, diaryDate }) => {
     formatVersion: number;
     diaries: Diary[];
   };
-  expect(data.formatVersion).toBe(2);
+  expect(data.formatVersion).toBe(3);
   expect(data.diaries.find((item) => item.date === diaryDate)).toMatchObject({
     body: "trash export body",
     deletedAt: expect.any(String),
@@ -517,7 +526,7 @@ test(titles[10], async ({ page, context, request, diaryDate }) => {
   await expect.poll(() => sourceText(other)).toBe(body);
   // The mobile editor deliberately hides the global navigation while writing.
   await page.getByRole("button", { name: "日記一覧に戻る", exact: true }).click();
-  await page.getByRole("button", { name: "設定", exact: true }).click();
+  await openUtility(page, "設定");
   await page.getByRole("main").getByRole("button", { name: "ログアウト", exact: true }).click();
   await expect(page.getByRole("dialog")).toContainText("未同期の下書きがあります。");
   await confirm(page, "ログアウト");
@@ -640,8 +649,8 @@ test(titles[12], async ({ page, request, diaryDate }, info) => {
     await page.setViewportSize({ width: 320, height: 844 });
     await expectEqualMobileNavigation();
     for (const [name, edge] of [
-      ["設定", "right"],
-      ["ゴミ箱", "left"],
+      ["その他", "right"],
+      ["メモ", "left"],
       ["日記一覧", "left"],
     ] as const) {
       const button = navigation.getByRole("button", { name, exact: true });
@@ -726,22 +735,26 @@ test(titles[12], async ({ page, request, diaryDate }, info) => {
   await capture("datepicker");
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "日記一覧に戻る", exact: true }).click();
-  await navigation.getByRole("button", { name: "設定", exact: true }).click();
-  await expect(navigation.getByRole("button", { name: "設定", exact: true })).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
+  await openUtility(page, "設定");
+  await expect(
+    navigation.getByRole("button", {
+      name: info.project.name === "mobile" ? "その他" : "設定",
+      exact: true,
+    }),
+  ).toHaveAttribute("aria-current", "page");
   await expectEqualMobileNavigation();
   await expect(
     page.getByRole("heading", { name: "データのエクスポート", exact: true }),
   ).toBeVisible();
   await capture("settings");
   await mutate(request, diaryDate, "trash");
-  await navigation.getByRole("button", { name: "ゴミ箱", exact: true }).click();
-  await expect(navigation.getByRole("button", { name: "ゴミ箱", exact: true })).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
+  await openUtility(page, "ゴミ箱");
+  await expect(
+    navigation.getByRole("button", {
+      name: info.project.name === "mobile" ? "その他" : "ゴミ箱",
+      exact: true,
+    }),
+  ).toHaveAttribute("aria-current", "page");
   await expectEqualMobileNavigation();
   await expect(diaryRow(page, diaryDate)).toHaveCount(1);
   await capture("trash");
@@ -855,7 +868,7 @@ test(titles[16], async ({ page, request, diaryDate }, info) => {
   const body = "サーバーエラー時も残す日記";
   await mutate(request, diaryDate, "create", body);
   await page.goto("/");
-  await page.getByRole("button", { name: "設定", exact: true }).click();
+  await openUtility(page, "設定");
   await page.route("**/api/export*", (route) =>
     route.fulfill({
       status: 500,

@@ -47,6 +47,56 @@ export const appMeta = sqliteTable("app_meta", {
   value: text("value").notNull(),
 });
 
+export const notes = sqliteTable(
+  "notes",
+  {
+    id: text("id").primaryKey(),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    pinned: integer("pinned").notNull().default(0),
+    archived: integer("archived").notNull().default(0),
+    excerpt: text("excerpt").notNull(),
+    taskCount: integer("task_count").notNull().default(0),
+    completedCount: integer("completed_count").notNull().default(0),
+    version: integer("version").notNull(),
+    deletedAt: text("deleted_at"),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (table) => [
+    index("notes_list_idx").on(
+      table.deletedAt,
+      table.archived,
+      table.pinned,
+      table.updatedAt,
+      table.id,
+    ),
+    check("notes_version_positive", sql`${table.version} >= 1`),
+    check("notes_body_bytes", sql`length(CAST(${table.body} AS BLOB)) <= 1000000`),
+    check("notes_title_length", sql`length(${table.title}) <= 200`),
+    check("notes_flags", sql`${table.pinned} IN (0, 1) AND ${table.archived} IN (0, 1)`),
+  ],
+);
+export const noteMutationReceipts = sqliteTable(
+  "note_mutation_receipts",
+  {
+    mutationId: text("mutation_id").primaryKey(),
+    requestHash: text("request_hash").notNull(),
+    noteId: text("note_id").notNull(),
+    kind: text("kind").notNull(),
+    resultVersion: integer("result_version").notNull(),
+    epoch: text("epoch").notNull(),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [
+    index("note_receipts_note_idx").on(table.noteId),
+    check(
+      "note_receipts_kind",
+      sql`${table.kind} IN ('create', 'update', 'trash', 'restore', 'purge')`,
+    ),
+  ],
+);
+
 // Summary text never changes the source diary's version. Purge cascades to both
 // current text and history; non-content operation receipts remain indefinitely.
 export const diarySummaries = sqliteTable(

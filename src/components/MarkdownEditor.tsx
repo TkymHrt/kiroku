@@ -19,6 +19,8 @@ interface Props {
   onChange: (value: string) => void;
   hidden: boolean;
   readOnly?: boolean;
+  label?: string;
+  autoFocus?: boolean;
 }
 const externalChange = Annotation.define<boolean>();
 
@@ -55,7 +57,14 @@ const highlighting = HighlightStyle.define([
   { tag: tags.quote, color: "#637064" },
 ]);
 
-export function MarkdownEditor({ value, onChange, hidden, readOnly = false }: Props) {
+export function MarkdownEditor({
+  value,
+  onChange,
+  hidden,
+  readOnly = false,
+  label = "日記の本文",
+  autoFocus = false,
+}: Props) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
   const change = useRef(onChange);
@@ -76,7 +85,7 @@ export function MarkdownEditor({ value, onChange, hidden, readOnly = false }: Pr
       theme,
       EditorView.lineWrapping,
       EditorView.contentAttributes.of({
-        "aria-label": "日記の本文",
+        "aria-label": label,
         spellcheck: "false",
       }),
       EditorState.readOnly.of(readOnly),
@@ -105,6 +114,7 @@ export function MarkdownEditor({ value, onChange, hidden, readOnly = false }: Pr
       parent: host.current,
     });
     view.current = editor;
+    if (autoFocus && !readOnly && !hidden) editor.focus();
     return () => {
       editor.destroy();
       view.current = null;

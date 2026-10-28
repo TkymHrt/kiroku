@@ -90,9 +90,9 @@ react-markdown + remark-gfm + remark-breaksで現在本文を表示する。生H
 | GET `/api/diaries/:date/neighbors` | 有効日記の前後日。端末だけの未同期日はクライアントで統合           |
 | GET `/api/export`                  | JSON形式版2。現在要約aiSummaryを含め、3件ずつ取得                  |
 
-出力応答は `{formatVersion:2, exportedAt, epoch, snapshotToken, diaries, nextCursor}`。継続は `after=nextCursor&snapshotToken=最初のtoken`。ブラウザで1つのJSONにまとめ、内部token/cursorはファイルに含めない。
+出力応答は `{formatVersion:3, exportedAt, epoch, snapshotToken, diaries, nextCursor, notes, nextNoteCursor}`。日記の継続は `after=nextCursor&snapshotToken=最初のtoken`。日記取得後、メモを `noteAfter=&snapshotToken=最初のtoken` から始め、`noteAfter=nextNoteCursor` で継続する。各ページ最大3件。ブラウザで1つのJSONの `diaries` / `notes` 配列へまとめ、内部token/cursorはファイルに含めない。
 
-snapshotTokenはepochと本文・要約receiptの最大rowidから作り、pageと同じbatchで取得する。途中変更は409 `EXPORT_CHANGED` として全出力をやり直す。Workerへ全行を集めない。大量出力にはブラウザ側のメモリ制約が残る。
+snapshotTokenはepochと日記本文・要約・メモreceiptの最大rowidから作り、pageと同じbatchで取得する。途中変更は409 `EXPORT_CHANGED` として全出力をやり直す。Workerへ全行を集めない。大量出力にはブラウザ側のメモリ制約が残る。
 
 エラーは `{ code, message, diary?, epoch?, absenceToken? }`。400は入力不正、401は認証要求、403は本人/CSRF拒否、409は競合・epoch変更・ID再利用・出力途中変更、413は本文上限、415はContent-Type不正、503は一時障害・設定/DB準備不足。本文や生の例外をログへ入れない。
 

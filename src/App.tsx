@@ -15,6 +15,8 @@ import {
   LogOut,
   PenLine,
   Settings,
+  StickyNote,
+  MoreHorizontal,
   ShieldCheck,
   Trash2,
   Undo2,
@@ -32,6 +34,8 @@ import {
   type UiError,
 } from "./lib/ui-errors";
 import { DiarySyncEngine, type SaveStatus } from "./lib/sync";
+import { createNoteSyncEngine } from "./lib/note-sync";
+import { NotesWorkspace } from "./components/NotesWorkspace";
 import {
   bodyBytes,
   isDiaryDate,
@@ -51,7 +55,7 @@ const MarkdownPreview = lazy(() =>
   })),
 );
 
-type Page = "list" | "diary" | "trash" | "settings";
+type Page = "list" | "diary" | "trash" | "settings" | "notes" | "more";
 type DisplayIssue = {
   error: UiError;
   operation: ErrorOperation;
@@ -169,6 +173,11 @@ export default function App() {
   const engineRef = useRef<DiarySyncEngine | null>(null);
   if (!engineRef.current) engineRef.current = new DiarySyncEngine();
   const engine = engineRef.current;
+  const notesRef = useRef<DiarySyncEngine | null>(null);
+  if (!notesRef.current) notesRef.current = createNoteSyncEngine();
+  const notesEngine = notesRef.current;
+  const [noteEditing, setNoteEditing] = useState(false);
+  const [newNoteRequest, setNewNoteRequest] = useState(0);
   const [tick, setTick] = useState(0);
   const [session, setSession] = useState<"loading" | "ready" | "locked" | "error">("loading");
   const [email, setEmail] = useState("");
@@ -214,6 +223,7 @@ export default function App() {
   function lockDisplay() {
     ++authSequence.current;
     engine.stop();
+    notesEngine.stop();
     activeDate.current = null;
     // Commit the locked DOM before navigating to Access logout (including bfcache).
     flushSync(() => {
@@ -260,6 +270,7 @@ export default function App() {
       if (sessionRef.current === "ready") setNeedsAuth(true);
       else {
         engine.stop();
+        notesEngine.stop();
         setSession("locked");
       }
       throw new AppRequestError(response.status || 401, "AUTH_REQUIRED");
@@ -323,8 +334,10 @@ export default function App() {
       if (sequence !== authSequence.current) return;
       setEmail(current.email);
       await engine.start();
+      await notesEngine.start();
       if (sequence !== authSequence.current) {
         engine.stop();
+        notesEngine.stop();
         return;
       }
       setSession("ready");
@@ -336,6 +349,7 @@ export default function App() {
     } catch (error) {
       if (sequence !== authSequence.current) return;
       engine.stop();
+      notesEngine.stop();
       setSession("error");
       displayError(error, "session", authenticate);
     }
@@ -343,6 +357,7 @@ export default function App() {
 
   useEffect(() => {
     const unsubscribe = engine.subscribe(() => setTick((value) => value + 1));
+    const unsubscribeNotes = notesEngine.subscribe(() => setTick((value) => value + 1));
     void authenticate();
     if (typeof BroadcastChannel !== "undefined") {
       const channel = new BroadcastChannel("kiroku-session");
@@ -362,7 +377,9 @@ export default function App() {
     window.addEventListener("focus", focus);
     return () => {
       unsubscribe();
+      unsubscribeNotes();
       engine.stop();
+      notesEngine.stop();
       sessionChannel.current?.close();
       sessionChannel.current = null;
       window.removeEventListener("focus", focus);
@@ -384,6 +401,14 @@ export default function App() {
 
   async function canLeave(): Promise<boolean> {
     try {
+      await notesEngine.flushLocal();
+    } catch {
+      setNotice(
+        "メモを端末に保存できていません。メモをコピーまたはMarkdown保存で退避してから再試行してください。",
+      );
+      return false;
+    }
+    try {
       await engine.flushLocal();
       if (localFailure.current)
         throw new Error(
@@ -402,6 +427,7 @@ export default function App() {
     setOpening(false);
     activeDate.current = null;
     setPage(target);
+    if (target === "notes") setNewNoteRequest(0);
     setMerge(null);
     setNotice("");
     setIssue(null);
@@ -461,6 +487,9 @@ export default function App() {
   const status = localError ? "error" : engine.getStatus(date);
   const deleted = !!current?.diary?.deletedAt;
   const unsynced = drafts.filter((draft) => draft.dirty || draft.pending);
+  const unsyncedCount =
+    unsynced.length +
+    notesEngine.getDrafts().filter((draft) => draft.dirty || draft.pending).length;
   const byteCount = bodyBytes(body);
   const conflict = current?.problem && ["conflict", "recovery"].includes(current.problem.kind);
   const ageWarning =
@@ -535,6 +564,7 @@ export default function App() {
     await api("/api/session");
     setNeedsAuth(false);
     await engine.retry();
+    await notesEngine.retry();
     setIssue(null);
     setNotice("");
     if (page === "list" || page === "trash") await loadList(page === "trash");
@@ -559,6 +589,8 @@ export default function App() {
       epoch: string;
       snapshotToken: string;
       diaries: unknown[];
+      notes: unknown[];
+      nextNoteCursor: string | null;
       nextCursor: string | null;
     };
     const first = await api<ExportPage>("/api/export");
@@ -587,6 +619,18 @@ export default function App() {
         throw new AppRequestError(409, "EXPORT_CHANGED");
       append(nextPage.diaries);
       after = nextPage.nextCursor;
+    }
+    parts.push('\n],"notes":[\n');
+    count = 0;
+    let noteAfter: string | null = "";
+    while (noteAfter !== null) {
+      const nextPage: ExportPage = await api<ExportPage>(
+        `/api/export?noteAfter=${encodeURIComponent(noteAfter)}&snapshotToken=${encodeURIComponent(first.snapshotToken)}`,
+      );
+      if (nextPage.epoch !== first.epoch || nextPage.snapshotToken !== first.snapshotToken)
+        throw new AppRequestError(409, "EXPORT_CHANGED");
+      append(nextPage.notes);
+      noteAfter = nextPage.nextNoteCursor;
     }
     parts.push("\n]}");
     downloadBlob(
@@ -659,7 +703,7 @@ export default function App() {
   function askLogout() {
     setConfirm({
       title: "ログアウトしますか",
-      description: `${unsynced.length ? "未同期の下書きがあります。ログアウト後もこの端末に残ります。" : "この端末に保存された下書きは保持されます。"}共有する前に端末の状態を確認してください。`,
+      description: `${unsyncedCount ? "未同期の下書きがあります。ログアウト後もこの端末に残ります。" : "この端末に保存された下書きは保持されます。"}共有する前に端末の状態を確認してください。`,
       label: "ログアウト",
       action: async () => {
         if (!(await canLeave())) return;
@@ -806,7 +850,9 @@ export default function App() {
     );
 
   return (
-    <div className={`app-shell ${page === "diary" ? "is-editing" : ""}`}>
+    <div
+      className={`app-shell ${page === "diary" || (page === "notes" && noteEditing) ? "is-editing" : ""}`}
+    >
       <aside className="sidebar">
         <button
           className="brand"
@@ -816,12 +862,18 @@ export default function App() {
           きろく
         </button>
         <button
-          className="button primary today-button"
-          onClick={() => void openDiary(tokyoToday())}
+          className={`button primary today-button${page === "notes" ? " memo-create-button" : ""}`}
+          onClick={() =>
+            page === "notes"
+              ? void canLeave().then((allowed) => {
+                  if (allowed) setNewNoteRequest((value) => value + 1);
+                })
+              : void openDiary(tokyoToday())
+          }
         >
           <PenLine size={18} />
-          今日の日記
-          <ChevronRight size={16} />
+          {page === "notes" ? "メモを書く" : "今日の日記"}
+          {page !== "notes" && <ChevronRight size={16} className="today-chevron" />}
         </button>
         <nav aria-label="メインナビゲーション">
           <button
@@ -833,21 +885,41 @@ export default function App() {
             日記一覧
           </button>
           <button
-            className={page === "trash" ? "nav-item active" : "nav-item"}
-            onClick={() => void navigate("trash")}
-            aria-current={page === "trash" ? "page" : undefined}
+            className={page === "notes" ? "nav-item active" : "nav-item"}
+            onClick={() => void navigate("notes")}
+            aria-current={page === "notes" ? "page" : undefined}
           >
-            <Trash2 size={19} />
-            ゴミ箱
+            <StickyNote size={19} />
+            メモ
           </button>
           <button
-            className={page === "settings" ? "nav-item active" : "nav-item"}
-            onClick={() => void navigate("settings")}
-            aria-current={page === "settings" ? "page" : undefined}
+            className={`nav-item mobile-more${page === "more" || page === "trash" || page === "settings" ? " active" : ""}`}
+            onClick={() => void navigate("more")}
+            aria-current={
+              page === "more" || page === "trash" || page === "settings" ? "page" : undefined
+            }
           >
-            <Settings size={19} />
-            設定
+            <MoreHorizontal size={19} />
+            その他
           </button>
+          <div className="nav-utilities">
+            <button
+              className={page === "trash" ? "nav-item active" : "nav-item"}
+              onClick={() => void navigate("trash")}
+              aria-current={page === "trash" ? "page" : undefined}
+            >
+              <Trash2 size={19} />
+              ゴミ箱
+            </button>
+            <button
+              className={page === "settings" ? "nav-item active" : "nav-item"}
+              onClick={() => void navigate("settings")}
+              aria-current={page === "settings" ? "page" : undefined}
+            >
+              <Settings size={19} />
+              設定
+            </button>
+          </div>
         </nav>
         <div className="sidebar-bottom">
           <p className="with-icon">
@@ -855,8 +927,8 @@ export default function App() {
             自分だけの記録
           </p>
           <p>
-            {unsynced.length
-              ? `${unsynced.length}件がサーバー未同期`
+            {unsyncedCount
+              ? `${unsyncedCount}件がサーバー未同期`
               : email === "local-development"
                 ? "ローカル開発環境"
                 : "Cloudflare Accessで保護"}
@@ -881,6 +953,34 @@ export default function App() {
               <CloudOff size={19} />
               <div>{notice}</div>
             </div>
+          )}
+
+          {page === "notes" && (
+            <NotesWorkspace
+              engine={notesEngine}
+              newRequest={newNoteRequest}
+              onEditingChange={setNoteEditing}
+              onAuthenticate={resumeAfterLogin}
+            />
+          )}
+          {page === "more" && (
+            <section className="more-page">
+              <h1>その他</h1>
+              <button className="more-row" onClick={() => void navigate("trash")}>
+                <Trash2 size={19} />
+                <span>日記のゴミ箱</span>
+                <ChevronRight size={18} />
+              </button>
+              <button className="more-row" onClick={() => void navigate("settings")}>
+                <Settings size={19} />
+                <span>設定</span>
+                <ChevronRight size={18} />
+              </button>
+              <button className="text-button" onClick={askLogout}>
+                <LogOut size={16} />
+                ログアウト
+              </button>
+            </section>
           )}
 
           {(page === "list" || page === "trash") && (
@@ -1378,14 +1478,12 @@ export default function App() {
                   <Download size={20} />
                   データのエクスポート
                 </h2>
-                <p>保存済みの日記を、ゴミ箱も含めてJSONで持ち出せます。</p>
+                <p>保存済みの日記とメモを、しまったメモ・ゴミ箱も含めてJSONで持ち出せます。</p>
                 <p className="muted">
-                  完全削除済みの日記と、この端末だけにある未同期の変更は含みません。未同期の本文は日記画面から個別にコピー・Markdown保存できます。
+                  完全削除した記録と、この端末だけにある未同期の変更は含みません。未同期の本文は各編集画面から個別にコピー・Markdown保存できます。
                 </p>
-                {unsynced.length > 0 && (
-                  <p className="warning-text">
-                    現在、{unsynced.length}件の未同期データがあります。
-                  </p>
+                {unsyncedCount > 0 && (
+                  <p className="warning-text">現在、{unsyncedCount}件の未同期データがあります。</p>
                 )}
                 <button
                   className="button primary"

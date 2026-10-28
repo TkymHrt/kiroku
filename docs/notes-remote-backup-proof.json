@@ -1,0 +1,92 @@
+{
+  "checkedAt": "2026-10-28T15:02:54.430258Z",
+  "kind": "real-temporary-cloudflare-d1",
+  "passed": true,
+  "temporaryDatabases": [
+    {
+      "id": "ec2389c3-14da-46ad-a8a0-739a8be830a7",
+      "name": "kiroku-restore-check-3c1e331eb638-source"
+    },
+    {
+      "id": "6f89ff9c-3b1e-438b-911d-feb92f868365",
+      "name": "kiroku-restore-check-c3b5fa089037-target"
+    }
+  ],
+  "cleanup": [
+    {
+      "id": "6f89ff9c-3b1e-438b-911d-feb92f868365",
+      "deleted": true
+    },
+    {
+      "id": "ec2389c3-14da-46ad-a8a0-739a8be830a7",
+      "deleted": true
+    }
+  ],
+  "sqlExportImportMatched": true,
+  "chunkedParameterizedTransferMatched": true,
+  "epochRotated": true,
+  "metadataTablesMatched": [
+    "app_meta",
+    "mutation_receipts",
+    "summary_mutation_receipts",
+    "mcp_daily_usage"
+  ],
+  "tablesMatched": [
+    "app_meta",
+    "diaries",
+    "diary_summaries",
+    "mcp_daily_usage",
+    "mutation_receipts",
+    "note_mutation_receipts",
+    "notes",
+    "summary_history",
+    "summary_mutation_receipts"
+  ],
+  "foreignKeysChecked": true,
+  "indexesRestored": [
+    "diaries_deleted_date_idx",
+    "diaries_diary_date_unique",
+    "mutation_receipts_date_idx",
+    "note_receipts_note_idx",
+    "notes_list_idx"
+  ],
+  "bodies": [
+    {
+      "kind": "diaries",
+      "id": "fixture-empty",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "diaries",
+      "id": "fixture-near-limit",
+      "bytes": 1000000,
+      "sha256": "99a15c27b48f3bef97cb30255c21bbe99cfaec539120746adaa3e62a1cfc7a95"
+    },
+    {
+      "kind": "diaries",
+      "id": "fixture-trash",
+      "bytes": 22,
+      "sha256": "659640e697f08af98c1eeed94cd48a936ea2c613ac0ecf7a90755a94f92e6e25"
+    },
+    {
+      "kind": "notes",
+      "id": "fixture-note-archive",
+      "bytes": 29,
+      "sha256": "bae85337c39d143c62d623c883cf98c51df9228f8901aa35f041c01cd4d261fd"
+    },
+    {
+      "kind": "notes",
+      "id": "fixture-note-limit",
+      "bytes": 1000000,
+      "sha256": "99a15c27b48f3bef97cb30255c21bbe99cfaec539120746adaa3e62a1cfc7a95"
+    },
+    {
+      "kind": "notes",
+      "id": "fixture-note-trash",
+      "bytes": 13,
+      "sha256": "9bb154b38bba3c1401ada9aa209bc2ba38f1686ca593d99e9a67e794aed98460"
+    }
+  ],
+  "sqlBackupBytes": 2132432
+}

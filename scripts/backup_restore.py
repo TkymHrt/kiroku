@@ -114,6 +114,17 @@ def fixture() -> sqlite3.Connection:
         connection.execute("INSERT INTO diaries VALUES (?, ?, ?, ?, ?, ?, ?)",
                            (identity, date, text, version, deleted, stamp, stamp))
     epoch = connection.execute("SELECT value FROM app_meta WHERE key='database_epoch'").fetchone()[0]
+    for identity, title, text, pinned, archived, deleted in [
+        ("fixture-note-limit", "メモの復元検証", body, 1, 0, None),
+        ("fixture-note-archive", "しまったメモ", "- [x] 完了\r\n残しておく", 0, 1, None),
+        ("fixture-note-trash", "メモのゴミ箱", "日本語🍵", 0, 0, stamp),
+    ]:
+        connection.execute("INSERT INTO notes (id,title,body,pinned,archived,excerpt,task_count,completed_count,version,deleted_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                           (identity, title, text, pinned, archived, title, 1, 0, 3, deleted, stamp, stamp))
+        connection.execute("INSERT INTO note_mutation_receipts VALUES (?,?,?,?,?,?,?)",
+                           (f"receipt-{identity}", "f" * 64, identity, "update", 3, epoch, stamp))
+    connection.execute("INSERT INTO note_mutation_receipts VALUES (?,?,?,?,?,?,?)",
+                       ("fixture-note-purge", "d" * 64, "fixture-note-purged", "purge", 3, epoch, stamp))
     for mutation, fingerprint, identity, date, kind, version in [
         ("fixture-create-near-limit", "a", "fixture-near-limit", "2026-10-18", "create", 1),
         ("fixture-operation", "f", "fixture-near-limit", "2026-10-18", "update", 7),
@@ -260,7 +271,7 @@ def target_snapshot(source: sqlite3.Connection, target: Any) -> dict[str, Any]:
         if not primary:
             raise RuntimeError("Snapshot verification requires an explicit primary key")
         last: list[Any] | None = None
-        limit = 3 if table == "diaries" else 100
+        limit = 3 if table in ("diaries", "notes") else 100
         order = ", ".join(q(key) for key in primary)
         while True:
             where = f"WHERE ({order}) > ({', '.join('?' for _ in primary)})" if last is not None else ""
@@ -275,8 +286,9 @@ def target_snapshot(source: sqlite3.Connection, target: Any) -> dict[str, Any]:
 def server_revision(target: Any) -> str:
     names = {row["name"] for row in target.query("SELECT name FROM sqlite_schema WHERE type='table'")}
     summary_revision = " || ':' || (SELECT COALESCE(MAX(rowid), 0) FROM summary_mutation_receipts)" if "summary_mutation_receipts" in names else ""
+    note_revision = " || ':' || (SELECT COALESCE(MAX(rowid), 0) FROM note_mutation_receipts)" if "note_mutation_receipts" in names else ""
     rows = target.query("SELECT value || ':' || (SELECT COALESCE(MAX(rowid), 0) "
-                        "FROM mutation_receipts)" + summary_revision + " AS revision FROM app_meta WHERE key='database_epoch'")
+                        "FROM mutation_receipts)" + summary_revision + note_revision + " AS revision FROM app_meta WHERE key='database_epoch'")
     if not rows:
         raise RuntimeError("Database epoch missing; cannot verify export stability")
     return str(rows[0]["revision"])
@@ -297,8 +309,9 @@ def verify_foreign_keys(target: Any) -> None:
 
 
 def body_proof(connection: sqlite3.Connection) -> list[dict[str, Any]]:
-    return [{"id": identity, "bytes": len(body.encode("utf-8")), "sha256": sha(body.encode("utf-8"))}
-            for identity, body in connection.execute("SELECT id, body FROM diaries ORDER BY id")]
+    return [{"kind": table, "id": identity, "bytes": len(body.encode("utf-8")), "sha256": sha(body.encode("utf-8"))}
+            for table in ("diaries", "notes") if table in tables(connection)
+            for identity, body in connection.execute(f"SELECT id, body FROM {q(table)} ORDER BY id")]
 
 
 def rotate_epoch(target: Any) -> str:

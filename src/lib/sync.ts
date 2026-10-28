@@ -36,6 +36,9 @@ export interface SyncOptions {
   now?: () => number;
   /** Disable only in tests. Browser lifecycle hooks and BroadcastChannel are enabled by default. */
   browserEvents?: boolean;
+  /** Isolate queues for adapters that reuse the durable mutation protocol. */
+  channelName?: string;
+  measureBody?: (body: string) => number;
 }
 
 class RequestFailure extends Error {
@@ -81,6 +84,8 @@ export class DiarySyncEngine {
   private readonly debounceMs: number;
   private readonly now: () => number;
   private readonly browserEvents: boolean;
+  private readonly channelName: string;
+  private readonly measureBody: (body: string) => number;
   private readonly owner = crypto.randomUUID();
   private readonly records = new Map<string, Draft>();
   private readonly listeners = new Set<Listener>();
@@ -100,6 +105,8 @@ export class DiarySyncEngine {
     this.debounceMs = options.debounceMs ?? 1000;
     this.now = options.now ?? Date.now;
     this.browserEvents = options.browserEvents ?? true;
+    this.channelName = options.channelName ?? "kiroku-draft-changes";
+    this.measureBody = options.measureBody ?? bodyBytes;
   }
 
   async start(): Promise<void> {
@@ -121,7 +128,7 @@ export class DiarySyncEngine {
       document.addEventListener("visibilitychange", this.onVisibility);
       window.addEventListener("beforeunload", this.onBeforeUnload);
       if (typeof BroadcastChannel !== "undefined") {
-        this.channel = new BroadcastChannel("kiroku-draft-changes");
+        this.channel = new BroadcastChannel(this.channelName);
         this.channel.onmessage = (event) => {
           if (typeof event.data?.date === "string") void this.refreshFromOtherTab(event.data.date);
         };
@@ -292,7 +299,7 @@ export class DiarySyncEngine {
             const dirty = !!base.pending || body !== (base.diary?.body ?? "");
             let problem = base.problem;
             if (problem?.kind === "storage" || problem?.kind === "validation") problem = null;
-            if (bodyBytes(body) > MAX_BODY_BYTES)
+            if (this.measureBody(body) > MAX_BODY_BYTES)
               problem = {
                 kind: "validation",
                 message:
@@ -536,7 +543,7 @@ export class DiarySyncEngine {
       this.schedule(date, record.retryAt! - this.now());
       return;
     }
-    if (bodyBytes(record.body) > MAX_BODY_BYTES) {
+    if (this.measureBody(record.body) > MAX_BODY_BYTES) {
       await this.change(
         date,
         (current) =>

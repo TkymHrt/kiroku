@@ -1,3 +1,4 @@
+import { Children, isValidElement, useId } from "react";
 import Markdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
@@ -45,13 +46,18 @@ export function MarkdownPreview({
   body,
   onChange,
   readOnly = false,
+  label = "日記のプレビュー",
+  comfortableTasks = false,
 }: {
   body: string;
   onChange: (body: string) => void;
   readOnly?: boolean;
+  label?: string;
+  comfortableTasks?: boolean;
 }) {
+  const taskIds = useId();
   return (
-    <article className="markdown-preview" aria-label="日記のプレビュー">
+    <article className="markdown-preview" aria-label={label}>
       {!body && <p className="empty-preview">まだ本文がありません。編集タブから記録できます。</p>}
       <Markdown
         remarkPlugins={[remarkGfm, remarkBreaks, taskPositions]}
@@ -75,20 +81,34 @@ export function MarkdownPreview({
             const checked =
               node?.properties["data-task-checked"] === true ||
               node?.properties["data-task-checked"] === "true";
+            const textId = `${taskIds}-task-${String(offset)}`;
+            const parts = Children.toArray(children);
+            const nestedAt = parts.findIndex(
+              (part) => isValidElement(part) && (part.type === "ul" || part.type === "ol"),
+            );
+            const splitAt = nestedAt < 0 ? parts.length : nestedAt;
+            const checkbox = (
+              <input
+                aria-labelledby={textId}
+                type="checkbox"
+                checked={checked}
+                disabled={readOnly}
+                onChange={() => {
+                  const at = Number(offset);
+                  if (body[at - 1] === "[" && body[at + 1] === "]")
+                    onChange(body.slice(0, at) + (checked ? " " : "x") + body.slice(at + 1));
+                }}
+              />
+            );
             return (
               <li className="task-list-item">
-                <input
-                  aria-label={checked ? "チェックを外す" : "チェックする"}
-                  type="checkbox"
-                  checked={checked}
-                  disabled={readOnly}
-                  onChange={() => {
-                    const at = Number(offset);
-                    if (body[at - 1] === "[" && body[at + 1] === "]")
-                      onChange(body.slice(0, at) + (checked ? " " : "x") + body.slice(at + 1));
-                  }}
-                />
-                <div>{children}</div>
+                {comfortableTasks ? <label className="task-toggle">{checkbox}</label> : checkbox}
+                <div>
+                  <div className="task-description" id={textId}>
+                    {parts.slice(0, splitAt)}
+                  </div>
+                  {parts.slice(splitAt)}
+                </div>
               </li>
             );
           },

@@ -1,6 +1,7 @@
 import type { Diary, DiarySummary, MutationRequest, MutationResponse } from "../src/lib/types";
 import { ApiError } from "./errors";
 import { validateDate, validateMutation } from "./validation";
+import type { Note } from "../src/lib/notes";
 
 type Connection = Pick<D1Database, "prepare" | "batch">;
 interface Row {
@@ -291,39 +292,50 @@ export async function mutateDiary(
 // the Worker memory ceiling and the Free plan's per-invocation D1 query limit.
 // The durable receipt rowid is a global revision; any successful write changes
 // it, so a concurrent edit aborts the export instead of mixing snapshots.
-export async function getExportPage(db: Connection, after = "", snapshotToken?: string) {
+export async function getExportPage(
+  db: Connection,
+  after = "",
+  snapshotToken?: string,
+  noteAfter?: string,
+) {
   if (after) validateDate(after);
-  if (after && !snapshotToken)
+  if ((after || noteAfter !== undefined) && !snapshotToken)
     throw new ApiError(
       400,
       "INVALID_INPUT",
       "エクスポートの継続条件がありません。最初から実行してください。",
     );
-  const [metadata, revisionResult, summaryRevisionResult, rows] = await db.batch<
-    Row | { value: string } | { revision: number }
-  >([
-    db.prepare("SELECT value FROM app_meta WHERE key = 'database_epoch'"),
-    db.prepare("SELECT COALESCE(MAX(rowid), 0) AS revision FROM mutation_receipts"),
-    db.prepare("SELECT COALESCE(MAX(rowid), 0) AS revision FROM summary_mutation_receipts"),
-    db
-      .prepare(
-        `SELECT d.*, s.summary AS ai_summary, s.source_version, s.source_epoch,
+  if (noteAfter && !/^[A-Za-z0-9_-]{16,100}$/.test(noteAfter))
+    throw new ApiError(400, "INVALID_INPUT", "メモの継続条件が正しくありません。");
+  const [metadata, revisionResult, summaryRevisionResult, rows, noteRevisionResult, noteRows] =
+    await db.batch<Row | { value: string } | { revision: number }>([
+      db.prepare("SELECT value FROM app_meta WHERE key = 'database_epoch'"),
+      db.prepare("SELECT COALESCE(MAX(rowid), 0) AS revision FROM mutation_receipts"),
+      db.prepare("SELECT COALESCE(MAX(rowid), 0) AS revision FROM summary_mutation_receipts"),
+      db
+        .prepare(
+          `SELECT d.*, s.summary AS ai_summary, s.source_version, s.source_epoch,
           s.revision AS summary_revision, s.updated_at AS summary_updated_at
           FROM diaries d LEFT JOIN diary_summaries s ON s.diary_id = d.id
-          WHERE d.diary_date > ? ORDER BY d.diary_date ASC LIMIT 3`,
-      )
-      .bind(after),
-  ]);
+          WHERE d.diary_date > ? AND ? = 1 ORDER BY d.diary_date ASC LIMIT 3`,
+        )
+        .bind(after, noteAfter === undefined ? 1 : 0),
+      db.prepare("SELECT COALESCE(MAX(rowid), 0) AS revision FROM note_mutation_receipts"),
+      db
+        .prepare("SELECT * FROM notes WHERE id > ? AND ? = 1 ORDER BY id ASC LIMIT 3")
+        .bind(noteAfter ?? "", noteAfter !== undefined ? 1 : 0),
+    ]);
   const epoch = (metadata.results[0] as { value: string } | undefined)?.value;
   if (!epoch) throw new ApiError(503, "DATABASE_NOT_READY", "データベースの準備ができていません。");
   const revision = (revisionResult.results[0] as { revision: number }).revision;
   const summaryRevision = (summaryRevisionResult.results[0] as { revision: number }).revision;
-  const currentToken = `${epoch}:${revision}:${summaryRevision}`;
+  const noteRevision = (noteRevisionResult.results[0] as { revision: number }).revision;
+  const currentToken = `${epoch}:${revision}:${summaryRevision}:${noteRevision}`;
   if (snapshotToken !== undefined && snapshotToken !== currentToken) {
     throw new ApiError(
       409,
       "EXPORT_CHANGED",
-      "エクスポート中に日記が更新されました。編集が保存された後にもう一度実行してください。",
+      "エクスポート中に記録が更新されました。編集が保存された後にもう一度実行してください。",
       undefined,
       epoch,
     );
@@ -349,12 +361,37 @@ export async function getExportPage(db: Connection, after = "", snapshotToken?: 
             updatedAt: row.summary_updated_at,
           },
   }));
+  const notes: Note[] = (
+    noteRows.results as unknown as {
+      id: string;
+      title: string;
+      body: string;
+      pinned: number;
+      archived: number;
+      version: number;
+      deleted_at: string | null;
+      created_at: string;
+      updated_at: string;
+    }[]
+  ).map((row) => ({
+    id: row.id,
+    title: row.title,
+    body: row.body,
+    pinned: row.pinned === 1,
+    archived: row.archived === 1,
+    version: row.version,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }));
   return {
-    formatVersion: 2,
+    formatVersion: 3,
     exportedAt: new Date().toISOString(),
     epoch,
     snapshotToken: currentToken,
     diaries,
+    notes,
+    nextNoteCursor: notes.length === 3 ? notes.at(-1)!.id : null,
     nextCursor: diaries.length === 3 ? diaries.at(-1)!.date : null,
   };
 }
