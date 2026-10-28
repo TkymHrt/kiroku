@@ -60,3 +60,9 @@ commit `896931e` をmainへpushし、[CI](https://github.com/TkymHrt/kiroku/acti
 Voidのstaged deployでversion `ff49a1a7-02cd-41e7-868f-ef6be87bf6e6` がliveになった。Worker/DB identity、独自ドメイン、旧URL、Access保護、preview無効、観測ログ無効の構成は維持した。
 
 [本番確認JSON](notes-production-proof.json)の46項目で、両originの認証付きHTML・session・readiness・faviconが200、HTML/sessionの8セキュリティヘッダー、各5件のJS/CSSと公開時buildのSHA-256一致、匿名10経路のHEADがAccessへ302になることを確認した。メモAPIはランダムな未使用IDの状態取得とランダム語で0件となる読取検索を確認し、本文取得・書込・本番E2Eは行っていない。Android実機と実Access期限切れは未確認。
+
+## 同日のメモ・その他の表示調整
+
+利用者が確認した空状態の短文化、タイトル入力の下線focusと余白統一、その他のログアウト行統一をcommit `2ef476e` としてmainへpushした。[CI](https://github.com/TkymHrt/kiroku/actions/runs/40715478701)の静的検査・単体128件・Workers7件・build・ローカル復元試験が成功し、公開前のメモE2E8件と画面確認も成功した。詳細は[UI変更](ui-refinement.md)を参照する。
+
+Voidのstaged deployでversion `801a341e-1baa-47fc-928c-35f56ba5f90d` がliveになった。DB構造・API・Worker/DB identity・公開設定の変更はなく、既存4件のmigrationは適用済み。[本番確認JSON](notes-ui-refinement-production-proof.json)の46項目で、両originの認証付き表示・8セキュリティヘッダー・各5件の配信JS/CSSのSHA-256一致・メモAPIの読取・匿名10経路のAccess拒否が成功した。本番の日記/メモの本文取得・変更は0件。
