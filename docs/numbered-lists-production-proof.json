@@ -1,0 +1,214 @@
+{
+  "checkedAt": "2026-10-28T12:47:51.7360706+00:00",
+  "gitCommit": "b1c1ea4c556bb0a1ce212f341372239e8589f822",
+  "checks": [
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/",
+      "securityHeadersMatched": 8
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/session",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/session",
+      "securityHeadersMatched": 8
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/__void/ready",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/favicon.svg",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "asset": "/assets/formatting-DlJ8Ls9u.js",
+      "sha256Matched": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "asset": "/assets/index-2vWVncS7.css",
+      "sha256Matched": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "asset": "/assets/index-Ciu1HPGs.js",
+      "sha256Matched": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "asset": "/assets/MarkdownEditor-B1pCWf_J.js",
+      "sha256Matched": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "asset": "/assets/MarkdownPreview-B6tof8ug.js",
+      "sha256Matched": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/session",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/diaries",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/diaries/2080-10-21",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/diaries/2080-10-21/neighbors",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/export",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/__void/ready",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/favicon.svg",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/",
+      "securityHeadersMatched": 8
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/session",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/session",
+      "securityHeadersMatched": 8
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/__void/ready",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/favicon.svg",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "asset": "/assets/formatting-DlJ8Ls9u.js",
+      "sha256Matched": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "asset": "/assets/index-2vWVncS7.css",
+      "sha256Matched": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "asset": "/assets/index-Ciu1HPGs.js",
+      "sha256Matched": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "asset": "/assets/MarkdownEditor-B1pCWf_J.js",
+      "sha256Matched": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "asset": "/assets/MarkdownPreview-B6tof8ug.js",
+      "sha256Matched": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/session",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/diaries",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/diaries/2080-10-21",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/diaries/2080-10-21/neighbors",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/export",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/__void/ready",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/favicon.svg",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    }
+  ],
+  "diaryContentRead": false,
+  "diaryMutations": 0
+}

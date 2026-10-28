@@ -42,3 +42,11 @@ commit `c15876c` をmainへpushし、[CI](https://github.com/TkymHrt/kiroku/acti
 Voidのstaged deployで既存Workerへ反映し、version `54331dbc-78bf-49eb-abdd-f08e9c157d7c` がliveになった。D1は全3件のmigrationが適用済みで、新しいmigrationはない。Worker/DB identity、独自ドメイン、旧URL、Access、preview無効、観測ログ無効を維持した。
 
 [確認JSON](toolchain-production-proof.json)の32項目で、両originの本人認証付きHTML・session・readiness・faviconが200、HTML/sessionの8セキュリティヘッダー、配信JS/CSSのローカルbuildとのSHA-256一致、匿名8経路のHEADがAccessへ302になることを確認した。日記本文の取得・変更、実データE2E、DB復元は行っていない。
+
+## 2026-10-28の番号リスト入力補助
+
+commit `b1c1ea4` をmainへpushし、[CI](https://github.com/TkymHrt/kiroku/actions/runs/40690279623)の静的検査・単体120件・Workers6件・build・ローカル復元試験が成功した。ローカルではPC/390pxのE2E42件も成功した。番号リストを補助バーとEnterで継続し、途中追加時の連番調整と空項目での終了に対応した。
+
+Voidのstaged deployでversion `351be291-c237-42b2-9184-1657f37bf804` がliveになった。D1は既存3件のmigrationが適用済みで、新しいmigrationはない。Worker/DB identityと公開設定の差分はない。
+
+[確認JSON](numbered-lists-production-proof.json)の38項目で、両originの認証付き4経路200、HTML/sessionの8セキュリティヘッダー、各5件の配信JS/CSSと今回のbuildのSHA-256一致、匿名8経路のHEADがAccessへ302になることを確認した。本番の日記本文の取得・変更は0件。Android実機の日本語IMEは未確認。
