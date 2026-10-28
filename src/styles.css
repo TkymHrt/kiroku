@@ -1322,22 +1322,15 @@ button:hover:not(:disabled) {
   text-align: center;
   padding: 72px 12px;
 }
-.notes-empty > svg {
-  color: var(--muted);
-  margin-bottom: 4px;
-}
 .notes-empty h2 {
-  font-size: 18px;
-  font-weight: 500;
+  color: var(--muted);
+  font-size: 16px;
+  font-weight: 400;
 }
 .notes-empty p {
   color: var(--muted);
   font-size: 14px;
-  white-space: pre-line;
   line-height: 1.9;
-}
-.notes-empty .button {
-  margin-top: 6px;
 }
 .note-heading {
   display: flex;
@@ -1358,6 +1351,8 @@ button:hover:not(:disabled) {
 }
 .note-title,
 .note-title-input {
+  min-height: 44px;
+  padding: 8px 0;
   font-size: 25px;
   font-weight: 600;
   letter-spacing: 0;
@@ -1365,24 +1360,25 @@ button:hover:not(:disabled) {
 }
 .note-title-input {
   border: 0;
-  border-bottom: 1px solid transparent;
+  border-bottom: 2px solid var(--line);
   border-radius: 0;
   width: 100%;
   min-width: 0;
   background: transparent;
-  padding: 4px 0 9px;
   color: var(--ink);
+  caret-color: var(--accent);
 }
 .note-title-input::placeholder {
   color: var(--muted);
   font-weight: 400;
 }
-.note-title-input:focus-visible {
-  outline-offset: 4px;
+.note-title-input:focus {
+  outline: none;
+  border-bottom-color: var(--accent);
 }
 .note-title {
+  border-bottom: 2px solid transparent;
   overflow-wrap: anywhere;
-  padding-bottom: 9px;
 }
 .note-properties {
   display: flex;
@@ -1504,10 +1500,6 @@ button:hover:not(:disabled) {
 .more-row span {
   flex: 1;
 }
-.more-page > .text-button {
-  margin-top: 24px;
-  min-height: 44px;
-}
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -1584,9 +1576,6 @@ button:hover:not(:disabled) {
   }
   .notes-empty {
     padding: 44px 0;
-  }
-  .notes-empty h2 {
-    font-size: 17px;
   }
   .note-heading {
     margin-bottom: 14px;

@@ -976,9 +976,9 @@ export default function App() {
                 <span>設定</span>
                 <ChevronRight size={18} />
               </button>
-              <button className="text-button" onClick={askLogout}>
-                <LogOut size={16} />
-                ログアウト
+              <button className="more-row" onClick={askLogout}>
+                <LogOut size={19} />
+                <span>ログアウト</span>
               </button>
             </section>
           )}

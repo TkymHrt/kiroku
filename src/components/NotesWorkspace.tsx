@@ -9,11 +9,9 @@ import {
   CloudOff,
   Copy,
   Download,
-  FileText,
   ListTodo,
   LoaderCircle,
   Pin,
-  Plus,
   RefreshCw,
   Search,
   Trash2,
@@ -480,7 +478,6 @@ export function NotesWorkspace({
             })}
             {!items.length && !loading && !listError && (
               <div className="notes-empty">
-                <FileText size={28} strokeWidth={1.4} />
                 <h2>
                   {query
                     ? "一致するメモがありません"
@@ -488,25 +485,16 @@ export function NotesWorkspace({
                       ? "しまったメモはありません"
                       : scope === "trash"
                         ? "メモのゴミ箱は空です"
-                        : "ふと思いついたことを、ここに。"}
+                        : "メモはまだありません"}
                 </h2>
-                <p>
-                  {query
-                    ? "別の言葉で検索してみてください。"
-                    : scope === "active"
-                      ? "書き留めたいことも、当面のTODOも。\n日付をまたいで使える、自分のメモ帳です。"
+                {(query || scope !== "active") && (
+                  <p>
+                    {query
+                      ? "別の言葉で検索してみてください。"
                       : scope === "archived"
                         ? "用件が済んだメモをしまうと、ここから見返せます。"
                         : "削除したメモは、ここから復元できます。"}
-                </p>
-                {scope === "active" && !query && (
-                  <button
-                    className="button primary"
-                    onClick={() => void work(() => open(crypto.randomUUID(), true))}
-                  >
-                    <Plus size={17} />
-                    最初のメモを書く
-                  </button>
+                  </p>
                 )}
               </div>
             )}
