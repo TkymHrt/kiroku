@@ -50,3 +50,13 @@ commit `b1c1ea4` をmainへpushし、[CI](https://github.com/TkymHrt/kiroku/acti
 Voidのstaged deployでversion `351be291-c237-42b2-9184-1657f37bf804` がliveになった。D1は既存3件のmigrationが適用済みで、新しいmigrationはない。Worker/DB identityと公開設定の差分はない。
 
 [確認JSON](numbered-lists-production-proof.json)の38項目で、両originの認証付き4経路200、HTML/sessionの8セキュリティヘッダー、各5件の配信JS/CSSと今回のbuildのSHA-256一致、匿名8経路のHEADがAccessへ302になることを確認した。本番の日記本文の取得・変更は0件。Android実機の日本語IMEは未確認。
+
+## 2026-10-29の独立メモ公開
+
+commit `896931e` をmainへpushし、[CI](https://github.com/TkymHrt/kiroku/actions/runs/40712467936)の静的検査・単体128件・Workers7件・build・ローカル復元試験が成功した。メモの作成・プレビュー・チェックリスト・検索・固定・保管・ゴミ箱とJSON形式版3を追加した。上部は「メモを書く」、一覧は検索から始まり、見出し/総件数を画面から除き、更新日に西暦を常時表示する。
+
+公開前の[実一時D1復元](notes-remote-backup-proof.json)では、約1MBの日記/メモ、全9表、索引、外部キー、epoch回転を確認し、一時DB2つの削除も成功した。本番D1は既存の日記を変更しない追加migration1件をVoidで適用し、全4件が適用済みになった。Voidは適用直前のTime Travel復旧ポイントを保存した。
+
+Voidのstaged deployでversion `ff49a1a7-02cd-41e7-868f-ef6be87bf6e6` がliveになった。Worker/DB identity、独自ドメイン、旧URL、Access保護、preview無効、観測ログ無効の構成は維持した。
+
+[本番確認JSON](notes-production-proof.json)の46項目で、両originの認証付きHTML・session・readiness・faviconが200、HTML/sessionの8セキュリティヘッダー、各5件のJS/CSSと公開時buildのSHA-256一致、匿名10経路のHEADがAccessへ302になることを確認した。メモAPIはランダムな未使用IDの状態取得とランダム語で0件となる読取検索を確認し、本文取得・書込・本番E2Eは行っていない。Android実機と実Access期限切れは未確認。

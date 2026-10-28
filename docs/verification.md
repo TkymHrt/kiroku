@@ -6,7 +6,7 @@ MCPの公開・ChatGPT・負荷・復元の追加結果は [MCP検証](mcp-verif
 
 ## 受入14項目
 
-2026-10-28の[独立メモ](notes.md)はローカル追加。複数作成・任意タイトル・重複文のチェック操作・固定・しまう/戻す・検索・ゴミ箱/復元・Markdown退避・オフライン・別コンテキスト競合をPC/390pxのEdge E2Eで確認した。JSON形式版3はメモを日記と同じsnapshot条件で出力し、変更中の出力を拒否する。約1MBメモ本文・固定/保管/削除状態・receiptを含む9表のSQL/分割復元とepoch回転をローカルself-testで確認。Android実機、実Access、本番メモ公開と実D1での追加表復元は未実施。
+2026-10-28追加の[独立メモ](notes.md)を10月29日に本番公開した。複数作成・任意タイトル・重複文のチェック操作・固定・しまう/戻す・検索・ゴミ箱/復元・Markdown退避・オフライン・別コンテキスト競合をPC/390pxのEdge E2Eで確認した。JSON形式版3はメモを日記と同じsnapshot条件で出力し、変更中の出力を拒否する。約1MBメモ本文・固定/保管/削除状態・receiptを含む9表のSQL/分割復元とepoch回転をローカルself-testと実一時D1で確認し、一時DB2つも削除済み。本番の両originで認証付きの表示・メモAPIの読取・配信物一致・匿名拒否の46項目が成功した。証跡は[本番確認](notes-production-proof.json)と[実D1復元](notes-remote-backup-proof.json)。本番での日記/メモの本文取得・変更は0件。Android実機と実Access期限切れは未確認。
 
 | #   | 確認内容                    | 確認済み範囲・残る項目                                                                                                                                                   |
 | --- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -38,10 +38,11 @@ MCPの公開・ChatGPT・負荷・復元の追加結果は [MCP検証](mcp-verif
 
 ## 復元の証跡
 
-| 証跡                                                         | 対象                                                                                     |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| [local-backup-proof.json](local-backup-proof.json)           | 2026-10-18のSQLite。1MB、空本文・ゴミ箱・receipt、SQL/分割復元、全列・index・epochを確認 |
-| [remote-backup-proof.json](remote-backup-proof.json)         | 同日の実一時D1。passedとcleanupを含めて確認                                              |
-| [mcp-remote-backup-proof.json](mcp-remote-backup-proof.json) | MCP追加後の全7表・外部キーを含む実一時D1                                                 |
+| 証跡                                                             | 対象                                                                                     |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| [local-backup-proof.json](local-backup-proof.json)               | 2026-10-18のSQLite。1MB、空本文・ゴミ箱・receipt、SQL/分割復元、全列・index・epochを確認 |
+| [remote-backup-proof.json](remote-backup-proof.json)             | 同日の実一時D1。passedとcleanupを含めて確認                                              |
+| [mcp-remote-backup-proof.json](mcp-remote-backup-proof.json)     | MCP追加後の全7表・外部キーを含む実一時D1                                                 |
+| [notes-remote-backup-proof.json](notes-remote-backup-proof.json) | メモ追加後の全9表・約1MBの日記/メモ・索引・epoch回転・一時DB2つの削除を確認              |
 
 古い未送信createが完全削除後に通る不具合は、absenceToken導入後に古tokenの409と新tokenでの明示create成功を確認済み。旧URLの端末下書きは自動移行されないため、同期完了か退避を確認する。証跡へ実日記本文・JWTを含めない。
