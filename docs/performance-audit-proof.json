@@ -1,0 +1,313 @@
+{
+  "checkedAt": "2026-10-29T15:32:09.915Z",
+  "baselineCommit": "df2bad59565e323a448e4f3c37c3aa2e54ebc352",
+  "productionSourceChanged": false,
+  "productionSettingsChanged": false,
+  "productionPrivateApiReads": 0,
+  "productionMutations": 0,
+  "headerInspection": {
+    "checkedAt": "2026-10-29T15:22:48.881Z",
+    "scope": "Authenticated HEAD of public application shell and built JS/CSS only. No diary, note, session, export, or database requests.",
+    "results": [
+      {
+        "path": "/",
+        "status": 200,
+        "headers": {
+          "cache-control": "no-store",
+          "pragma": "no-cache",
+          "content-type": "text/html",
+          "content-encoding": "br",
+          "content-length": null,
+          "vary": null,
+          "cf-cache-status": "HIT"
+        }
+      },
+      {
+        "path": "/assets/index-BUQtmFFT.js",
+        "status": 200,
+        "headers": {
+          "cache-control": "no-store",
+          "pragma": "no-cache",
+          "content-type": "text/javascript",
+          "content-encoding": "br",
+          "content-length": null,
+          "vary": null,
+          "cf-cache-status": "HIT"
+        }
+      },
+      {
+        "path": "/assets/index-Bhifgahw.css",
+        "status": 200,
+        "headers": {
+          "cache-control": "no-store",
+          "pragma": "no-cache",
+          "content-type": "text/css",
+          "content-encoding": "br",
+          "content-length": null,
+          "vary": null,
+          "cf-cache-status": "HIT"
+        }
+      }
+    ]
+  },
+  "loading": {
+    "scope": "Built production frontend, synthetic loopback APIs only, gzip transfer,390px viewport,CDP128/256kbps400msRTT4xCPU. Cache experiment changes only immutable JS/CSS response headers. Repeat means normal navigation in same browser context, not hard reload.",
+    "assets": [
+      {
+        "path": "/assets/index-Bhifgahw.css",
+        "rawBytes": 26471,
+        "gzipBytes": 6225,
+        "brotliQuality5Bytes": 5987
+      },
+      {
+        "path": "/assets/index-BUQtmFFT.js",
+        "rawBytes": 989744,
+        "gzipBytes": 319624,
+        "brotliQuality5Bytes": 301303
+      }
+    ],
+    "groups": [
+      {
+        "kbps": 128,
+        "policy": "baseline",
+        "visit": "cold",
+        "repetitions": 2,
+        "listReadyMedianMs": 22851.235699999997,
+        "editorReadyMedianMs": 224.97925000000396,
+        "jsCssNetworkRequests": [2, 2],
+        "pageErrors": []
+      },
+      {
+        "kbps": 128,
+        "policy": "baseline",
+        "visit": "repeat",
+        "repetitions": 2,
+        "listReadyMedianMs": 22541.58685,
+        "editorReadyMedianMs": 105.3840499999933,
+        "jsCssNetworkRequests": [2, 2],
+        "pageErrors": []
+      },
+      {
+        "kbps": 128,
+        "policy": "cached",
+        "visit": "cold",
+        "repetitions": 2,
+        "listReadyMedianMs": 22915.09859999999,
+        "editorReadyMedianMs": 226.27470000000176,
+        "jsCssNetworkRequests": [2, 2],
+        "pageErrors": []
+      },
+      {
+        "kbps": 128,
+        "policy": "cached",
+        "visit": "repeat",
+        "repetitions": 2,
+        "listReadyMedianMs": 1756.6727000000028,
+        "editorReadyMedianMs": 104.62300000000687,
+        "jsCssNetworkRequests": [0, 0],
+        "pageErrors": []
+      },
+      {
+        "kbps": 256,
+        "policy": "baseline",
+        "visit": "cold",
+        "repetitions": 1,
+        "listReadyMedianMs": 12549.970099999977,
+        "editorReadyMedianMs": 173.39369999998598,
+        "jsCssNetworkRequests": [2],
+        "pageErrors": []
+      },
+      {
+        "kbps": 256,
+        "policy": "baseline",
+        "visit": "repeat",
+        "repetitions": 1,
+        "listReadyMedianMs": 12283.424599999998,
+        "editorReadyMedianMs": 121.94690000000992,
+        "jsCssNetworkRequests": [2],
+        "pageErrors": []
+      },
+      {
+        "kbps": 256,
+        "policy": "cached",
+        "visit": "cold",
+        "repetitions": 1,
+        "listReadyMedianMs": 12644.7267,
+        "editorReadyMedianMs": 244.11959999997634,
+        "jsCssNetworkRequests": [2],
+        "pageErrors": []
+      },
+      {
+        "kbps": 256,
+        "policy": "cached",
+        "visit": "repeat",
+        "repetitions": 1,
+        "listReadyMedianMs": 1579.8194000000076,
+        "editorReadyMedianMs": 113.88300000000163,
+        "jsCssNetworkRequests": [0],
+        "pageErrors": []
+      }
+    ],
+    "allPageErrors": []
+  },
+  "input": {
+    "scope": "Synthetic100 clean cached notes10KB each; built frontend; Edge Chromium headless390px/CDP4xCPU; in-page keydown to second RAF is a responsiveness proxy, not physical Android validation. Candidate only skips hidden notes list with selected dependency; source untouched. Mutation responses held to remove network acknowledgement variability.",
+    "grouped": {
+      "baseline": {
+        "samples": 10,
+        "medianTwoRafMs": 384.4000000001397,
+        "p95TwoRafMs": 454.5,
+        "longTaskCount": 18,
+        "longTaskTotalMs": 6770
+      },
+      "candidate": {
+        "samples": 10,
+        "medianTwoRafMs": 22.899999999906868,
+        "p95TwoRafMs": 42.89999999990687,
+        "longTaskCount": 0,
+        "longTaskTotalMs": 0
+      }
+    },
+    "checks": [
+      {
+        "variant": "baseline",
+        "repeat": 1,
+        "startupPosts": 0,
+        "listEquivalent": true,
+        "typedSuffixRetained": true,
+        "pageErrors": []
+      },
+      {
+        "variant": "candidate",
+        "repeat": 1,
+        "startupPosts": 0,
+        "listEquivalent": true,
+        "typedSuffixRetained": true,
+        "pageErrors": []
+      },
+      {
+        "variant": "candidate",
+        "repeat": 2,
+        "startupPosts": 0,
+        "listEquivalent": true,
+        "typedSuffixRetained": true,
+        "pageErrors": []
+      },
+      {
+        "variant": "baseline",
+        "repeat": 2,
+        "startupPosts": 0,
+        "listEquivalent": true,
+        "typedSuffixRetained": true,
+        "pageErrors": []
+      }
+    ],
+    "unexpectedApiRequests": []
+  },
+  "bundle": {
+    "scope": "Isolated Vite build matching baseline exactly. gzip level9 / Brotli quality11 are offline comparison sizes, not observed production wire bytes.",
+    "groups": {
+      "React+DOM": 218897,
+      "CodeMirror+Lezer": 502108,
+      "application src": 97878,
+      "Markdown preview+other": 157210,
+      "icons": 10989
+    },
+    "baseline": {
+      "raw": 989744,
+      "gzip": 318986,
+      "brotli": 268569,
+      "gzipDefault": 319624
+    },
+    "staticVendorChunks": {
+      "raw": 989443,
+      "gzip": 319710,
+      "brotli": 273225,
+      "gzipDefault": 320332
+    },
+    "parserOnlyGfm": {
+      "raw": 974138,
+      "gzip": 314480,
+      "brotli": 264981,
+      "gzipDefault": 315121
+    },
+    "gfmEquivalence": {
+      "passed": true,
+      "astComparisons": 12,
+      "htmlComparisons": 12,
+      "cases": [
+        "japanese",
+        "repeatedTasks",
+        "tables",
+        "footnotes",
+        "strike",
+        "autolinks",
+        "escapedLinks",
+        "nestedLists",
+        "code",
+        "breaks",
+        "html",
+        "definitions"
+      ]
+    }
+  },
+  "network": {
+    "scope": "Synthetic only; no real API requests or diary reads/writes. JSON byte counts exclude HTTP headers/TLS. Gzip/br estimates are offline compression, not observed production transfer. CPU is Bun on local desktop and is not an Android latency measurement.",
+    "requestCounts": {
+      "initialUnknownBaselineTyping": {
+        "gets": 2,
+        "posts": 1,
+        "savedBodyRetained": true
+      },
+      "sequentialUnchangedOpens": {
+        "opens": 3,
+        "gets": 3,
+        "cacheHitBodyReplies": 3
+      },
+      "backlog": {
+        "documents": 10,
+        "peakSimultaneousPosts": 10
+      }
+    },
+    "oneMegabyteJapaneseFixtures": [
+      {
+        "variant": "diary_like_japanese",
+        "bodyBytes": 1000000,
+        "get": {
+          "jsonBytes": 1010350,
+          "gzipBytes": 115845,
+          "brotliQ5Bytes": 116203
+        },
+        "post": {
+          "jsonBytes": 1010247,
+          "gzipBytes": 115753,
+          "brotliQ5Bytes": 116118
+        },
+        "ack": {
+          "jsonBytes": 1010494,
+          "gzipBytes": 115898,
+          "brotliQ5Bytes": 116252
+        }
+      },
+      {
+        "variant": "less_repetitive_japanese",
+        "bodyBytes": 1000000,
+        "get": {
+          "jsonBytes": 1004870,
+          "gzipBytes": 747458,
+          "brotliQ5Bytes": 641630
+        },
+        "post": {
+          "jsonBytes": 1004767,
+          "gzipBytes": 747351,
+          "brotliQ5Bytes": 642422
+        },
+        "ack": {
+          "jsonBytes": 1005014,
+          "gzipBytes": 747528,
+          "brotliQ5Bytes": 641708
+        }
+      }
+    ]
+  }
+}

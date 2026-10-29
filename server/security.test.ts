@@ -1,9 +1,95 @@
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { exportJWK, generateKeyPair, SignJWT } from "jose";
-import { assertCsrf, authenticate, securityHeaders } from "./security";
+import { assertCsrf, authenticate, reusableStaticResponse, securityHeaders } from "./security";
 
 afterEach(() => {
   vi.restoreAllMocks();
+});
+
+describe("authenticated static response caching", () => {
+  const cache = "private, max-age=31536000, immutable";
+  const js = "/assets/index-AbCd1234.js";
+  const css = "/assets/index-EfGh5678.css";
+  const request = (path = js, method = "GET") =>
+    new Request(`https://diary.example${path}`, { method });
+  const response = (headers: Record<string, string> = {}, status = 200) =>
+    new Response(null, {
+      status,
+      headers: { "Cache-Control": cache, "Content-Type": "text/javascript", ...headers },
+    });
+  const manifest = () => Response.json({ entry: { file: js.slice(1), css: [css.slice(1)] } });
+
+  it("coalesces manifest reads and preserves only the exact current build's JS/CSS", async () => {
+    const assets = { fetch: vi.fn(async (_request: Request) => manifest()) };
+    await expect(
+      Promise.all([
+        reusableStaticResponse(request(), response(), assets),
+        reusableStaticResponse(
+          request(css, "HEAD"),
+          response({ "Content-Type": "text/css" }),
+          assets,
+        ),
+        reusableStaticResponse(request(), response({}, 304), assets),
+      ]),
+    ).resolves.toEqual([true, true, true]);
+    expect(assets.fetch).toHaveBeenCalledTimes(1);
+    expect(assets.fetch.mock.calls[0][0].url).toBe("https://diary.example/.vite/manifest.json");
+    await expect(
+      reusableStaticResponse(request("/assets/unknown-IjKl9012.js"), response(), assets),
+    ).resolves.toBe(false);
+    const headers = new Headers({ "Cache-Control": cache, Pragma: "no-cache" });
+    securityHeaders(headers, false, true);
+    expect(headers.get("cache-control")).toBe(cache);
+    expect(headers.get("pragma")).toBeNull();
+    expect(headers.get("x-frame-options")).toBe("DENY");
+    securityHeaders(headers, true, true);
+    expect(headers.get("cache-control")).toBe("no-store");
+    expect(headers.get("pragma")).toBe("no-cache");
+  });
+
+  it("never loads a manifest or reuses API, HTML, downloads, authentication or error responses", async () => {
+    const assets = { fetch: vi.fn(async () => manifest()) };
+    for (const [path, method, candidate] of [
+      ["/api/diaries/2080-01-01", "GET", response()],
+      ["/", "GET", response()],
+      ["/assets/plain.js", "GET", response()],
+      [js, "POST", response()],
+      [js, "GET", response({ "Content-Type": "text/html" })],
+      [css, "GET", response()],
+      [js, "GET", response({ "Cache-Control": "public, max-age=31536000, immutable" })],
+      [js, "GET", response({ "Cache-Control": "no-store" })],
+      [js, "GET", response({ "Set-Cookie": "synthetic=value" })],
+      [js, "GET", response({ "Content-Disposition": "attachment" })],
+      ...[401, 403, 404, 416, 500].map((status) => [js, "GET", response({}, status)]),
+    ] as [string, string, Response][]) {
+      await expect(reusableStaticResponse(request(path, method), candidate, assets)).resolves.toBe(
+        false,
+      );
+    }
+    expect(assets.fetch).not.toHaveBeenCalled();
+    const headers = new Headers({ "Cache-Control": cache });
+    securityHeaders(headers);
+    expect(headers.get("cache-control")).toBe("no-store");
+    expect(headers.get("pragma")).toBe("no-cache");
+  });
+
+  it("fails closed when the manifest binding is missing, invalid or unavailable", async () => {
+    await expect(reusableStaticResponse(request(), response())).resolves.toBe(false);
+    for (const load of [
+      async () => new Response(null, { status: 404 }),
+      async () => new Response("invalid JSON"),
+      async () => Response.json([]),
+      async () => Response.json({ entry: { file: 1, css: [null, false] } }),
+      async () => {
+        throw new Error("synthetic manifest failure");
+      },
+    ]) {
+      const assets = { fetch: vi.fn(load) };
+      await expect(reusableStaticResponse(request(), response(), assets)).resolves.toBe(false);
+      await expect(reusableStaticResponse(request(), response(), assets)).resolves.toBe(false);
+      expect(assets.fetch).toHaveBeenCalledTimes(1);
+    }
+  });
 });
 
 describe("Access verification and CSRF", () => {

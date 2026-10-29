@@ -91,9 +91,69 @@ export function assertCsrf(request: Request): void {
   }
 }
 
-export function securityHeaders(headers: Headers, development = false): void {
-  headers.set("Cache-Control", "no-store");
-  headers.set("Pragma", "no-cache");
+const privateStaticCache = "private, max-age=31536000, immutable";
+interface StaticAssets {
+  fetch(request: Request): Promise<Response>;
+}
+const staticCodeFiles = new WeakMap<StaticAssets, Promise<ReadonlySet<string>>>();
+
+/** The Assets binding supplies this policy only for this build's exact output allowlist. */
+export async function reusableStaticResponse(
+  request: Request,
+  response: Response,
+  assets?: StaticAssets,
+): Promise<boolean> {
+  const path = new URL(request.url).pathname;
+  const contentType = response.headers.get("content-type")?.split(";", 1)[0].trim().toLowerCase();
+  if (
+    !assets ||
+    !["GET", "HEAD"].includes(request.method) ||
+    ![200, 206, 304].includes(response.status) ||
+    !/^\/assets\/[^/\s?#]+-[\w-]{8,}\.(?:js|css)$/.test(path) ||
+    !(path.endsWith(".css")
+      ? contentType === "text/css"
+      : contentType === "text/javascript" || contentType === "application/javascript") ||
+    response.headers.get("cache-control") !== privateStaticCache ||
+    response.headers.has("set-cookie") ||
+    response.headers.has("content-disposition")
+  )
+    return false;
+  let files = staticCodeFiles.get(assets);
+  if (!files) {
+    files = (async () => {
+      try {
+        const manifest = await assets.fetch(
+          new Request(new URL("/.vite/manifest.json", request.url)),
+        );
+        if (!manifest.ok) return new Set<string>();
+        const value: unknown = await manifest.json();
+        if (!value || typeof value !== "object" || Array.isArray(value)) return new Set<string>();
+        return new Set(
+          Object.values(value).flatMap((entry: unknown) => {
+            if (!entry || typeof entry !== "object") return [];
+            const { file, css } = entry as { file?: unknown; css?: unknown };
+            return [file, ...(Array.isArray(css) ? css : [])].filter(
+              (item): item is string => typeof item === "string",
+            );
+          }),
+        );
+      } catch {
+        return new Set<string>();
+      }
+    })();
+    staticCodeFiles.set(assets, files);
+  }
+  return (await files).has(path.slice(1));
+}
+
+export function securityHeaders(
+  headers: Headers,
+  development = false,
+  reusableStatic = false,
+): void {
+  headers.set("Cache-Control", reusableStatic && !development ? privateStaticCache : "no-store");
+  if (reusableStatic && !development) headers.delete("Pragma");
+  else headers.set("Pragma", "no-cache");
   headers.set("X-Content-Type-Options", "nosniff");
   headers.set("Referrer-Policy", "no-referrer");
   headers.set("X-Frame-Options", "DENY");

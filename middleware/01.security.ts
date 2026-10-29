@@ -1,7 +1,12 @@
 import { defineMiddleware } from "void";
 import { env } from "void/env";
 import { errorResponse } from "../server/errors";
-import { assertCsrf, authenticate, securityHeaders } from "../server/security";
+import {
+  assertCsrf,
+  authenticate,
+  reusableStaticResponse,
+  securityHeaders,
+} from "../server/security";
 import { authenticateMcp } from "../server/mcp-security";
 
 export default defineMiddleware(async (c, next) => {
@@ -16,5 +21,9 @@ export default defineMiddleware(async (c, next) => {
   } catch (error) {
     c.res = errorResponse(error);
   }
-  securityHeaders(c.res.headers, import.meta.env.DEV);
+  securityHeaders(
+    c.res.headers,
+    import.meta.env.DEV,
+    !import.meta.env.DEV && (await reusableStaticResponse(c.req.raw, c.res, c.env.ASSETS)),
+  );
 });

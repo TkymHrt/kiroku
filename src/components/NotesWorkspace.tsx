@@ -324,6 +324,7 @@ export function NotesWorkspace({
   }, [newRequest]);
 
   const items = useMemo(() => {
+    if (selected) return [];
     const entries = new Map(remote.map((note) => [note.id, note]));
     for (const draft of engine.getDrafts()) {
       if (draft.tombstone && !draft.dirty) {
@@ -361,7 +362,7 @@ export function NotesWorkspace({
         b.id.localeCompare(a.id),
     );
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- The engine is an external mutable store; tick invalidates its snapshot.
-  }, [remote, tick, engine, scope, query]);
+  }, [remote, tick, engine, scope, query, selected]);
   const draft = selected ? engine.getDraft(selected) : undefined;
   const deleted = !!draft?.diary?.deletedAt;
   const problem = draft?.problem;

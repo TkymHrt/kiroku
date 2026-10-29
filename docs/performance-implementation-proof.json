@@ -1,0 +1,269 @@
+{
+  "checkedAt": "2026-10-29T15:56:13.283Z",
+  "baselineCommit": "df2bad59565e323a448e4f3c37c3aa2e54ebc352",
+  "scope": "Built production Worker in local Miniflare, real Assets binding and empty ephemeral D1. Synthetic RS256 owner/JWKS; no production private API traffic. Browser390px/128kbps/400ms/4xCPU with gzip bridge and unchanged Worker cache/security headers. Backend primed by Worker proof; browser contexts cold. Counts are local evidence, not Android or production timings.",
+  "fullCheck": {
+    "formatLintTypes": true,
+    "unitTests": 146,
+    "workersTests": 7,
+    "build": true
+  },
+  "mockedBrowserRegression": {
+    "cases": 18,
+    "passed": 18,
+    "projects": ["desktop", "mobile"],
+    "notesPerformanceCases": 6,
+    "fullBodyAndLocalDraftEqualityChecked": true,
+    "allApiRequestsIntercepted": true
+  },
+  "builtWorker": {
+    "passed": true,
+    "jwtChecksViaJwks": 1,
+    "checks": [
+      {
+        "path": "/",
+        "authenticated": true,
+        "status": 200,
+        "expectedStatus": 200,
+        "statusMatched": true,
+        "observedCachePolicy": "no-store",
+        "observedPragma": "no-cache",
+        "cachePolicyMatched": true,
+        "pragmaMatched": true,
+        "securityHeadersMatched": 6,
+        "passed": true
+      },
+      {
+        "path": "/api/session",
+        "authenticated": true,
+        "status": 200,
+        "expectedStatus": 200,
+        "statusMatched": true,
+        "observedCachePolicy": "no-store",
+        "observedPragma": "no-cache",
+        "cachePolicyMatched": true,
+        "pragmaMatched": true,
+        "securityHeadersMatched": 6,
+        "passed": true,
+        "ownerSessionValidated": true
+      },
+      {
+        "path": "/api/diaries",
+        "authenticated": true,
+        "status": 200,
+        "expectedStatus": 200,
+        "statusMatched": true,
+        "observedCachePolicy": "no-store",
+        "observedPragma": "no-cache",
+        "cachePolicyMatched": true,
+        "pragmaMatched": true,
+        "securityHeadersMatched": 6,
+        "passed": true
+      },
+      {
+        "path": "/api/diaries/2081-11-01",
+        "authenticated": true,
+        "status": 200,
+        "expectedStatus": 200,
+        "statusMatched": true,
+        "observedCachePolicy": "no-store",
+        "observedPragma": "no-cache",
+        "cachePolicyMatched": true,
+        "pragmaMatched": true,
+        "securityHeadersMatched": 6,
+        "passed": true
+      },
+      {
+        "path": "/favicon.svg",
+        "authenticated": true,
+        "status": 200,
+        "expectedStatus": 200,
+        "statusMatched": true,
+        "observedCachePolicy": "no-store",
+        "observedPragma": "no-cache",
+        "cachePolicyMatched": true,
+        "pragmaMatched": true,
+        "securityHeadersMatched": 6,
+        "passed": true
+      },
+      {
+        "path": "/__void/ready",
+        "authenticated": true,
+        "status": 200,
+        "expectedStatus": 200,
+        "statusMatched": true,
+        "observedCachePolicy": "other",
+        "observedPragma": null,
+        "cachePolicyMatched": null,
+        "pragmaMatched": true,
+        "securityHeadersMatched": null,
+        "passed": true,
+        "readyValidated": true
+      },
+      {
+        "path": "/assets/index-Bhifgahw.css",
+        "authenticated": true,
+        "status": 200,
+        "expectedStatus": 200,
+        "statusMatched": true,
+        "observedCachePolicy": "private, max-age=31536000, immutable",
+        "observedPragma": null,
+        "cachePolicyMatched": true,
+        "pragmaMatched": true,
+        "securityHeadersMatched": 6,
+        "assetDigestMatched": true,
+        "passed": true
+      },
+      {
+        "path": "/assets/index-Bhifgahw.css",
+        "authenticated": false,
+        "status": 401,
+        "expectedStatus": 401,
+        "statusMatched": true,
+        "observedCachePolicy": "no-store",
+        "observedPragma": "no-cache",
+        "cachePolicyMatched": true,
+        "pragmaMatched": true,
+        "securityHeadersMatched": 6,
+        "passed": true
+      },
+      {
+        "path": "/assets/index-pyRu3_as.js",
+        "authenticated": true,
+        "status": 200,
+        "expectedStatus": 200,
+        "statusMatched": true,
+        "observedCachePolicy": "private, max-age=31536000, immutable",
+        "observedPragma": null,
+        "cachePolicyMatched": true,
+        "pragmaMatched": true,
+        "securityHeadersMatched": 6,
+        "assetDigestMatched": true,
+        "passed": true
+      },
+      {
+        "path": "/assets/index-pyRu3_as.js",
+        "authenticated": false,
+        "status": 401,
+        "expectedStatus": 401,
+        "statusMatched": true,
+        "observedCachePolicy": "no-store",
+        "observedPragma": "no-cache",
+        "cachePolicyMatched": true,
+        "pragmaMatched": true,
+        "securityHeadersMatched": 6,
+        "passed": true
+      },
+      {
+        "path": "/assets/index-pyRu3_as.js",
+        "invalidRange": true,
+        "authenticated": true,
+        "status": 200,
+        "expectedStatus": [200, 416],
+        "statusMatched": true,
+        "observedCachePolicy": "private, max-age=31536000, immutable",
+        "observedPragma": null,
+        "cachePolicyMatched": true,
+        "pragmaMatched": true,
+        "securityHeadersMatched": 6,
+        "assetDigestMatched": true,
+        "passed": true
+      },
+      {
+        "path": "/assets/unhashed.js",
+        "authenticated": true,
+        "status": 404,
+        "expectedStatus": 404,
+        "statusMatched": true,
+        "observedCachePolicy": "no-store",
+        "observedPragma": "no-cache",
+        "cachePolicyMatched": true,
+        "pragmaMatched": true,
+        "securityHeadersMatched": 6,
+        "passed": true
+      },
+      {
+        "path": "/assets/index-not-a-real-hash.js",
+        "authenticated": true,
+        "status": 404,
+        "expectedStatus": 404,
+        "statusMatched": true,
+        "observedCachePolicy": "no-store",
+        "observedPragma": "no-cache",
+        "cachePolicyMatched": true,
+        "pragmaMatched": true,
+        "securityHeadersMatched": 6,
+        "passed": true
+      },
+      {
+        "path": "/assets/private.json",
+        "authenticated": true,
+        "status": 404,
+        "expectedStatus": 404,
+        "statusMatched": true,
+        "observedCachePolicy": "no-store",
+        "observedPragma": "no-cache",
+        "cachePolicyMatched": true,
+        "pragmaMatched": true,
+        "securityHeadersMatched": 6,
+        "passed": true
+      },
+      {
+        "path": "/api/session",
+        "authenticated": false,
+        "status": 401,
+        "expectedStatus": 401,
+        "statusMatched": true,
+        "observedCachePolicy": "no-store",
+        "observedPragma": "no-cache",
+        "cachePolicyMatched": true,
+        "pragmaMatched": true,
+        "securityHeadersMatched": 6,
+        "passed": true
+      }
+    ]
+  },
+  "loading": {
+    "passed": true,
+    "backendPrimed": true,
+    "assets": [
+      {
+        "path": "/assets/index-Bhifgahw.css",
+        "rawBytes": 26471,
+        "gzipBytes": 6225
+      },
+      {
+        "path": "/assets/index-pyRu3_as.js",
+        "rawBytes": 989760,
+        "gzipBytes": 319634
+      }
+    ],
+    "visits": [
+      {
+        "visit": "cold",
+        "runs": 2,
+        "kbps": 128,
+        "latencyMs": 400,
+        "cpuSlowdown": 4,
+        "listReadyMedianMs": 23175.8501,
+        "jsCssServerRequests": [2, 2]
+      },
+      {
+        "visit": "repeat",
+        "runs": 2,
+        "kbps": 128,
+        "latencyMs": 400,
+        "cpuSlowdown": 4,
+        "listReadyMedianMs": 2007.1739000000016,
+        "jsCssServerRequests": [0, 0]
+      }
+    ]
+  },
+  "styling": {
+    "cssSha256": "43dcf4865daa4e2fc93eb088387473027cdffa506ca361e8bdb7eb16fbaaa815",
+    "unchangedFromAudit": true
+  },
+  "productionDiaryBodyReads": 0,
+  "productionNoteBodyReads": 0,
+  "productionMutations": 0
+}

@@ -1,10 +1,11 @@
 import { defineConfig } from "vite-plus";
 import { voidPlugin } from "void";
 import react from "@vitejs/plugin-react";
+import { staticCache } from "./build/static-cache";
 
 export default defineConfig(({ mode }) => ({
   // Node tests use Vitest's server; Void owns the development/build environments.
-  plugins: mode === "test" ? [] : [react(), voidPlugin()],
+  plugins: mode === "test" ? [] : [react(), voidPlugin(), staticCache()],
   server: { host: "127.0.0.1" },
   test: {
     include: ["src/**/*.test.ts", "server/**/*.test.ts"],

@@ -57,6 +57,8 @@ SQL退避・分割復元は下記の既存スクリプトを使う。Voidの `db
 
 実DB名・保存先・local/remoteを確認する。観測ログは無効にし、公開後は匿名拒否・本人接続・配信物・ヘッダーを確認する。架空データを使った試験と実データへの操作を区別する。
 
+配信JS/CSSはビルド時にmanifestと照合したファイルだけ、ブラウザのprivate immutable cacheを許可する。公開後は両originの新しいJS/CSSのSHA-256、保存方針、Pragmaがないことを確認し、HTML/sessionのno-storeと8ヘッダー、匿名時のAccess拒否も確認する。`public/_headers` は共通のセキュリティヘッダー、ビルド用プラグインは配信物ごとの規則を管理する。生成した `dist/client/_headers` を直接編集しない。
+
 ### ドメインと旧URLの下書き
 
 独自ドメインはVoidのdomain addで既存Workerへ接続済み。旧workers.dev URLもAccess保護付きで維持する。IndexedDBはorigin別で、新URLへ下書きは自動移行されない。旧URLで「保存済み」を確認するか、本文をコピー・Markdown保存してから移動する。確認前に旧URLのブラウザデータを消さない。
