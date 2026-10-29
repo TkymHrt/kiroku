@@ -10,6 +10,8 @@ MCPの公開・ChatGPT・負荷・復元の追加結果は [MCP検証](mcp-verif
 
 2026-10-29に上記6場面を両viewportで実行し、12件が成功した。通信待ち中も本文・タイトルの入力、端末保存、プレビュー、一覧への移動ができ、認証・一覧の期限切れ後は再試行で復帰した。待機中と一覧エラーの4画像を `.impeccable/review/network/` に保存し、折返し・操作の重なり・はみ出しがないことを確認した。画像はGit管理対象外。
 
+2026-10-30にcommit `4c72b7a` の[CI](https://github.com/TkymHrt/kiroku/actions/runs/40896904387)成功後、本番version `2385cbdb-9d20-46d7-9b23-8e43faa2cf79` を公開した。[本番確認42項目](network-production-proof.json)で、両originの配信物一致・readinessのversionId・認証付き表示・セキュリティヘッダー・匿名拒否を確認した。本番の本文取得・変更は行っていない。
+
 ## 受入14項目
 
 2026-10-28追加の[独立メモ](notes.md)を10月29日に本番公開した。複数作成・任意タイトル・重複文のチェック操作・固定・しまう/戻す・検索・ゴミ箱/復元・Markdown退避・オフライン・別コンテキスト競合をPC/390pxのEdge E2Eで確認した。JSON形式版3はメモを日記と同じsnapshot条件で出力し、変更中の出力を拒否する。約1MBメモ本文・固定/保管/削除状態・receiptを含む9表のSQL/分割復元とepoch回転をローカルself-testと実一時D1で確認し、一時DB2つも削除済み。本番の両originで認証付きの表示・メモAPIの読取・配信物一致・匿名拒否の46項目が成功した。証跡は[本番確認](notes-production-proof.json)と[実D1復元](notes-remote-backup-proof.json)。本番での日記/メモの本文取得・変更は0件。Android実機と実Access期限切れは未確認。

@@ -66,3 +66,11 @@ Voidのstaged deployでversion `ff49a1a7-02cd-41e7-868f-ef6be87bf6e6` がliveに
 利用者が確認した空状態の短文化、タイトル入力の下線focusと余白統一、その他のログアウト行統一をcommit `2ef476e` としてmainへpushした。[CI](https://github.com/TkymHrt/kiroku/actions/runs/40715478701)の静的検査・単体128件・Workers7件・build・ローカル復元試験が成功し、公開前のメモE2E8件と画面確認も成功した。詳細は[UI変更](ui-refinement.md)を参照する。
 
 Voidのstaged deployでversion `801a341e-1baa-47fc-928c-35f56ba5f90d` がliveになった。DB構造・API・Worker/DB identity・公開設定の変更はなく、既存4件のmigrationは適用済み。[本番確認JSON](notes-ui-refinement-production-proof.json)の46項目で、両originの認証付き表示・8セキュリティヘッダー・各5件の配信JS/CSSのSHA-256一致・メモAPIの読取・匿名10経路のAccess拒否が成功した。本番の日記/メモの本文取得・変更は0件。
+
+## 2026-10-30の不安定回線への対応
+
+commit `4c72b7a` をmainへpushし、[CI](https://github.com/TkymHrt/kiroku/actions/runs/40896904387)の静的検査・単体140件・Workers7件・build・ローカル復元試験が成功した。通信待ち中も端末の本文を編集できるようにし、認証・一覧の15秒期限、本文転送の180秒期限、古い応答による巻き戻り防止を追加した。公開前には全APIを模擬したPC/390px幅の通信障害E2E12件も成功した。
+
+Voidのstaged deployでversion `2385cbdb-9d20-46d7-9b23-8e43faa2cf79` がliveになった。DB構造・Worker/DB identity・公開設定の変更はなく、既存4件のmigrationは適用済み。
+
+[本番確認JSON](network-production-proof.json)の42項目で、両originの認証付きHTML・session・readiness・favicon、HTML/sessionの8セキュリティヘッダー、各originのJS/CSS計2件のSHA-256一致、readinessのversionId一致、匿名10経路のHEADがAccessへ302になることを確認した。本番の日記/メモの本文取得・変更は0件。Android実機の通信制限と実Access期限切れは未確認。
