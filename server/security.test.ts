@@ -56,8 +56,6 @@ describe("authenticated static response caching", () => {
       [js, "POST", response()],
       [js, "GET", response({ "Content-Type": "text/html" })],
       [css, "GET", response()],
-      [js, "GET", response({ "Cache-Control": "public, max-age=31536000, immutable" })],
-      [js, "GET", response({ "Cache-Control": "no-store" })],
       [js, "GET", response({ "Set-Cookie": "synthetic=value" })],
       [js, "GET", response({ "Content-Disposition": "attachment" })],
       ...[401, 403, 404, 416, 500].map((status) => [js, "GET", response({}, status)]),
@@ -71,6 +69,28 @@ describe("authenticated static response caching", () => {
     securityHeaders(headers);
     expect(headers.get("cache-control")).toBe("no-store");
     expect(headers.get("pragma")).toBe("no-cache");
+  });
+
+  it("uses the exact manifest membership when the deployed provider omits authored cache headers", async () => {
+    const assets = { fetch: vi.fn(async () => manifest()) };
+    for (const policy of ["public, max-age=0, must-revalidate", "no-store", null]) {
+      for (const [path, contentType] of [
+        [js, "text/javascript"],
+        [css, "text/css"],
+      ]) {
+        const candidate = new Response(null, {
+          headers: {
+            "Content-Type": contentType,
+            ...(policy ? { "Cache-Control": policy } : {}),
+          },
+        });
+        await expect(reusableStaticResponse(request(path), candidate, assets)).resolves.toBe(true);
+        await expect(
+          reusableStaticResponse(request("/assets/unknown-IjKl9012.js"), candidate, assets),
+        ).resolves.toBe(false);
+      }
+    }
+    expect(assets.fetch).toHaveBeenCalledTimes(1);
   });
 
   it("fails closed when the manifest binding is missing, invalid or unavailable", async () => {

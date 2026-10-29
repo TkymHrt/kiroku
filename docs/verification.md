@@ -14,9 +14,9 @@ MCPの公開・ChatGPT・負荷・復元の追加結果は [MCP検証](mcp-verif
 
 ## 配信物の再利用とメモ編集中の計算抑制
 
-[性能調査](performance-audit.md)の2案を実装した。全体checkの静的検査・単体146件・Workers7件・buildが成功した。`server/static-cache.test.ts` と `server/security.test.ts` はビルドmanifestの許可範囲、Assetsの200/304、HTML・API・エラーの保存禁止、manifest取得失敗時の拒否を確認する。
+[性能調査](performance-audit.md)の2案を実装した。全体checkの静的検査・単体147件・Workers7件・buildが成功した。`server/static-cache.test.ts` と `server/security.test.ts` はビルドmanifestの許可範囲、Assetsの200/304、HTML・API・エラーの保存禁止、manifest取得失敗時の拒否を確認する。
 
-ビルド済みWorkerをMiniflareのAssetsと架空の本人JWT・空の一時D1で動かし、15項目を確認した。同じWorkerに対する390px幅・128kbps・400ms・CPU4倍減速の試験を2組実行し、一覧取得完了の中央値はブラウザ初回23.18秒、再訪2.01秒。JS/CSSのサーバー取得は各組で2件から0件になった。gzip転送の模擬回線で、バックエンドは事前確認済み、ブラウザ環境は各組で新規。Android実機や本番の実測とは分ける。
+ビルド済みWorkerをMiniflareのAssetsと架空の本人JWT・空の一時D1で動かし、通常の生成規則ありと、Voidの公開処理に合わせて `_headers` を除いた構成で各15項目、計30項目を確認した。規則ありの同一フロントエンドに対する390px幅・128kbps・400ms・CPU4倍減速の試験を2組実行し、一覧取得完了の中央値はブラウザ初回23.18秒、再訪2.01秒。JS/CSSのサーバー取得は各組で2件から0件になった。gzip転送の模擬回線で、バックエンドは事前確認済み、ブラウザ環境は各組で新規。Android実機や本番の実測とは分ける。
 
 全APIを模擬した `e2e/network.spec.ts` と `e2e/notes-performance.spec.ts` の18件がPC/390px幅で成功した。100件の端末メモから1件を編集し、本文全体と端末下書きの一致、一覧に戻った際のタイトル・順序・抜粋・チェック数・固定、検索条件としまう/戻す、新規メモを確認した。CSSは調査前の配信物と同じSHA-256。[ローカル検証証跡](performance-implementation-proof.json)に記録した。
 

@@ -59,6 +59,8 @@ SQL退避・分割復元は下記の既存スクリプトを使う。Voidの `db
 
 配信JS/CSSはビルド時にmanifestと照合したファイルだけ、ブラウザのprivate immutable cacheを許可する。公開後は両originの新しいJS/CSSのSHA-256、保存方針、Pragmaがないことを確認し、HTML/sessionのno-storeと8ヘッダー、匿名時のAccess拒否も確認する。`public/_headers` は共通のセキュリティヘッダー、ビルド用プラグインは配信物ごとの規則を管理する。生成した `dist/client/_headers` を直接編集しない。
 
+現行Void 1.2.1のバージョン固定アップローダーは `_headers` を送らないため、ローカルAssetsだけの確認を公開成功の代用にしない。Workerのmanifest照合で保存方針を設定し、生成規則がある場合と、公開時と同じく規則を除いた場合の両方を確認する。
+
 ### ドメインと旧URLの下書き
 
 独自ドメインはVoidのdomain addで既存Workerへ接続済み。旧workers.dev URLもAccess保護付きで維持する。IndexedDBはorigin別で、新URLへ下書きは自動移行されない。旧URLで「保存済み」を確認するか、本文をコピー・Markdown保存してから移動する。確認前に旧URLのブラウザデータを消さない。

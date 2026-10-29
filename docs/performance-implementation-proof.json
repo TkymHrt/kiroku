@@ -1,10 +1,10 @@
 {
-  "checkedAt": "2026-10-29T15:56:13.283Z",
+  "checkedAt": "2026-10-29T16:06:56.155Z",
   "baselineCommit": "df2bad59565e323a448e4f3c37c3aa2e54ebc352",
   "scope": "Built production Worker in local Miniflare, real Assets binding and empty ephemeral D1. Synthetic RS256 owner/JWKS; no production private API traffic. Browser390px/128kbps/400ms/4xCPU with gzip bridge and unchanged Worker cache/security headers. Backend primed by Worker proof; browser contexts cold. Counts are local evidence, not Android or production timings.",
   "fullCheck": {
     "formatLintTypes": true,
-    "unitTests": 146,
+    "unitTests": 147,
     "workersTests": 7,
     "build": true
   },
@@ -265,5 +265,15 @@
   },
   "productionDiaryBodyReads": 0,
   "productionNoteBodyReads": 0,
-  "productionMutations": 0
+  "productionMutations": 0,
+  "uploaderEmulation": {
+    "checkedAt": "2026-10-29T16:05:20.553Z",
+    "scope": "Actual built production Worker tested twice: local dist/client assets with _headers, then an isolated copy omitting _headers/_redirects/.assetsignore/environment files to emulate the pinned Void uploader. Synthetic verified RS256 owner, ephemeral empty D1, blocked external network. No production requests.",
+    "normalChecks": 15,
+    "normalPassed": true,
+    "uploaderChecks": 15,
+    "uploaderPassed": true,
+    "uploaderAssetHeadersFilePresent": false,
+    "passed": true
+  }
 }

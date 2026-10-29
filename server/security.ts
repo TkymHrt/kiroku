@@ -97,7 +97,9 @@ interface StaticAssets {
 }
 const staticCodeFiles = new WeakMap<StaticAssets, Promise<ReadonlySet<string>>>();
 
-/** The Assets binding supplies this policy only for this build's exact output allowlist. */
+/** The current Assets manifest, rather than provider headers, authorizes private code caching.
+ * Void's pinned-version uploader does not forward the generated _headers file.
+ */
 export async function reusableStaticResponse(
   request: Request,
   response: Response,
@@ -113,7 +115,6 @@ export async function reusableStaticResponse(
     !(path.endsWith(".css")
       ? contentType === "text/css"
       : contentType === "text/javascript" || contentType === "application/javascript") ||
-    response.headers.get("cache-control") !== privateStaticCache ||
     response.headers.has("set-cookie") ||
     response.headers.has("content-disposition")
   )
