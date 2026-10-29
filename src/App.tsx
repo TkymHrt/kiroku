@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { flushSync } from "react-dom";
 import {
   Check,
@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { DatePicker } from "./components/DatePicker";
 import { ErrorNotice } from "./components/ErrorNotice";
+import { MarkdownEditor } from "./components/MarkdownEditor";
+import { MarkdownPreview } from "./components/MarkdownPreview";
 import {
   AppRequestError,
   describeError,
@@ -36,6 +38,7 @@ import {
 import { DiarySyncEngine, type SaveStatus } from "./lib/sync";
 import { createNoteSyncEngine } from "./lib/note-sync";
 import { NotesWorkspace } from "./components/NotesWorkspace";
+import { withNetworkDeadline } from "./lib/network";
 import {
   bodyBytes,
   isDiaryDate,
@@ -44,17 +47,6 @@ import {
   type DiaryListResponse,
   type DiarySummary,
 } from "./lib/types";
-const MarkdownEditor = lazy(() =>
-  import("./components/MarkdownEditor").then((module) => ({
-    default: module.MarkdownEditor,
-  })),
-);
-const MarkdownPreview = lazy(() =>
-  import("./components/MarkdownPreview").then((module) => ({
-    default: module.MarkdownPreview,
-  })),
-);
-
 type Page = "list" | "diary" | "trash" | "settings" | "notes" | "more";
 type DisplayIssue = {
   error: UiError;
@@ -193,6 +185,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [opening, setOpening] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [localError, setLocalError] = useState<UiError | null>(null);
   const [notice, setNotice] = useState("");
   const [issue, setIssue] = useState<DisplayIssue | null>(null);
@@ -218,10 +211,23 @@ export default function App() {
   sessionRef.current = session;
   const sessionChannel = useRef<BroadcastChannel | null>(null);
   const authSequence = useRef(0);
+  const authController = useRef<AbortController | null>(null);
+  const listSequence = useRef(0);
+  const listController = useRef<AbortController | null>(null);
+  const neighborsController = useRef<AbortController | null>(null);
   const copyField = useRef<HTMLTextAreaElement>(null);
 
-  function lockDisplay() {
+  function cancelReadRequests() {
     ++authSequence.current;
+    ++openSequence.current;
+    ++listSequence.current;
+    authController.current?.abort();
+    listController.current?.abort();
+    neighborsController.current?.abort();
+  }
+
+  function lockDisplay() {
+    cancelReadRequests();
     engine.stop();
     notesEngine.stop();
     activeDate.current = null;
@@ -231,6 +237,8 @@ export default function App() {
       setMerge(null);
       setManualCopy(null);
       setConfirm(null);
+      setOpening(false);
+      setRefreshing(false);
       setPage("list");
       setSession("locked");
     });
@@ -260,43 +268,67 @@ export default function App() {
     }
   };
 
-  async function api<T>(url: string): Promise<T> {
-    const response = await fetch(url, {
-      cache: "no-store",
-      redirect: "manual",
-      credentials: "same-origin",
-    });
-    if (response.status === 401 || response.status === 403 || response.type === "opaqueredirect") {
-      if (sessionRef.current === "ready") setNeedsAuth(true);
-      else {
-        engine.stop();
-        notesEngine.stop();
-        setSession("locked");
-      }
-      throw new AppRequestError(response.status || 401, "AUTH_REQUIRED");
-    }
-    if (!response.ok) {
-      let code = "SERVER_ERROR";
-      try {
-        const data = (await response.json()) as { code?: unknown };
-        if (typeof data.code === "string") code = data.code;
-      } catch {}
-      throw new AppRequestError(response.status, code);
-    }
-    if (!response.headers.get("content-type")?.includes("application/json")) {
-      if (sessionRef.current === "ready") setNeedsAuth(true);
-      throw new AppRequestError(401, "AUTH_REQUIRED");
-    }
-    return response.json() as Promise<T>;
+  async function api<T>(url: string, signal?: AbortSignal): Promise<T> {
+    return withNetworkDeadline(
+      async (requestSignal) => {
+        const response = await fetch(url, {
+          cache: "no-store",
+          redirect: "manual",
+          credentials: "same-origin",
+          signal: requestSignal,
+        });
+        requestSignal.throwIfAborted();
+        if (
+          response.status === 401 ||
+          response.status === 403 ||
+          response.type === "opaqueredirect"
+        ) {
+          if (sessionRef.current === "ready") setNeedsAuth(true);
+          else {
+            engine.stop();
+            notesEngine.stop();
+            setSession("locked");
+          }
+          throw new AppRequestError(response.status || 401, "AUTH_REQUIRED");
+        }
+        if (!response.ok) {
+          let code = "SERVER_ERROR";
+          try {
+            const data = (await response.json()) as { code?: unknown };
+            if (typeof data.code === "string") code = data.code;
+          } catch {}
+          throw new AppRequestError(response.status, code);
+        }
+        if (!response.headers.get("content-type")?.includes("application/json")) {
+          if (sessionRef.current === "ready") setNeedsAuth(true);
+          throw new AppRequestError(401, "AUTH_REQUIRED");
+        }
+        return response.json() as Promise<T>;
+      },
+      { signal },
+    );
+  }
+
+  function cancelList() {
+    ++listSequence.current;
+    listController.current?.abort();
+    listController.current = null;
+    setLoading(false);
   }
 
   async function loadList(trash = false, append = false) {
+    listController.current?.abort();
+    const controller = new AbortController();
+    listController.current = controller;
+    const sequence = ++listSequence.current;
     setLoading(true);
     try {
       const after = trash ? trashCursor : cursor;
       const response = await api<DiaryListResponse>(
         `/api/diaries?trash=${trash ? "1" : "0"}${append && after ? `&before=${encodeURIComponent(after)}` : ""}`,
+        controller.signal,
       );
+      if (sequence !== listSequence.current) return;
       const assign = trash ? setTrashItems : setItems;
       assign((previous) =>
         append
@@ -314,22 +346,32 @@ export default function App() {
       setNotice("");
       setIssue((previous) => (previous?.operation === "list" ? null : previous));
     } catch (error) {
+      if (sequence !== listSequence.current || controller.signal.aborted) return;
       setListFailure((previous) => ({
         ...previous,
         [trash ? "trash" : "list"]: true,
       }));
       displayError(error, "list", () => loadList(trash, append));
     } finally {
-      setLoading(false);
+      if (sequence === listSequence.current) {
+        listController.current = null;
+        setLoading(false);
+      }
     }
   }
 
   async function authenticate() {
     const sequence = ++authSequence.current;
+    authController.current?.abort();
+    const controller = new AbortController();
+    authController.current = controller;
     setSession("loading");
     setIssue(null);
     try {
-      const current = await api<{ authenticated: boolean; email: string }>("/api/session");
+      const current = await api<{ authenticated: boolean; email: string }>(
+        "/api/session",
+        controller.signal,
+      );
       if (!current.authenticated) throw new AppRequestError(401, "AUTH_REQUIRED");
       if (sequence !== authSequence.current) return;
       setEmail(current.email);
@@ -341,11 +383,7 @@ export default function App() {
         return;
       }
       setSession("ready");
-      await loadList();
-      if (activeDate.current) {
-        await engine.open(activeDate.current);
-        setBody(engine.getDraft(activeDate.current)?.body ?? "");
-      }
+      void loadList();
     } catch (error) {
       if (sequence !== authSequence.current) return;
       engine.stop();
@@ -373,9 +411,18 @@ export default function App() {
         if (error instanceof AppRequestError && error.status === 401)
           displayError(error, "session", resumeAfterLogin);
       });
+      refreshAfterReconnect();
+    };
+    const refreshAfterReconnect = () => {
+      if (sessionRef.current !== "ready" || !activeDate.current) return;
+      const current = engine.getDraft(activeDate.current);
+      if (current?.problem?.kind === "network" && !current.dirty && !current.pending)
+        void refreshDiary(activeDate.current, openSequence.current);
     };
     window.addEventListener("focus", focus);
+    window.addEventListener("online", refreshAfterReconnect);
     return () => {
+      cancelReadRequests();
       unsubscribe();
       unsubscribeNotes();
       engine.stop();
@@ -383,6 +430,7 @@ export default function App() {
       sessionChannel.current?.close();
       sessionChannel.current = null;
       window.removeEventListener("focus", focus);
+      window.removeEventListener("online", refreshAfterReconnect);
     };
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- Mount owns this subscription; callbacks read the current session and active date through refs.
   }, []);
@@ -422,16 +470,19 @@ export default function App() {
   }
 
   async function navigate(target: Page) {
-    if (!(await canLeave())) return;
-    ++openSequence.current;
+    const sequence = ++openSequence.current;
+    if (!(await canLeave()) || sequence !== openSequence.current) return;
+    cancelList();
+    neighborsController.current?.abort();
     setOpening(false);
+    setRefreshing(false);
     activeDate.current = null;
     setPage(target);
     if (target === "notes") setNewNoteRequest(0);
     setMerge(null);
     setNotice("");
     setIssue(null);
-    if (target === "list" || target === "trash") await loadList(target === "trash");
+    if (target === "list" || target === "trash") void loadList(target === "trash");
     window.scrollTo({ top: 0 });
   }
 
@@ -440,8 +491,10 @@ export default function App() {
       displayError(new AppRequestError(400, "INVALID_DATE"), "open");
       return;
     }
-    if (!(await canLeave())) return;
     const sequence = ++openSequence.current;
+    if (!(await canLeave()) || sequence !== openSequence.current) return;
+    cancelList();
+    neighborsController.current?.abort();
     activeDate.current = target;
     setDate(target);
     setDateInput(target);
@@ -449,12 +502,14 @@ export default function App() {
     setMerge(null);
     setPage("diary");
     setOpening(true);
+    setRefreshing(false);
+    setNeighbors({ previous: null, next: null });
     setNotice("");
     setIssue(null);
     setBody(engine.getDraft(target)?.body ?? "");
     let draft;
     try {
-      draft = await engine.open(target);
+      draft = await engine.openLocal(target);
     } catch (error) {
       if (sequence === openSequence.current) {
         setOpening(false);
@@ -466,14 +521,28 @@ export default function App() {
     setBody(draft.body);
     setOpening(false);
     window.scrollTo({ top: 0 });
+    void refreshDiary(target, sequence);
+    const controller = new AbortController();
+    neighborsController.current = controller;
+    void api<{
+      previous: string | null;
+      next: string | null;
+    }>(`/api/diaries/${target}/neighbors`, controller.signal)
+      .then((response) => {
+        if (sequence === openSequence.current) setNeighbors(response);
+      })
+      .catch(() => {});
+  }
+
+  async function refreshDiary(target: string, sequence: number) {
+    setRefreshing(true);
     try {
-      const response = await api<{
-        previous: string | null;
-        next: string | null;
-      }>(`/api/diaries/${target}/neighbors`);
-      if (sequence === openSequence.current) setNeighbors(response);
-    } catch {
-      if (sequence === openSequence.current) setNeighbors({ previous: null, next: null });
+      await engine.refresh(target);
+      if (sequence === openSequence.current) setBody(engine.getDraft(target)?.body ?? "");
+    } catch (error) {
+      if (sequence === openSequence.current) protect(error);
+    } finally {
+      if (sequence === openSequence.current) setRefreshing(false);
     }
   }
 
@@ -1144,15 +1213,28 @@ export default function App() {
                   <ChevronRight size={20} />
                 </button>
                 <SaveState
-                  status={readFailure ? "unsynced" : status}
+                  status={
+                    readFailure ? "unsynced" : refreshing && status === "saved" ? "syncing" : status
+                  }
                   label={
-                    opening ? "読み込み中" : readFailure ? "読み込みできていません" : undefined
+                    opening
+                      ? "読み込み中"
+                      : readFailure
+                        ? "読み込みできていません"
+                        : refreshing && status === "saved"
+                          ? "サーバー確認中"
+                          : undefined
                   }
                   empty={
                     !current?.diary && !body && !current?.dirty && !current?.problem && !opening
                   }
                 />
               </div>
+              {refreshing && !opening && (
+                <p className="muted" role="status">
+                  サーバーの内容を確認しています。編集は続けられます。
+                </p>
+              )}
               {deleted && (
                 <div className="banner">
                   <Trash2 size={19} />
@@ -1406,14 +1488,7 @@ export default function App() {
                     日記を開いています
                   </div>
                 ) : (
-                  <Suspense
-                    fallback={
-                      <div className="editor-loading">
-                        <LoaderCircle size={21} className="spinning" />
-                        エディタを準備しています
-                      </div>
-                    }
-                  >
+                  <>
                     <div
                       id="edit-panel"
                       role="tabpanel"
@@ -1438,7 +1513,7 @@ export default function App() {
                         <MarkdownPreview body={body} onChange={edit} readOnly={deleted} />
                       )}
                     </div>
-                  </Suspense>
+                  </>
                 )}
                 <div className="editor-footer">
                   <span>Markdown</span>

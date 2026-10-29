@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vite-plus/test";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { IDBFactory } from "fake-indexeddb";
 import { DraftRepository, DraftRevisionConflict, emptyDraft } from "./drafts";
 import { DiarySyncEngine, retryAfterMilliseconds } from "./sync";
@@ -21,6 +21,7 @@ function engine(repo: DraftRepository, server: FakeServer, now?: () => number) {
     fetcher: server.fetch,
     browserEvents: false,
     debounceMs: 1_000_000,
+    requestTimeoutMs: 15_000,
     now,
   });
   engines.push(value);
@@ -148,6 +149,7 @@ class FakeServer {
 afterEach(() => {
   for (const value of engines.splice(0)) value.stop();
   for (const value of databases.splice(0)) value.close();
+  vi.useRealTimers();
 });
 
 describe("durable draft repository", () => {
@@ -606,6 +608,305 @@ describe("sync without losing local changes", () => {
     await app.retry(date);
     expect(app.getDraft(date)?.body).toBe("new");
     expect(app.getStatus(date)).toBe("saved");
+  });
+});
+
+describe("local editing during slow requests", () => {
+  it("allows a throttled document transfer past 15 seconds while keeping editing and its lease", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    let now = 100_000;
+    const repo = repository();
+    const server = new FakeServer();
+    let signal!: AbortSignal;
+    let entered!: () => void;
+    const waiting = new Promise<void>((resolve) => {
+      entered = resolve;
+    });
+    const app = new DiarySyncEngine({
+      repository: repo,
+      browserEvents: false,
+      debounceMs: 1_000_000,
+      now: () => now,
+      fetcher: (input, init) => {
+        if (init?.method !== "POST") return server.fetch(input, init);
+        signal = init.signal!;
+        entered();
+        return new Promise<Response>(() => {});
+      },
+    });
+    engines.push(app);
+    await app.start();
+    await app.open(date);
+    await app.edit(date, "request text");
+    const syncing = app.retry(date);
+    await waiting;
+    const pending = (await repo.get(date))!.pending;
+    expect((await repo.get(date))?.lease?.until).toBe(now + 190_000);
+    await vi.advanceTimersByTimeAsync(15_001);
+    expect(signal.aborted).toBe(false);
+    expect(app.getStatus(date)).toBe("syncing");
+    await app.edit(date, "still writing on the slow connection");
+    expect((await repo.get(date))?.body).toBe("still writing on the slow connection");
+    expect((await repo.get(date))?.pending).toEqual(pending);
+    now += 180_000;
+    await vi.advanceTimersByTimeAsync(164_999);
+    await syncing;
+    expect(signal.aborted).toBe(true);
+    expect(app.getStatus(date)).toBe("unsynced");
+    expect((await repo.get(date))?.body).toBe("still writing on the slow connection");
+    expect((await repo.get(date))?.pending).toEqual(pending);
+  });
+
+  it("opens cached text without a request and keeps edits while a deduplicated refresh stalls", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    const repo = repository();
+    await repo.change(date, () => ({
+      ...emptyDraft(date),
+      body: "cached text",
+      diary: diary("cached text"),
+      epoch: "epoch-1",
+    }));
+    let requests = 0;
+    let signal!: AbortSignal;
+    const app = new DiarySyncEngine({
+      repository: repo,
+      browserEvents: false,
+      debounceMs: 1_000_000,
+      requestTimeoutMs: 15_000,
+      fetcher: (_input, init) => {
+        requests++;
+        signal = init!.signal!;
+        return new Promise<Response>(() => {});
+      },
+    });
+    engines.push(app);
+    await app.start();
+    expect((await app.openLocal(date)).body).toBe("cached text");
+    expect(requests).toBe(0);
+    const refresh = app.refresh(date);
+    expect(app.refresh(date)).toBe(refresh);
+    await app.edit(date, "written while waiting");
+    expect((await repo.get(date))?.body).toBe("written while waiting");
+    await vi.advanceTimersByTimeAsync(15_000);
+    await refresh;
+    expect(signal.aborted).toBe(true);
+    expect(requests).toBe(1);
+    expect(app.getDraft(date)?.body).toBe("written while waiting");
+    expect(app.getDraft(date)?.problem?.kind).toBe("network");
+  });
+
+  it.each([false, true])(
+    "ignores an older read after a concurrent save advances the server baseline (existing: %s)",
+    async (existing) => {
+      const repo = repository();
+      const server = new FakeServer();
+      if (existing) server.diaries.set(date, diary("before"));
+      let hold = false;
+      let release!: () => void;
+      let entered!: () => void;
+      const waiting = new Promise<void>((resolve) => {
+        entered = resolve;
+      });
+      const app = new DiarySyncEngine({
+        repository: repo,
+        browserEvents: false,
+        debounceMs: 1_000_000,
+        fetcher: async (input, init) => {
+          const snapshot = await server.fetch(input, init);
+          if (hold && init?.method === "GET") {
+            entered();
+            await new Promise<void>((resolve) => {
+              release = resolve;
+            });
+          }
+          return snapshot;
+        },
+      });
+      engines.push(app);
+      await app.start();
+      await app.open(date);
+      hold = true;
+      const refresh = app.refresh(date);
+      await waiting;
+      await app.edit(date, "newly saved");
+      await app.retry(date);
+      expect(app.getStatus(date)).toBe("saved");
+      release();
+      await refresh;
+      expect(app.getDraft(date)?.body).toBe("newly saved");
+      expect(app.getDraft(date)?.diary?.body).toBe("newly saved");
+      expect(app.getDraft(date)?.diary?.version).toBe(existing ? 2 : 1);
+      expect(app.getDraft(date)?.problem).toBeNull();
+    },
+  );
+
+  it("replays the immutable mutation after its committed response body times out, preserving newer text", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    let now = 100_000;
+    const repo = repository();
+    const server = new FakeServer();
+    let stall = true;
+    let signal!: AbortSignal;
+    let entered!: () => void;
+    const waiting = new Promise<void>((resolve) => {
+      entered = resolve;
+    });
+    const app = new DiarySyncEngine({
+      repository: repo,
+      browserEvents: false,
+      debounceMs: 1_000_000,
+      requestTimeoutMs: 15_000,
+      now: () => now,
+      fetcher: async (input, init) => {
+        const response = await server.fetch(input, init);
+        if (stall && init?.method === "POST") {
+          stall = false;
+          signal = init.signal!;
+          entered();
+          return new Response(new ReadableStream(), {
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+        return response;
+      },
+    });
+    engines.push(app);
+    await app.start();
+    await app.open(date);
+    await app.edit(date, "original request");
+    const syncing = app.retry(date);
+    await waiting;
+    const pending = (await repo.get(date))!.pending!;
+    await app.edit(date, "newer local text");
+    await vi.advanceTimersByTimeAsync(15_000);
+    await syncing;
+    expect(signal.aborted).toBe(true);
+    expect(app.getStatus(date)).toBe("unsynced");
+    expect((await repo.get(date))?.pending).toEqual(pending);
+    expect((await repo.get(date))?.body).toBe("newer local text");
+    expect(server.diaries.get(date)?.body).toBe("original request");
+    now += 1000;
+    await app.retry(date);
+    const { revision: _revision, ...payload } = pending;
+    expect(server.requests[1]).toEqual(payload);
+    expect(app.getDraft(date)?.body).toBe("newer local text");
+    await app.retry(date);
+    expect(server.diaries.get(date)?.body).toBe("newer local text");
+    expect(server.diaries.get(date)?.version).toBe(2);
+    expect(app.getStatus(date)).toBe("saved");
+  });
+
+  it("does not replace a newer conflict snapshot when an older read times out", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    const repo = repository();
+    const server = new FakeServer();
+    server.diaries.set(date, diary("before"));
+    let stall = false;
+    const app = new DiarySyncEngine({
+      repository: repo,
+      browserEvents: false,
+      debounceMs: 1_000_000,
+      requestTimeoutMs: 15_000,
+      fetcher: (input, init) =>
+        stall && init?.method === "GET"
+          ? new Promise<Response>(() => {})
+          : server.fetch(input, init),
+    });
+    engines.push(app);
+    await app.start();
+    await app.open(date);
+    stall = true;
+    const refresh = app.refresh(date);
+    await app.edit(date, "local text");
+    server.diaries.set(date, diary("other device text", 2));
+    await app.retry(date);
+    const conflict = app.getDraft(date)?.problem;
+    expect(conflict?.kind).toBe("conflict");
+    expect(conflict?.server?.body).toBe("other device text");
+    await vi.advanceTimersByTimeAsync(15_000);
+    await refresh;
+    expect(app.getDraft(date)?.problem).toEqual(conflict);
+    expect(app.getDraft(date)?.body).toBe("local text");
+    expect(app.getStatus(date)).toBe("conflict");
+  });
+
+  it("retains stale-tab recovery text when a concurrent refresh fails", async () => {
+    const repo = repository();
+    const server = new FakeServer();
+    server.diaries.set(date, diary("before"));
+    let stall = false;
+    let rejectRead!: (error: Error) => void;
+    const app = new DiarySyncEngine({
+      repository: repo,
+      browserEvents: false,
+      debounceMs: 1_000_000,
+      fetcher: (input, init) =>
+        stall && init?.method === "GET"
+          ? new Promise<Response>((_resolve, reject) => {
+              rejectRead = reject;
+            })
+          : server.fetch(input, init),
+    });
+    engines.push(app);
+    await app.start();
+    await app.open(date);
+    stall = true;
+    const refresh = app.refresh(date);
+    await repo.change(date, (current) => ({
+      ...current!,
+      revision: current!.revision + 1,
+      body: "other tab draft",
+      dirty: true,
+    }));
+    await expect(app.edit(date, "this tab recovery text")).rejects.toBeInstanceOf(
+      DraftRevisionConflict,
+    );
+    rejectRead(new TypeError("network unavailable"));
+    await refresh;
+    expect(app.getDraft(date)?.body).toBe("this tab recovery text");
+    expect(app.getDraft(date)?.problem?.kind).toBe("conflict");
+    expect((await repo.get(date))?.body).toBe("other tab draft");
+    await expect(app.flushLocal(date)).rejects.toThrow("端末内保存");
+  });
+
+  it("keeps scratch edits made while a storage-degraded server read is pending", async () => {
+    const repo = repository();
+    const server = new FakeServer();
+    server.diaries.set(date, diary("remote text"));
+    const failure = async () => {
+      throw new DOMException("storage unavailable", "UnknownError");
+    };
+    repo.list = failure;
+    repo.get = failure;
+    repo.change = failure;
+    let release!: () => void;
+    let entered!: () => void;
+    const waiting = new Promise<void>((resolve) => {
+      entered = resolve;
+    });
+    const app = new DiarySyncEngine({
+      repository: repo,
+      browserEvents: false,
+      fetcher: async (input, init) => {
+        entered();
+        await new Promise<void>((resolve) => {
+          release = resolve;
+        });
+        return server.fetch(input, init);
+      },
+    });
+    engines.push(app);
+    await app.start();
+    const local = await app.openLocal(date);
+    expect(local.problem?.kind).toBe("storage");
+    const refresh = app.refresh(date);
+    await waiting;
+    await expect(app.edit(date, "scratch while waiting")).rejects.toThrow();
+    release();
+    await refresh;
+    expect(app.getDraft(date)?.body).toBe("scratch while waiting");
+    expect(app.getDraft(date)?.problem?.kind).toBe("storage");
+    await expect(app.flushLocal(date)).rejects.toThrow("端末内保存");
   });
 });
 

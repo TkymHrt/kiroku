@@ -16,6 +16,7 @@ import {
   type MutationKind,
   type PendingMutation,
 } from "./drafts";
+import { withNetworkDeadline } from "./network";
 
 export type SaveStatus =
   | "saved"
@@ -33,6 +34,8 @@ export interface SyncOptions {
   repository?: DraftRepositoryLike;
   fetcher?: Fetcher;
   debounceMs?: number;
+  /** Documents may approach 1 MB; allow throttled connections to finish a transfer. */
+  requestTimeoutMs?: number;
   now?: () => number;
   /** Disable only in tests. Browser lifecycle hooks and BroadcastChannel are enabled by default. */
   browserEvents?: boolean;
@@ -63,6 +66,14 @@ function sameServer(a: Diary | null | undefined, b: Diary | null | undefined): b
   return (a?.id ?? null) === (b?.id ?? null) && (a?.version ?? null) === (b?.version ?? null);
 }
 
+function sameBaseline(a: Draft, b: Draft): boolean {
+  return (
+    sameServer(a.diary, b.diary) &&
+    a.epoch === b.epoch &&
+    (a.absenceToken ?? null) === (b.absenceToken ?? null)
+  );
+}
+
 function isDiary(value: unknown): value is Diary {
   if (!value || typeof value !== "object") return false;
   const diary = value as Record<string, unknown>;
@@ -82,6 +93,7 @@ export class DiarySyncEngine {
   private readonly repository: DraftRepositoryLike;
   private readonly fetcher: Fetcher;
   private readonly debounceMs: number;
+  private readonly requestTimeoutMs: number;
   private readonly now: () => number;
   private readonly browserEvents: boolean;
   private readonly channelName: string;
@@ -93,6 +105,7 @@ export class DiarySyncEngine {
   private readonly localQueues = new Map<string, Promise<void>>();
   private readonly localCounts = new Map<string, number>();
   private readonly active = new Map<string, Promise<void>>();
+  private readonly refreshes = new Map<string, Promise<Draft>>();
   private readonly syncing = new Set<string>();
   private readonly failedLocal = new Set<string>();
   private channel: BroadcastChannel | null = null;
@@ -103,6 +116,7 @@ export class DiarySyncEngine {
     this.repository = options.repository ?? createDraftRepository();
     this.fetcher = options.fetcher ?? ((input, init) => fetch(input, init));
     this.debounceMs = options.debounceMs ?? 1000;
+    this.requestTimeoutMs = options.requestTimeoutMs ?? 180_000;
     this.now = options.now ?? Date.now;
     this.browserEvents = options.browserEvents ?? true;
     this.channelName = options.channelName ?? "kiroku-draft-changes";
@@ -182,27 +196,20 @@ export class DiarySyncEngine {
   }
 
   async open(date: string): Promise<Draft> {
+    await this.openLocal(date);
+    return this.refresh(date);
+  }
+
+  /** Make durable text available without waiting for the network. */
+  async openLocal(date: string): Promise<Draft> {
     await this.flushLocal(date);
     let stored: Draft | null;
     try {
       stored = await this.repository.get(date);
     } catch {
       const existing = this.records.get(date) ?? emptyDraft(date);
-      let scratch = existing;
-      try {
-        const response = await this.request<DiaryResponse>(date);
-        scratch = {
-          ...existing,
-          diary: response.diary,
-          epoch: response.epoch,
-          absenceToken: response.absenceToken,
-          body: existing.dirty || existing.pending ? existing.body : (response.diary?.body ?? ""),
-        };
-      } catch {
-        /* Keep any memory text if both storage and the network fail. */
-      }
-      scratch = {
-        ...scratch,
+      const scratch: Draft = {
+        ...existing,
         problem: {
           kind: "storage",
           message:
@@ -217,10 +224,43 @@ export class DiarySyncEngine {
     if (stored) this.records.set(date, stored);
     else if (!this.records.has(date)) this.records.set(date, emptyDraft(date));
     this.emit();
+    return this.records.get(date) ?? emptyDraft(date);
+  }
+
+  /** Reconcile a server read against the latest local revision, including edits made while waiting. */
+  refresh(date: string): Promise<Draft> {
+    const existing = this.refreshes.get(date);
+    if (existing) return existing;
+    const task = this.refreshDay(date).finally(() => this.refreshes.delete(date));
+    this.refreshes.set(date, task);
+    return task;
+  }
+
+  private async refreshDay(date: string): Promise<Draft> {
+    const observed = this.records.get(date) ?? emptyDraft(date);
     try {
       const response = await this.request<DiaryResponse>(date);
+      if (this.failedLocal.has(date)) {
+        const current = this.records.get(date) ?? emptyDraft(date);
+        if (current.problem?.kind === "storage") {
+          this.records.set(date, {
+            ...current,
+            diary: response.diary,
+            epoch: response.epoch,
+            absenceToken: response.absenceToken,
+            body: current.dirty || current.pending ? current.body : (response.diary?.body ?? ""),
+          });
+          this.emit();
+        }
+        return this.records.get(date) ?? emptyDraft(date);
+      }
+      await this.flushLocal(date);
       const result = await this.change(date, (current) => {
         const local = current ?? emptyDraft(date);
+        // A save may have completed after this GET took its snapshot. Never roll it back.
+        if (!sameBaseline(local, observed)) return current;
+        // A keystroke queued after flushLocal must keep its original server preconditions.
+        if ((this.localCounts.get(date) ?? 0) > 0) return current;
         if (local.dirty || local.pending) {
           if (local.epoch && local.epoch !== response.epoch)
             return this.withConflict(
@@ -267,7 +307,16 @@ export class DiarySyncEngine {
       });
       if (result?.dirty || result?.pending) this.schedule(date, 0);
     } catch (error) {
-      await this.recordFailure(date, error, false);
+      // A failed local write owns its in-memory recovery text. Do not replace it
+      // with durable content while recording an unrelated read failure.
+      const current = this.records.get(date) ?? emptyDraft(date);
+      if (
+        !this.failedLocal.has(date) &&
+        sameBaseline(current, observed) &&
+        (!current.problem || current.problem.kind === "network")
+      ) {
+        await this.recordFailure(date, error, false);
+      }
     }
     return this.records.get(date) ?? emptyDraft(date);
   }
@@ -598,7 +647,7 @@ export class DiarySyncEngine {
       return {
         ...current,
         pending: current.pending ?? this.operation(current, current.diary ? "update" : "create"),
-        lease: { owner: this.owner, until: this.now() + 30_000 },
+        lease: { owner: this.owner, until: this.now() + this.requestTimeoutMs + 10_000 },
       };
     });
     if (!claimed?.pending || claimed.lease?.owner !== this.owner) {
@@ -711,67 +760,66 @@ export class DiarySyncEngine {
   }
 
   private async request<T>(date: string, payload?: Omit<PendingMutation, "revision">): Promise<T> {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 20_000);
-    try {
-      const response = await this.fetcher(`/api/diaries/${encodeURIComponent(date)}`, {
-        method: payload ? "POST" : "GET",
-        credentials: "same-origin",
-        cache: "no-store",
-        redirect: "manual",
-        signal: controller.signal,
-        headers: payload
-          ? { "Content-Type": "application/json", "X-Kiroku-CSRF": "1" }
-          : { Accept: "application/json" },
-        ...(payload ? { body: JSON.stringify(payload) } : {}),
-      });
-      const isJson = response.headers.get("content-type")?.includes("application/json");
-      if (!isJson) {
-        const authentication =
-          response.status < 400 || response.status === 401 || response.status === 403;
-        throw new RequestFailure(authentication ? 401 : response.status, {
-          code: authentication ? "AUTH_REQUIRED" : "SERVER_ERROR",
-          message: authentication
-            ? "認証を確認できません。再認証後に「再試行」を押してください。端末の本文は保持しています。"
-            : "サーバーが応答できません。本文は端末に保持し、時間をおいて再試行します。",
+    return withNetworkDeadline(
+      async (signal) => {
+        const response = await this.fetcher(`/api/diaries/${encodeURIComponent(date)}`, {
+          method: payload ? "POST" : "GET",
+          credentials: "same-origin",
+          cache: "no-store",
+          redirect: "manual",
+          signal,
+          headers: payload
+            ? { "Content-Type": "application/json", "X-Kiroku-CSRF": "1" }
+            : { Accept: "application/json" },
+          ...(payload ? { body: JSON.stringify(payload) } : {}),
         });
-      }
-      const decoded: unknown = await response.json();
-      if (!decoded || typeof decoded !== "object") throw new TypeError("Invalid server response");
-      const data = decoded as Record<string, unknown>;
-      if (!response.ok) {
-        const problem: ApiProblem = {
-          code: typeof data?.code === "string" ? data.code : "SERVER_ERROR",
-          message:
-            typeof data?.message === "string"
-              ? data.message
-              : "保存できませんでした。本文は端末に保持しています。",
-          ...(data.diary === null || isDiary(data.diary) ? { diary: data.diary } : {}),
-          ...(typeof data?.epoch === "string" ? { epoch: data.epoch } : {}),
-          ...(data.absenceToken === null || typeof data.absenceToken === "string"
-            ? { absenceToken: data.absenceToken }
-            : {}),
-        };
-        throw new RequestFailure(
-          response.status,
-          problem,
-          retryAfterMilliseconds(response.headers.get("Retry-After"), this.now()),
-        );
-      }
-      if (
-        typeof data.epoch !== "string" ||
-        (data.diary !== null && !isDiary(data.diary)) ||
-        (payload &&
-          (data.mutationId !== payload.mutationId ||
-            !("appliedVersion" in data) ||
-            typeof data.appliedDiaryId !== "string"))
-      ) {
-        throw new TypeError("Invalid server response");
-      }
-      return decoded as T;
-    } finally {
-      clearTimeout(timeout);
-    }
+        const isJson = response.headers.get("content-type")?.includes("application/json");
+        if (!isJson) {
+          const authentication =
+            response.status < 400 || response.status === 401 || response.status === 403;
+          throw new RequestFailure(authentication ? 401 : response.status, {
+            code: authentication ? "AUTH_REQUIRED" : "SERVER_ERROR",
+            message: authentication
+              ? "認証を確認できません。再認証後に「再試行」を押してください。端末の本文は保持しています。"
+              : "サーバーが応答できません。本文は端末に保持し、時間をおいて再試行します。",
+          });
+        }
+        const decoded: unknown = await response.json();
+        if (!decoded || typeof decoded !== "object") throw new TypeError("Invalid server response");
+        const data = decoded as Record<string, unknown>;
+        if (!response.ok) {
+          const problem: ApiProblem = {
+            code: typeof data?.code === "string" ? data.code : "SERVER_ERROR",
+            message:
+              typeof data?.message === "string"
+                ? data.message
+                : "保存できませんでした。本文は端末に保持しています。",
+            ...(data.diary === null || isDiary(data.diary) ? { diary: data.diary } : {}),
+            ...(typeof data?.epoch === "string" ? { epoch: data.epoch } : {}),
+            ...(data.absenceToken === null || typeof data.absenceToken === "string"
+              ? { absenceToken: data.absenceToken }
+              : {}),
+          };
+          throw new RequestFailure(
+            response.status,
+            problem,
+            retryAfterMilliseconds(response.headers.get("Retry-After"), this.now()),
+          );
+        }
+        if (
+          typeof data.epoch !== "string" ||
+          (data.diary !== null && !isDiary(data.diary)) ||
+          (payload &&
+            (data.mutationId !== payload.mutationId ||
+              !("appliedVersion" in data) ||
+              typeof data.appliedDiaryId !== "string"))
+        ) {
+          throw new TypeError("Invalid server response");
+        }
+        return decoded as T;
+      },
+      { timeoutMs: this.requestTimeoutMs },
+    );
   }
 
   private async recordFailure(date: string, error: unknown, scheduleRetry = true): Promise<void> {

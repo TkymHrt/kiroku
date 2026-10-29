@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Archive,
   ArchiveRestore,
@@ -20,6 +20,9 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { type DiarySyncEngine, type SaveStatus } from "../lib/sync";
+import { withNetworkDeadline } from "../lib/network";
+import { MarkdownEditor } from "./MarkdownEditor";
+import { MarkdownPreview } from "./MarkdownPreview";
 import {
   decodeNote,
   encodeNote,
@@ -33,12 +36,6 @@ import {
   type NoteSummary,
 } from "../lib/notes";
 
-const MarkdownEditor = lazy(() =>
-  import("./MarkdownEditor").then((module) => ({ default: module.MarkdownEditor })),
-);
-const MarkdownPreview = lazy(() =>
-  import("./MarkdownPreview").then((module) => ({ default: module.MarkdownPreview })),
-);
 const labels: Record<SaveStatus, string> = {
   saved: "保存済み",
   "local-saving": "端末保存中",
@@ -54,24 +51,49 @@ const scopeLabels: Record<NoteScope, string> = {
   archived: "しまったメモ",
   trash: "メモのゴミ箱",
 };
-function NoteSaveState({ status, empty = false }: { status: SaveStatus; empty?: boolean }) {
-  const Icon =
-    status === "saved"
-      ? CheckCheck
-      : status === "local"
-        ? Check
-        : status === "syncing" || status === "local-saving"
-          ? LoaderCircle
-          : status === "unsynced"
-            ? CloudOff
-            : AlertCircle;
+function NoteSaveState({
+  status,
+  empty = false,
+  checking = false,
+  unverified = false,
+}: {
+  status: SaveStatus;
+  empty?: boolean;
+  checking?: boolean;
+  unverified?: boolean;
+}) {
+  const checkingServer = checking && status === "saved";
+  const serverUnverified = unverified && status === "saved";
+  const Icon = checkingServer
+    ? LoaderCircle
+    : serverUnverified
+      ? CloudOff
+      : status === "saved"
+        ? CheckCheck
+        : status === "local"
+          ? Check
+          : status === "syncing" || status === "local-saving"
+            ? LoaderCircle
+            : status === "unsynced"
+              ? CloudOff
+              : AlertCircle;
   return (
-    <span className={`save-state state-${status}`} role="status">
+    <span className={`save-state state-${serverUnverified ? "unsynced" : status}`} role="status">
       <Icon
         size={15}
-        className={status === "syncing" || status === "local-saving" ? "spinning" : undefined}
+        className={
+          checkingServer || status === "syncing" || status === "local-saving"
+            ? "spinning"
+            : undefined
+        }
       />
-      {empty ? "まだメモは作成されていません" : labels[status]}
+      {checkingServer
+        ? "サーバー確認中"
+        : serverUnverified
+          ? "サーバー未確認"
+          : empty
+            ? "まだメモは作成されていません"
+            : labels[status]}
     </span>
   );
 }
@@ -116,6 +138,7 @@ export function NotesWorkspace({
   const [content, setContent] = useState<NoteContent>(emptyNote);
   const [mode, setMode] = useState<"edit" | "preview">("edit");
   const [opening, setOpening] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [fresh, setFresh] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -129,12 +152,20 @@ export function NotesWorkspace({
   } | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const listSequence = useRef(0);
+  const listRequest = useRef<AbortController | null>(null);
   const openSequence = useRef(0);
   const titleInput = useRef<HTMLInputElement>(null);
   const latestContent = useRef(content);
   latestContent.current = content;
 
   useEffect(() => engine.subscribe(() => setTick((value) => value + 1)), [engine]);
+  useEffect(
+    () => () => {
+      // A background refresh may finish after this workspace has been closed.
+      ++openSequence.current;
+    },
+    [],
+  );
   useEffect(() => {
     onEditingChange(selected !== null);
     return () => onEditingChange(false);
@@ -147,22 +178,47 @@ export function NotesWorkspace({
   useEffect(() => {
     if (confirmation) dialog.current?.showModal();
   }, [confirmation]);
+  useEffect(() => {
+    const reconnect = () => {
+      if (!selected || opening || navigator.onLine === false) return;
+      const draft = engine.getDraft(selected);
+      // Changed documents already have the engine's durable retry queue.
+      if (draft?.problem?.kind === "network" && !draft.dirty && !draft.pending)
+        void refreshNote(selected, openSequence.current);
+    };
+    window.addEventListener("online", reconnect);
+    window.addEventListener("focus", reconnect);
+    return () => {
+      window.removeEventListener("online", reconnect);
+      window.removeEventListener("focus", reconnect);
+    };
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- Reconnect only acts on the currently selected document and reads its latest durable state.
+  }, [selected, opening, engine]);
 
   async function load(append = false) {
     const sequence = ++listSequence.current;
+    listRequest.current?.abort();
+    const controller = new AbortController();
+    listRequest.current = controller;
     setLoading(true);
     try {
-      const response = await fetch("/api/notes/query", {
-        method: "POST",
-        credentials: "same-origin",
-        redirect: "manual",
-        cache: "no-store",
-        headers: { "Content-Type": "application/json", "X-Kiroku-CSRF": "1" },
-        body: JSON.stringify({ scope, query, cursor: append ? cursor : "" }),
-      });
-      if (!response.ok || !response.headers.get("content-type")?.includes("application/json"))
-        throw new Error();
-      const page = (await response.json()) as NoteListResponse;
+      const page = await withNetworkDeadline(
+        async (signal) => {
+          const response = await fetch("/api/notes/query", {
+            method: "POST",
+            credentials: "same-origin",
+            redirect: "manual",
+            cache: "no-store",
+            signal,
+            headers: { "Content-Type": "application/json", "X-Kiroku-CSRF": "1" },
+            body: JSON.stringify({ scope, query, cursor: append ? cursor : "" }),
+          });
+          if (!response.ok || !response.headers.get("content-type")?.includes("application/json"))
+            throw new Error();
+          return (await response.json()) as NoteListResponse;
+        },
+        { signal: controller.signal },
+      );
       if (sequence !== listSequence.current) return;
       setRemote((previous) =>
         append
@@ -175,14 +231,19 @@ export function NotesWorkspace({
       setCursor(page.nextCursor);
       setListError(false);
     } catch {
-      if (sequence === listSequence.current) setListError(true);
+      if (sequence === listSequence.current && !controller.signal.aborted) setListError(true);
     } finally {
-      if (sequence === listSequence.current) setLoading(false);
+      if (sequence === listSequence.current) {
+        listRequest.current = null;
+        setLoading(false);
+      }
     }
   }
   useEffect(() => {
     setRemote([]);
     setCursor(null);
+    setLoading(true);
+    setListError(false);
     const timer = setTimeout(
       () => {
         void load();
@@ -193,6 +254,8 @@ export function NotesWorkspace({
       clearTimeout(timer);
       // oxlint-disable-next-line react-hooks/exhaustive-deps -- This counter cancels in-flight requests, rather than tracking a DOM node.
       ++listSequence.current;
+      listRequest.current?.abort();
+      listRequest.current = null;
     };
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- Query and scope define a list request; continuations are explicit.
   }, [scope, query]);
@@ -211,8 +274,13 @@ export function NotesWorkspace({
     }
   }
   async function open(id: string, fresh = false) {
-    await engine.flushLocal();
     const sequence = ++openSequence.current;
+    await engine.flushLocal();
+    if (sequence !== openSequence.current) return;
+    ++listSequence.current;
+    listRequest.current?.abort();
+    listRequest.current = null;
+    setLoading(false);
     setSelected(id);
     setFresh(fresh);
     setContent(decodeNote(engine.getDraft(id)?.body ?? ""));
@@ -220,8 +288,12 @@ export function NotesWorkspace({
     setMerge(null);
     setMessage("");
     setOpening(true);
+    setRefreshing(false);
     try {
-      await engine.open(id);
+      const local = await engine.openLocal(id);
+      if (sequence !== openSequence.current) return;
+      setContent(decodeNote(local.body));
+      void refreshNote(id, sequence);
     } finally {
       if (sequence === openSequence.current) {
         setContent(decodeNote(engine.getDraft(id)?.body ?? ""));
@@ -229,6 +301,22 @@ export function NotesWorkspace({
       }
     }
     window.scrollTo({ top: 0 });
+  }
+  async function refreshNote(id: string, sequence: number) {
+    setRefreshing(true);
+    try {
+      await engine.refresh(id);
+    } catch {
+      if (sequence === openSequence.current)
+        setMessage(
+          "メモを読み直せませんでした。端末の内容を保持しています。もう一度お試しください。",
+        );
+    } finally {
+      if (sequence === openSequence.current) {
+        setContent(decodeNote(engine.getDraft(id)?.body ?? ""));
+        setRefreshing(false);
+      }
+    }
   }
   useEffect(() => {
     if (newRequest) void work(() => open(crypto.randomUUID(), true));
@@ -279,7 +367,12 @@ export function NotesWorkspace({
   const problem = draft?.problem;
   const conflict = problem?.kind === "conflict" || problem?.kind === "recovery";
   const status = selected ? engine.getStatus(selected) : "saved";
-  const unavailable = !!problem && !draft?.diary && !draft?.body && problem.kind !== "storage";
+  const unavailable =
+    !!problem &&
+    !draft?.diary &&
+    !draft?.body &&
+    problem.kind !== "storage" &&
+    problem.kind !== "network";
   const server = problem?.server ? decodeNote(problem.server.body) : null;
   const unsynced = engine.getDrafts().filter((item) => item.dirty || item.pending).length;
   function edit(next: NoteContent) {
@@ -295,12 +388,15 @@ export function NotesWorkspace({
       );
   }
   async function back() {
+    const sequence = ++openSequence.current;
     await engine.flushLocal();
-    ++openSequence.current;
+    if (sequence !== openSequence.current) return;
     setSelected(null);
+    setOpening(false);
+    setRefreshing(false);
     setMerge(null);
     setMessage("");
-    await load();
+    void load();
   }
   async function copy() {
     try {
@@ -524,6 +620,8 @@ export function NotesWorkspace({
             </button>
             <NoteSaveState
               status={status}
+              checking={opening || refreshing}
+              unverified={problem?.kind === "network"}
               empty={!draft?.diary && !draft?.body && !problem && !opening}
             />
           </div>
@@ -533,6 +631,12 @@ export function NotesWorkspace({
               メモをひらいています
             </div>
           )}
+          {refreshing && !opening && (
+            <div className="loading-line" role="status">
+              <LoaderCircle size={18} className="spinning" />
+              サーバーの内容を確認しています。編集は続けられます。
+            </div>
+          )}
           {problem && (
             <div
               className={`banner ${problem.kind === "storage" ? "danger-banner" : ""}`}
@@ -540,7 +644,13 @@ export function NotesWorkspace({
             >
               <AlertCircle size={19} />
               <div>
-                <strong>{conflict ? "両方の内容を確認してください" : labels[status]}</strong>
+                <strong>
+                  {conflict
+                    ? "両方の内容を確認してください"
+                    : problem.kind === "network"
+                      ? "サーバーに接続できません"
+                      : labels[status]}
+                </strong>
                 <p>
                   {problem.message
                     .replaceAll("日記", "メモ")
@@ -758,26 +868,24 @@ export function NotesWorkspace({
                 </button>
               </div>
             </div>
-            <Suspense fallback={<div className="loading-line">本文を準備しています</div>}>
-              <MarkdownEditor
-                key={selected}
-                label="メモの本文"
-                autoFocus={fresh}
-                value={content.body}
-                hidden={mode !== "edit"}
+            <MarkdownEditor
+              key={selected}
+              label="メモの本文"
+              autoFocus={fresh}
+              value={content.body}
+              hidden={mode !== "edit"}
+              readOnly={deleted || opening || unavailable}
+              onChange={(body) => edit({ ...latestContent.current, body })}
+            />
+            {mode === "preview" && (
+              <MarkdownPreview
+                comfortableTasks
+                label="メモのプレビュー"
+                body={content.body}
                 readOnly={deleted || opening || unavailable}
                 onChange={(body) => edit({ ...latestContent.current, body })}
               />
-              {mode === "preview" && (
-                <MarkdownPreview
-                  comfortableTasks
-                  label="メモのプレビュー"
-                  body={content.body}
-                  readOnly={deleted || opening || unavailable}
-                  onChange={(body) => edit({ ...latestContent.current, body })}
-                />
-              )}
-            </Suspense>
+            )}
           </div>
           {!deleted && draft?.diary && (
             <div className="note-footer">
