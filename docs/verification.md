@@ -20,6 +20,8 @@ MCPの公開・ChatGPT・負荷・復元の追加結果は [MCP検証](mcp-verif
 
 全APIを模擬した `e2e/network.spec.ts` と `e2e/notes-performance.spec.ts` の18件がPC/390px幅で成功した。100件の端末メモから1件を編集し、本文全体と端末下書きの一致、一覧に戻った際のタイトル・順序・抜粋・チェック数・固定、検索条件としまう/戻す、新規メモを確認した。CSSは調査前の配信物と同じSHA-256。[ローカル検証証跡](performance-implementation-proof.json)に記録した。
 
+最終commit `5a8a1e0` の[CI](https://github.com/TkymHrt/kiroku/actions/runs/40908369167)成功後、本番version `99473975-8aff-470b-921f-5a574cbca425` を公開した。[本番60項目](performance-production-proof.json)で、両originの配信物とprivateキャッシュ設定、HTML/sessionの保存禁止、保護ヘッダー、本人認証、readinessのversionId、JS/CSSを含む匿名拒否を確認した。本番本文の取得・変更は行っていない。
+
 ## 受入14項目
 
 2026-10-28追加の[独立メモ](notes.md)を10月29日に本番公開した。複数作成・任意タイトル・重複文のチェック操作・固定・しまう/戻す・検索・ゴミ箱/復元・Markdown退避・オフライン・別コンテキスト競合をPC/390pxのEdge E2Eで確認した。JSON形式版3はメモを日記と同じsnapshot条件で出力し、変更中の出力を拒否する。約1MBメモ本文・固定/保管/削除状態・receiptを含む9表のSQL/分割復元とepoch回転をローカルself-testと実一時D1で確認し、一時DB2つも削除済み。本番の両originで認証付きの表示・メモAPIの読取・配信物一致・匿名拒否の46項目が成功した。証跡は[本番確認](notes-production-proof.json)と[実D1復元](notes-remote-backup-proof.json)。本番での日記/メモの本文取得・変更は0件。Android実機と実Access期限切れは未確認。

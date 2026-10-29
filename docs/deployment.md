@@ -74,3 +74,13 @@ commit `4c72b7a` をmainへpushし、[CI](https://github.com/TkymHrt/kiroku/acti
 Voidのstaged deployでversion `2385cbdb-9d20-46d7-9b23-8e43faa2cf79` がliveになった。DB構造・Worker/DB identity・公開設定の変更はなく、既存4件のmigrationは適用済み。
 
 [本番確認JSON](network-production-proof.json)の42項目で、両originの認証付きHTML・session・readiness・favicon、HTML/sessionの8セキュリティヘッダー、各originのJS/CSS計2件のSHA-256一致、readinessのversionId一致、匿名10経路のHEADがAccessへ302になることを確認した。本番の日記/メモの本文取得・変更は0件。Android実機の通信制限と実Access期限切れは未確認。
+
+## 同日の配信物再利用とメモ編集の軽量化
+
+ハッシュ付きJS/CSSのブラウザ再利用と、メモ選択中の非表示一覧の計算抑制を実装した。最終commit `5a8a1e0` をmainへpushし、[CI](https://github.com/TkymHrt/kiroku/actions/runs/40908369167)の静的検査・単体147件・Workers7件・build・ローカル復元試験が成功した。PC/390px幅の全API模擬E2E18件も成功した。
+
+通常のAssets構成と、現行Voidのバージョン固定アップローダーに合わせて `_headers` を除いた構成で、ビルド済みWorkerの30項目を確認した。保存方針はプロバイダーの既存ヘッダーに依存せず、Workerが本人認証後にASSETSのmanifestと応答条件を照合して設定する。ローカル128kbps試験では一覧表示が初回23.18秒、再訪2.01秒で、JS/CSSの取得は2件から0件になった。[ローカル証跡](performance-implementation-proof.json)と[調査記録](performance-audit.md)を参照する。
+
+Voidのstaged deployでversion `99473975-8aff-470b-921f-5a574cbca425` がliveになった。DB構造・Worker/DB identity・公開設定に変更はなく、既存4件のmigrationは適用済み。
+
+[本番確認JSON](performance-production-proof.json)の60項目で、両originの配信JS/CSSのSHA-256一致、`private, max-age=31536000, immutable` とPragma不在、6つの保護ヘッダー、HTML/sessionのno-storeとPragma、本人session、readinessのversionId一致、匿名12経路のHEADによるAccess拒否を確認した。本番の日記/メモ本文の取得・変更は0件。Android実機の速度や入力操作の実証とは区別する。

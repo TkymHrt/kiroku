@@ -1,0 +1,383 @@
+{
+  "checkedAt": "2026-10-29T16:10:30.351Z",
+  "gitCommit": "5a8a1e042f022f845e2ef372859b44190ecb9ea3",
+  "workerVersion": "99473975-8aff-470b-921f-5a574cbca425",
+  "ci": "https://github.com/TkymHrt/kiroku/actions/runs/40908369167",
+  "migrationsAdded": 0,
+  "checks": [
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/",
+      "securityHeadersMatched": 6,
+      "expectedSecurityHeaders": 6
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/",
+      "noStore": true,
+      "pragmaNoCache": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/",
+      "htmlAssetsMatched": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/session",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/session",
+      "securityHeadersMatched": 6,
+      "expectedSecurityHeaders": 6
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/session",
+      "noStore": true,
+      "pragmaNoCache": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/session",
+      "ownerSessionValidated": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/__void/ready",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/__void/ready",
+      "noStore": null,
+      "pragmaNoCache": null
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/__void/ready",
+      "ready": true,
+      "versionMetadataAvailable": true,
+      "workerVersionMatched": true,
+      "readinessNoStore": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/favicon.svg",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/favicon.svg",
+      "securityHeadersMatched": 6,
+      "expectedSecurityHeaders": 6
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/favicon.svg",
+      "noStore": true,
+      "pragmaNoCache": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "asset": "/assets/index-Bhifgahw.css",
+      "authenticatedStatus": 200,
+      "sha256Matched": true,
+      "immutablePrivateCache": true,
+      "noLegacyPragma": true,
+      "observedCacheControl": "private, max-age=31536000, immutable",
+      "observedPragma": null
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/assets/index-Bhifgahw.css",
+      "securityHeadersMatched": 6,
+      "expectedSecurityHeaders": 6
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "asset": "/assets/index-pyRu3_as.js",
+      "authenticatedStatus": 200,
+      "sha256Matched": true,
+      "immutablePrivateCache": true,
+      "noLegacyPragma": true,
+      "observedCacheControl": "private, max-age=31536000, immutable",
+      "observedPragma": null
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/assets/index-pyRu3_as.js",
+      "securityHeadersMatched": 6,
+      "expectedSecurityHeaders": 6
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/session",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/diaries",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/diaries/2081-11-01",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/diaries/2081-11-01/neighbors",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/export",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/__void/ready",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/favicon.svg",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/notes/:random-id",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/api/notes/query",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/assets/index-Bhifgahw.css",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.tkymhrt.dpdns.org",
+      "path": "/assets/index-pyRu3_as.js",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/",
+      "securityHeadersMatched": 6,
+      "expectedSecurityHeaders": 6
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/",
+      "noStore": true,
+      "pragmaNoCache": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/",
+      "htmlAssetsMatched": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/session",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/session",
+      "securityHeadersMatched": 6,
+      "expectedSecurityHeaders": 6
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/session",
+      "noStore": true,
+      "pragmaNoCache": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/session",
+      "ownerSessionValidated": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/__void/ready",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/__void/ready",
+      "noStore": null,
+      "pragmaNoCache": null
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/__void/ready",
+      "ready": true,
+      "versionMetadataAvailable": true,
+      "workerVersionMatched": true,
+      "readinessNoStore": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/favicon.svg",
+      "authenticatedStatus": 200
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/favicon.svg",
+      "securityHeadersMatched": 6,
+      "expectedSecurityHeaders": 6
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/favicon.svg",
+      "noStore": true,
+      "pragmaNoCache": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "asset": "/assets/index-Bhifgahw.css",
+      "authenticatedStatus": 200,
+      "sha256Matched": true,
+      "immutablePrivateCache": true,
+      "noLegacyPragma": true,
+      "observedCacheControl": "private, max-age=31536000, immutable",
+      "observedPragma": null
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/assets/index-Bhifgahw.css",
+      "securityHeadersMatched": 6,
+      "expectedSecurityHeaders": 6
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "asset": "/assets/index-pyRu3_as.js",
+      "authenticatedStatus": 200,
+      "sha256Matched": true,
+      "immutablePrivateCache": true,
+      "noLegacyPragma": true,
+      "observedCacheControl": "private, max-age=31536000, immutable",
+      "observedPragma": null
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/assets/index-pyRu3_as.js",
+      "securityHeadersMatched": 6,
+      "expectedSecurityHeaders": 6
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/session",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/diaries",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/diaries/2081-11-01",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/diaries/2081-11-01/neighbors",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/export",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/__void/ready",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/favicon.svg",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/notes/:random-id",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/api/notes/query",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/assets/index-Bhifgahw.css",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    },
+    {
+      "origin": "https://kiroku.23-h-takayama-nutfes.workers.dev",
+      "path": "/assets/index-pyRu3_as.js",
+      "anonymousHeadStatus": 302,
+      "accessRedirect": true
+    }
+  ],
+  "failures": [],
+  "productionDiaryBodyReads": 0,
+  "productionNoteBodyReads": 0,
+  "productionMutations": 0,
+  "success": true,
+  "migrationsApplied": 4
+}
